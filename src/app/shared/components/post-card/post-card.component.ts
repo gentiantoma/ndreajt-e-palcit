@@ -312,7 +312,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
     try {
       const likes = await this.fs.getLikesForPost(this.post.id!);
       const withProfiles = await Promise.all(
-        likes.slice(0, 50).map(async l => {
+        likes.map(async l => {
           const p = await this.fs.getUser(l.userId);
           return p ? { uid: p.uid, displayName: p.displayName, photoURL: p.photoURL, reaction: l.reaction } : null;
         })

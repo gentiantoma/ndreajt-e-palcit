@@ -73,7 +73,7 @@ export class FirestoreService {
   }
 
   async getLikesForPost(postId: string): Promise<{ userId: string; reaction: ReactionType }[]> {
-    const q = query(collection(this.db, 'likes'), where('postId', '==', postId), limit(50));
+    const q = query(collection(this.db, 'likes'), where('postId', '==', postId));
     const snap = await getDocs(q);
     return snap.docs.map(d => ({
       userId: d.data()['userId'] as string,
