@@ -247,26 +247,31 @@
 .cat-scroll-wrap {
   display: flex;
   align-items: center;
+  gap: 6px;
   position: sticky;
   top: var(--header-height);
   z-index: 10;
   background: #ffffff;
+  padding: 6px 0;
   margin-bottom: 8px;
 }
 
 /* Arrow scroll buttons */
 .cat-nav-btn {
   flex-shrink: 0;
-  width: 36px;
-  height: 42px;
-  background: transparent;
-  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-bg-card);
+  border: 1.5px solid var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 
+  &:hover { background: var(--color-bg-elevated); border-color: #c4c9d1; }
   &:active { background: var(--color-bg-elevated); }
 }
 
