@@ -3,3 +3,19 @@
   <router-outlet></router-outlet>
 </main>
 <app-toast></app-toast>
+
+<!-- Global reaction picker — rendered at root level, escapes all overflow/transform contexts -->
+<div *ngIf="picker.isOpen() && picker.position()"
+     class="reaction-picker-global"
+     [class.fading]="picker.isFading()"
+     [style.top.px]="picker.position()!.top"
+     [style.left.px]="picker.position()!.left"
+     (click)="$event.stopPropagation()">
+  <button *ngFor="let r of reactions"
+          class="reaction-opt-g"
+          [class.active]="picker.currentReaction() === r.type"
+          (click)="picker.select(r.type)">
+    <span class="reaction-emoji-g">{{ r.emoji }}</span>
+    <span class="reaction-label-g">{{ r.label }}</span>
+  </button>
+</div>

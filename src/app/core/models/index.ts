@@ -2,6 +2,16 @@ import { Timestamp } from 'firebase/firestore';
 
 export type PostCategory = 'lajme' | 'histori' | 'njoftim' | 'events' | 'pajtimet' | 'takimet' | 'other';
 export type UserRole = 'member' | 'admin';
+export type ReactionType = 'like' | 'haha' | 'wow' | 'sad' | 'angry' | 'celebrate';
+
+export const REACTIONS: { type: ReactionType; emoji: string; label: string }[] = [
+  { type: 'like',      emoji: '❤️',  label: 'Pëlqej'   },
+  { type: 'haha',      emoji: '😂',  label: 'Haha'     },
+  { type: 'wow',       emoji: '😮',  label: 'Wow'      },
+  { type: 'sad',       emoji: '😢',  label: 'Pikëllim' },
+  { type: 'angry',     emoji: '😡',  label: 'Zemërim'  },
+  { type: 'celebrate', emoji: '🎉',  label: 'Festoj'   },
+];
 
 export interface Post {
   id?: string;

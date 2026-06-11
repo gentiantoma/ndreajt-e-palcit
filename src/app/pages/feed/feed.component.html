@@ -157,12 +157,28 @@
 
           <app-post-card *ngFor="let post of posts(); trackBy: trackById" [post]="post" class="fade-in"></app-post-card>
 
-          <!-- Load More — admin only -->
-          <div *ngIf="auth.isAdmin() && hasMore" class="load-more-wrap">
-            <button class="btn btn-secondary" (click)="loadMore()" [disabled]="loadingMore()">
-              <span *ngIf="loadingMore()" class="spinner"></span>
-              {{ 'feed.load_more' | translate }}
-            </button>
+          <!-- Bottom feed indicator -->
+          <div class="feed-bottom">
+            <!-- Loading more spinner -->
+            <ng-container *ngIf="loadingMore()">
+              <span class="spinner feed-spinner"></span>
+            </ng-container>
+
+            <!-- Load more trigger (admin only, hidden button) -->
+            <ng-container *ngIf="auth.isAdmin() && hasMore() && !loadingMore()">
+              <button class="feed-more-btn" (click)="loadMore()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+            </ng-container>
+
+            <!-- No more posts — static end marker -->
+            <ng-container *ngIf="!hasMore() && !loading() && !loadingMore() && posts().length > 0">
+              <div class="feed-end-dots">
+                <span></span><span></span><span></span>
+              </div>
+            </ng-container>
           </div>
         </ng-container>
       </main>

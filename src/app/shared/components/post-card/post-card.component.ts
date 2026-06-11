@@ -6,11 +6,12 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription, filter, firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { Post, Comment, Reply, UserProfile } from '../../../core/models';
+import { Post, Comment, Reply, UserProfile, ReactionType, REACTIONS } from '../../../core/models';
 import { FirestoreService } from '../../../core/services/firestore.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
+import { ReactionPickerService } from '../../../core/services/reaction-picker.service';
 import { LazyImgDirective } from '../../directives/lazy-img.directive';
 import { fmtDateShort, fmtDateDay } from '../../../core/utils/date.util';
 
@@ -35,25 +36,57 @@ interface CommentState {
 export class PostCardComponent implements OnInit, OnDestroy {
   @Input({ required: true }) post!: Post;
 
-  private fs     = inject(FirestoreService);
-  private router = inject(Router);
-  auth           = inject(AuthService);
-  private toast = inject(ToastService);
-  private audio = inject(AudioService);
+  private fs      = inject(FirestoreService);
+  private router  = inject(Router);
+  auth            = inject(AuthService);
+  private toast   = inject(ToastService);
+  private audio   = inject(AudioService);
   private translate = inject(TranslateService);
+  private pickerSvc = inject(ReactionPickerService);
 
-  liked        = signal(false);
+  myReaction   = signal<ReactionType | null>(null);
   bookmarked   = signal(false);
   likeCount    = signal(0);
   showComments = signal(false);
   comments     = signal<Comment[]>([]);
   commentText  = signal('');
   submitting   = signal(false);
-  expanded     = signal(false);
   lightboxImg  = signal<string | null>(null);
 
   showLikersModal = signal(false);
-  likers          = signal<UserProfile[]>([]);
+  likers          = signal<{ uid: string; displayName: string; photoURL?: string; reaction: ReactionType }[]>([]);
+  reactionFilter  = signal<ReactionType | null>(null);
+
+  readonly reactions = REACTIONS;
+
+  get liked() { return this.myReaction() !== null; }
+
+  reactionEmoji(r: ReactionType | null) {
+    return REACTIONS.find(x => x.type === r)?.emoji ?? '❤️';
+  }
+  reactionLabel(r: ReactionType | null) {
+    return REACTIONS.find(x => x.type === r)?.label ?? 'Pëlqej';
+  }
+  getReactionColor(r: ReactionType | null): string {
+    const colors: Record<ReactionType, string> = {
+      like: '#e0245e', haha: '#f7c948', wow: '#f7c948',
+      sad: '#4fa3e0', angry: '#e05e30', celebrate: '#9b59b6',
+    };
+    return r ? colors[r] : '';
+  }
+
+  reactionTabs = computed(() => {
+    const counts = new Map<ReactionType, number>();
+    this.likers().forEach(l => counts.set(l.reaction, (counts.get(l.reaction) ?? 0) + 1));
+    return REACTIONS
+      .filter(r => counts.has(r.type))
+      .map(r => ({ type: r.type, emoji: r.emoji, count: counts.get(r.type)! }));
+  });
+
+  filteredLikers = computed(() => {
+    const filter = this.reactionFilter();
+    return filter ? this.likers().filter(l => l.reaction === filter) : this.likers();
+  });
   loadingLikers   = signal(false);
 
   // Per-comment reply state keyed by comment.id
@@ -88,11 +121,11 @@ export class PostCardComponent implements OnInit, OnDestroy {
   private async loadUserState() {
     const user = this.auth.currentUser();
     if (!user || !this.post.id) return;
-    const [liked, bm] = await Promise.all([
-      this.fs.hasLiked(this.post.id, user.uid),
+    const [reaction, bm] = await Promise.all([
+      this.fs.getUserReaction(this.post.id, user.uid),
       this.fs.hasFavorited(this.post.id, user.uid),
     ]);
-    this.liked.set(liked);
+    this.myReaction.set(reaction);
     this.bookmarked.set(bm);
   }
 
@@ -104,15 +137,39 @@ export class PostCardComponent implements OnInit, OnDestroy {
     return u;
   }
 
-  async toggleLike() {
+  openPicker(event: MouseEvent) {
+    event.stopPropagation();
+    const btn  = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    const pickerWidth  = window.innerWidth <= 600 ? 268 : 370;
+    const pickerHeight = window.innerWidth <= 600 ? 50  : 62;
+    const top  = rect.top - pickerHeight - 15;
+    // Center on the card; card is the closest <article> ancestor
+    const card     = btn.closest('article') as HTMLElement;
+    const cardRect = card ? card.getBoundingClientRect() : rect;
+    const left = Math.max(8, Math.min(
+      window.innerWidth - pickerWidth - 8,
+      cardRect.left + cardRect.width / 2 - pickerWidth / 2
+    ));
+    this.pickerSvc.toggle({ top, left }, this.myReaction(), r => this.setReaction(r));
+  }
+
+  async setReaction(reaction: ReactionType) {
     const user = await this.getResolvedUser();
-    if (!user) { this.toast.info('Duhet të hyni për të pëlqyer.'); return; }
+    if (!user) { this.toast.info('Duhet të hyni për të reaguar.'); return; }
     if (!this.post.id) return;
+    this.pickerSvc.dismiss();
     try {
-      const nowLiked = await this.fs.toggleLike(this.post.id, user.uid);
-      this.liked.set(nowLiked);
-      this.likeCount.update(c => nowLiked ? c + 1 : Math.max(0, c - 1));
-      if (nowLiked) this.audio.like(); else this.audio.unlike();
+      const prev = this.myReaction();
+      const result = await this.fs.setReaction(this.post.id, user.uid, reaction);
+      this.myReaction.set(result);
+      if (result === null) {
+        this.likeCount.update(c => Math.max(0, c - 1));
+        this.audio.unlike();
+      } else if (prev === null) {
+        this.likeCount.update(c => c + 1);
+        this.audio.like();
+      }
     } catch (e: any) {
       this.toast.error('Gabim: ' + (e?.message ?? 'Provo sërish'));
     }
@@ -250,18 +307,24 @@ export class PostCardComponent implements OnInit, OnDestroy {
   async showLikers() {
     if (this.likeCount() === 0) return;
     this.showLikersModal.set(true);
-    if (this.likers().length > 0) return;
+    this.likers.set([]);
     this.loadingLikers.set(true);
     try {
       const likes = await this.fs.getLikesForPost(this.post.id!);
-      const userProfiles = await Promise.all(likes.slice(0, 20).map(l => this.fs.getUser(l.userId)));
-      this.likers.set(userProfiles.filter((u): u is UserProfile => !!u));
+      const withProfiles = await Promise.all(
+        likes.slice(0, 50).map(async l => {
+          const p = await this.fs.getUser(l.userId);
+          return p ? { uid: p.uid, displayName: p.displayName, photoURL: p.photoURL, reaction: l.reaction } : null;
+        })
+      );
+      this.likers.set(withProfiles.filter((u): u is NonNullable<typeof u> => !!u));
     } finally {
       this.loadingLikers.set(false);
     }
   }
 
-  closeLikersModal() { this.showLikersModal.set(false); }
+  closeLikersModal() { this.showLikersModal.set(false); this.reactionFilter.set(null); }
+
 
   openLightbox(img: string) { this.lightboxImg.set(img); }
   closeLightbox()            { this.lightboxImg.set(null); }
@@ -273,15 +336,13 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   navigateToPost(e: MouseEvent) {
     const target = e.target as HTMLElement;
-    if (target.closest('.expand-btn, .action-btn, .bookmark-btn, .comment-input-row, .comments-section, .stat-item, a'))
+    if (target.closest('.action-btn, .bookmark-btn, .comment-input-row, .comments-section, .stat-item, a'))
       return;
     if (this.post.id) this.router.navigate(['/post', this.post.id]);
   }
 
   formatDate(ts: any): string { return fmtDateShort(ts, this.lang); }
   formatTime(ts: any): string { return fmtDateDay(ts, this.lang); }
-
-  toggleExpanded() { this.expanded.update(v => !v); }
 
   get bodyTooLong()    { return this.body.length > 280; }
   get hasImages()      { return this.allImages.length > 0; }

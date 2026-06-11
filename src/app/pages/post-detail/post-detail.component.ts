@@ -10,7 +10,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { SeoService } from '../../core/services/seo.service';
 import { LazyImgDirective } from '../../shared/directives/lazy-img.directive';
-import { Post, Comment } from '../../core/models';
+import { Post, Comment, ReactionType, REACTIONS } from '../../core/models';
+import { ReactionPickerService } from '../../core/services/reaction-picker.service';
 import { DEMO_POSTS } from '../../data/demo-posts';
 
 @Component({
@@ -21,12 +22,13 @@ import { DEMO_POSTS } from '../../data/demo-posts';
   styleUrls: ['./post-detail.component.scss'],
 })
 export class PostDetailComponent implements OnInit, OnDestroy {
-  private route     = inject(ActivatedRoute);
-  private fs        = inject(FirestoreService);
-  auth              = inject(AuthService);
-  private toast     = inject(ToastService);
-  private seo       = inject(SeoService);
-  private translate = inject(TranslateService);
+  private route      = inject(ActivatedRoute);
+  private fs         = inject(FirestoreService);
+  auth               = inject(AuthService);
+  private toast      = inject(ToastService);
+  private seo        = inject(SeoService);
+  private translate  = inject(TranslateService);
+  private pickerSvc  = inject(ReactionPickerService);
 
   post        = signal<Post | null>(null);
   authorAvatarError = signal(false);
@@ -35,11 +37,20 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   comments    = signal<Comment[]>([]);
   commentText = signal('');
   submitting  = signal(false);
-  liked       = signal(false);
+  myReaction  = signal<ReactionType | null>(null);
   likeCount   = signal(0);
   bookmarked  = signal(false);
   lightboxImg = signal<string | null>(null);
   carouselIndex = signal(0);
+
+  readonly reactions = REACTIONS;
+  get liked() { return this.myReaction() !== null; }
+  reactionEmoji(r: ReactionType | null) { return REACTIONS.find(x => x.type === r)?.emoji ?? '❤️'; }
+  reactionLabel(r: ReactionType | null) { return REACTIONS.find(x => x.type === r)?.label ?? 'Pëlqej'; }
+  getReactionColor(r: ReactionType | null): string {
+    const c: Record<ReactionType, string> = { like: '#e0245e', haha: '#f7c948', wow: '#f7c948', sad: '#4fa3e0', angry: '#e05e30', celebrate: '#9b59b6' };
+    return r ? c[r] : '';
+  }
 
   private commentsSub?: Subscription;
   private postId = '';
@@ -85,21 +96,40 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private async loadUserState() {
     const user = this.auth.currentUser();
     if (!user) return;
-    const [liked, bm] = await Promise.all([
-      this.fs.hasLiked(this.postId, user.uid),
+    const [reaction, bm] = await Promise.all([
+      this.fs.getUserReaction(this.postId, user.uid),
       this.fs.hasFavorited(this.postId, user.uid),
     ]);
-    this.liked.set(liked);
+    this.myReaction.set(reaction);
     this.bookmarked.set(bm);
   }
 
-  async toggleLike() {
+  openPicker(event: MouseEvent) {
+    event.stopPropagation();
+    const btn  = event.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    const pickerWidth  = window.innerWidth <= 600 ? 268 : 380;
+    const pickerHeight = window.innerWidth <= 600 ? 50  : 62;
+    const top  = rect.top - pickerHeight - 15;
+    const article     = btn.closest('article') as HTMLElement;
+    const articleRect = article ? article.getBoundingClientRect() : rect;
+    const left = Math.max(8, Math.min(
+      window.innerWidth - pickerWidth - 8,
+      articleRect.left + articleRect.width / 2 - pickerWidth / 2
+    ));
+    this.pickerSvc.toggle({ top, left }, this.myReaction(), r => this.setReaction(r));
+  }
+
+  async setReaction(reaction: ReactionType) {
     const user = this.auth.currentUser();
     if (!user) { this.toast.info('Duhet të hyni.'); return; }
-    const nowLiked = await this.fs.toggleLike(this.postId, user.uid);
-    this.liked.set(nowLiked);
-    this.likeCount.update(c => nowLiked ? c + 1 : Math.max(0, c - 1));
-    if (this.post()) this.post.update(p => p ? { ...p, likeCount: this.likeCount() } : p);
+    this.pickerSvc.dismiss();
+    const prev = this.myReaction();
+    const result = await this.fs.setReaction(this.postId, user.uid, reaction);
+    this.myReaction.set(result);
+    if (result === null) this.likeCount.update(c => Math.max(0, c - 1));
+    else if (prev === null) this.likeCount.update(c => c + 1);
+    this.post.update(p => p ? { ...p, likeCount: this.likeCount() } : p);
   }
 
   async toggleBookmark() {

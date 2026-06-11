@@ -6,7 +6,7 @@ import {
   DocumentData
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { Post, Comment, Reply, UserProfile, Favorite } from '../models';
+import { Post, Comment, Reply, UserProfile, Favorite, ReactionType } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -45,32 +45,45 @@ export class FirestoreService {
     if (likeSnap.docs.length) await batch.commit();
   }
 
-  /* ── likes ── */
-  async toggleLike(postId: string, userId: string): Promise<boolean> {
+  /* ── reactions ── */
+  async setReaction(postId: string, userId: string, reaction: ReactionType): Promise<ReactionType | null> {
     const likeId = `${postId}_${userId}`;
     const likeRef = doc(this.db, 'likes', likeId);
     const postRef = doc(this.db, 'posts', postId);
     const snap = await getDoc(likeRef);
     if (snap.exists()) {
-      await deleteDoc(likeRef);
-      await updateDoc(postRef, { likeCount: increment(-1) });
-      return false;
-    } else {
-      await setDoc(likeRef, { postId, userId, createdAt: serverTimestamp() });
-      await updateDoc(postRef, { likeCount: increment(1) });
-      return true;
+      const current = (snap.data()['reaction'] as ReactionType) || 'like';
+      if (current === reaction) {
+        await deleteDoc(likeRef);
+        await updateDoc(postRef, { likeCount: increment(-1) });
+        return null;
+      }
+      await updateDoc(likeRef, { reaction });
+      return reaction;
     }
+    await setDoc(likeRef, { postId, userId, reaction, createdAt: serverTimestamp() });
+    await updateDoc(postRef, { likeCount: increment(1) });
+    return reaction;
+  }
+
+  async getUserReaction(postId: string, userId: string): Promise<ReactionType | null> {
+    const snap = await getDoc(doc(this.db, 'likes', `${postId}_${userId}`));
+    if (!snap.exists()) return null;
+    return (snap.data()['reaction'] as ReactionType) || 'like';
+  }
+
+  async getLikesForPost(postId: string): Promise<{ userId: string; reaction: ReactionType }[]> {
+    const q = query(collection(this.db, 'likes'), where('postId', '==', postId), limit(50));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({
+      userId: d.data()['userId'] as string,
+      reaction: (d.data()['reaction'] as ReactionType) || 'like',
+    }));
   }
 
   async hasLiked(postId: string, userId: string): Promise<boolean> {
     const snap = await getDoc(doc(this.db, 'likes', `${postId}_${userId}`));
     return snap.exists();
-  }
-
-  async getLikesForPost(postId: string): Promise<{ userId: string }[]> {
-    const q = query(collection(this.db, 'likes'), where('postId', '==', postId), limit(20));
-    const snap = await getDocs(q);
-    return snap.docs.map(d => d.data() as { userId: string });
   }
 
   /* ── favorites ── */
