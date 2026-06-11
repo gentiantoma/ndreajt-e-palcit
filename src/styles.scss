@@ -75,6 +75,12 @@ input, textarea, select {
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+
+  @media (max-width: 600px) {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 
 /* ─── BUTTONS ─── */

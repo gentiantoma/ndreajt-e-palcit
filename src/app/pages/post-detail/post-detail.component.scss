@@ -36,9 +36,9 @@
   box-shadow: var(--shadow-card);
 
   @media (max-width: 600px) {
+    border: none;
     border-radius: 0;
-    border-left: none;
-    border-right: none;
+    box-shadow: none;
   }
 }
 
@@ -47,6 +47,10 @@
   background: #0a0a0a;
   border-radius: var(--radius-card) var(--radius-card) 0 0;
   overflow: hidden;
+
+  @media (max-width: 600px) {
+    border-radius: 0;
+  }
 }
 
 .carousel-viewport {
