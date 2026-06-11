@@ -251,7 +251,6 @@
   top: var(--header-height);
   z-index: 10;
   background: #ffffff;
-  border-bottom: 1px solid var(--color-border);
   margin-bottom: 8px;
 }
 
@@ -260,7 +259,7 @@
   flex-shrink: 0;
   width: 36px;
   height: 42px;
-  background: #ffffff;
+  background: transparent;
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -268,8 +267,6 @@
   align-items: center;
   justify-content: center;
 
-  &:first-child { border-right: 1px solid var(--color-border); }
-  &:last-child  { border-left:  1px solid var(--color-border); }
   &:active { background: var(--color-bg-elevated); }
 }
 
@@ -297,24 +294,21 @@
   flex-wrap: wrap;
 }
 
-/* Desktop scroll-wrap variant (no sticky, no full bleed border) */
+/* Desktop scroll-wrap variant (no sticky, no border, no card bg) */
 .cat-scroll-wrap--desktop {
   position: static;
   background: transparent;
-  border-bottom: none;
+  border: none;
   margin-bottom: 0;
-  border-radius: var(--radius-btn);
-  border: 1px solid var(--color-border);
-  overflow: hidden;
 
   .cat-nav-btn {
-    background: var(--color-bg-card);
+    background: transparent;
     height: 40px;
   }
 
   .cat-scroll-bar {
     padding: 6px 8px;
-    background: var(--color-bg-card);
+    background: transparent;
   }
 }
 

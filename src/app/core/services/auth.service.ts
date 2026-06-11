@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { map, firstValueFrom } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { UserProfile } from '../models';
+import { FirestoreService } from './firestore.service';
 
 export const ADMIN_EMAILS = ['gentiantoma403@gmail.com'];
 
@@ -13,6 +14,7 @@ export class AuthService {
   private auth = inject(Auth);
   private firestore = inject(Firestore);
   private router = inject(Router);
+  private fs = inject(FirestoreService);
 
   readonly user$ = user(this.auth);
   readonly currentUser = toSignal(this.user$);
@@ -33,7 +35,13 @@ export class AuthService {
       if (u) {
         await this.ensureUserDoc(u);
         const snap = await getDoc(doc(this.firestore, 'users', u.uid));
-        if (snap.exists()) this.userProfile.set(snap.data() as UserProfile);
+        if (snap.exists()) {
+          const profile = snap.data() as UserProfile;
+          this.userProfile.set(profile);
+          if (ADMIN_EMAILS.includes(u.email ?? '') && profile.photoURL) {
+            this.fs.migrateAdminPosts(u.uid, profile.photoURL).catch(() => {});
+          }
+        }
       } else {
         this.userProfile.set(null);
       }
