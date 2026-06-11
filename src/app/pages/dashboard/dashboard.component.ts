@@ -179,14 +179,16 @@ export class DashboardComponent implements OnInit {
       }
       this.uploadingImages.set(false);
 
+      const titleEn = this.formTitleEn().trim();
+      const bodyEn = this.formBodyEn().trim();
       const postData: Partial<Post> = {
         titleSq: this.formTitleSq().trim(),
-        titleEn: this.formTitleEn().trim() || undefined,
+        ...(titleEn ? { titleEn } : {}),
         bodySq: this.formBodySq().trim(),
-        bodyEn: this.formBodyEn().trim() || undefined,
+        ...(bodyEn ? { bodyEn } : {}),
         category: this.formCategory(),
         published: this.formPublished(),
-        coverImage: coverImage || undefined,
+        ...(coverImage ? { coverImage } : {}),
         images,
         authorId: user.uid,
         authorName: 'Ndreajt e Palçit',

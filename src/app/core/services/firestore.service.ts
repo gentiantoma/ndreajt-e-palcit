@@ -225,11 +225,16 @@ export class FirestoreService {
 
   /* ── admin: all comments ── */
   async getAllComments(limitCount = 50): Promise<(Comment & { postId: string })[]> {
-    const q = query(collectionGroup(this.db, 'comments'), orderBy('createdAt', 'desc'), limit(limitCount));
+    const q = query(collectionGroup(this.db, 'comments'), limit(limitCount));
     const snap = await getDocs(q);
-    return snap.docs.map(d => {
+    const comments = snap.docs.map(d => {
       const postId = d.ref.parent.parent?.id ?? '';
       return { id: d.id, postId, ...d.data() } as Comment & { postId: string };
+    });
+    return comments.sort((a: any, b: any) => {
+      const ta = a.createdAt?.toDate?.()?.getTime() ?? 0;
+      const tb = b.createdAt?.toDate?.()?.getTime() ?? 0;
+      return tb - ta;
     });
   }
 }
