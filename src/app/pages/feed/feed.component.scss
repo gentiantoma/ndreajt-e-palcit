@@ -259,24 +259,34 @@
 /* Arrow scroll buttons */
 .cat-nav-btn {
   flex-shrink: 0;
-  width: 32px;
+  box-sizing: border-box;
+  width: 32px !important;
+  height: 32px !important;
   min-width: 32px;
-  height: 32px;
   min-height: 32px;
-  border-radius: 50%;
-  background: #ffffff;
+  max-width: 32px;
+  max-height: 32px;
+  border-radius: 50% !important;
+  background: #ffffff !important;
   border: 1.5px solid var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   align-self: center;
-  padding: 0;
+  padding: 0 !important;
+  margin: 0;
+  line-height: 1;
+  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
   transition: background var(--transition-fast), border-color var(--transition-fast);
 
-  &:hover { background: var(--color-bg-elevated); border-color: #c4c9d1; }
-  &:active { background: var(--color-bg-elevated); }
+  &:hover { background: var(--color-bg-elevated) !important; border-color: #c4c9d1; }
+  &:active { background: var(--color-bg-elevated) !important; }
+
+  svg { display: block; flex-shrink: 0; }
 }
 
 /* The scrollable overflow area */
