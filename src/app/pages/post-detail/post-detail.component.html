@@ -21,8 +21,35 @@
 
       <article class="post-article">
 
-        <div *ngIf="post()!.coverImage" class="hero-image">
-          <img [lazyImg]="post()!.coverImage!" [alt]="title" class="hero-img">
+        <!-- ─── Image Carousel ─── -->
+        <div *ngIf="allImages.length > 0" class="post-carousel">
+          <div class="carousel-viewport" (click)="openLightbox(allImages[carouselIndex()])">
+            <div class="carousel-track" [style.transform]="'translateX(-' + (carouselIndex() * 100) + '%)'">
+              <div *ngFor="let img of allImages; trackBy: trackByUrl" class="carousel-slide">
+                <img [src]="img" [alt]="title" class="carousel-img">
+              </div>
+            </div>
+
+            <ng-container *ngIf="allImages.length > 1">
+              <button class="carousel-btn carousel-prev" (click)="prevImage(); $event.stopPropagation()" aria-label="Previous">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <button class="carousel-btn carousel-next" (click)="nextImage(); $event.stopPropagation()" aria-label="Next">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <div class="carousel-counter">{{ carouselIndex() + 1 }} / {{ allImages.length }}</div>
+            </ng-container>
+          </div>
+
+          <!-- Thumbnail strip -->
+          <div *ngIf="allImages.length > 1" class="carousel-thumbs">
+            <div *ngFor="let img of allImages; let i = index; trackBy: trackByUrl"
+                 class="carousel-thumb"
+                 [class.active]="i === carouselIndex()"
+                 (click)="carouselIndex.set(i)">
+              <img [src]="img" loading="lazy" [alt]="title">
+            </div>
+          </div>
         </div>
 
         <div class="article-body">
@@ -60,16 +87,6 @@
           </div>
 
           <div class="article-text">{{ body }}</div>
-
-          <!-- Gallery -->
-          <div *ngIf="allImages.length > 1" class="extra-gallery">
-            <h3 class="gallery-heading">{{ 'post.gallery' | translate }}</h3>
-            <div class="photo-grid">
-              <div *ngFor="let img of allImages.slice(1); trackBy: trackByUrl" class="photo-item" (click)="openLightbox(img)">
-                <img [lazyImg]="img" alt="Gallery image">
-              </div>
-            </div>
-          </div>
 
           <!-- Action Bar -->
           <div class="action-bar">

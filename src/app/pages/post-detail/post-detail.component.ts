@@ -39,6 +39,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   likeCount   = signal(0);
   bookmarked  = signal(false);
   lightboxImg = signal<string | null>(null);
+  carouselIndex = signal(0);
 
   private commentsSub?: Subscription;
   private postId = '';
@@ -66,6 +67,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     }
     if (postData) {
       this.post.set(postData);
+      this.carouselIndex.set(0);
       this.likeCount.set(postData.likeCount || 0);
       this.seo.set({
         title: postData.titleSq,
@@ -138,6 +140,16 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
   openLightbox(img: string) { this.lightboxImg.set(img); }
   closeLightbox() { this.lightboxImg.set(null); }
+
+  prevImage() {
+    const len = this.allImages.length;
+    this.carouselIndex.update(i => (i - 1 + len) % len);
+  }
+
+  nextImage() {
+    const len = this.allImages.length;
+    this.carouselIndex.update(i => (i + 1) % len);
+  }
 
   getInitial(name: string) { return (name || 'A')[0].toUpperCase(); }
 

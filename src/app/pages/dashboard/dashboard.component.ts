@@ -236,7 +236,7 @@ export class DashboardComponent implements OnInit {
 
   formatDate(ts: any): string { return fmtDateShort(ts, 'sq') || '—'; }
 
-  getInitial(name: string) { return (name || '?')[0].toUpperCase(); }
+  getInitial(name?: string) { return ((name || '?')[0] || '?').toUpperCase(); }
 
   trackByUid(_i: number, u: UserWithStats) { return u.uid; }
 
