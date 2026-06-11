@@ -4,7 +4,7 @@
     <div class="dashboard-header">
       <div>
         <h1 class="dash-title">Dashboard</h1>
-        <p class="dash-sub">{{ auth.currentUser()?.displayName }} · <span style="color:var(--color-accent)">Admin</span></p>
+        <p class="dash-sub">Ndreajt e Palçit · <span style="color:var(--color-accent)">Admin</span></p>
       </div>
       <button class="btn btn-primary" (click)="switchTab('create'); editingPost.set(null); resetForm()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -301,15 +301,18 @@
               <tr *ngFor="let u of users(); trackBy: trackByUid">
                 <td>
                   <div class="user-cell">
-                    <img *ngIf="u.photoURL" [src]="u.photoURL" class="avatar sm" [alt]="u.displayName" loading="lazy"
-                         (error)="$any($event.target).style.display='none'">
-                    <div *ngIf="!u.photoURL" class="avatar-initial sm" style="font-size:11px">{{ getInitial(u.displayName) }}</div>
+                    <div *ngIf="u.role === 'admin'" class="avatar-brand sm"></div>
+                    <ng-container *ngIf="u.role !== 'admin'">
+                      <img *ngIf="u.photoURL" [src]="u.photoURL" class="avatar sm" [alt]="u.displayName" loading="lazy"
+                           (error)="$any($event.target).style.display='none'">
+                      <div *ngIf="!u.photoURL" class="avatar-initial sm" style="font-size:11px">{{ getInitial(u.displayName) }}</div>
+                    </ng-container>
                     <div>
-                      <span class="user-name">{{ u.displayName || 'Anëtar' }}</span>
+                      <span class="user-name">{{ u.role === 'admin' ? 'Ndreajt e Palçit' : (u.displayName || 'Anëtar') }}</span>
                     </div>
                   </div>
                 </td>
-                <td style="font-size:12px;color:var(--color-text-dim)">{{ u.email }}</td>
+                <td style="font-size:12px;color:var(--color-text-dim)">{{ u.role === 'admin' ? '—' : u.email }}</td>
                 <td style="text-align:center">
                   <span class="user-stat-badge comment">{{ u.commentCount }}</span>
                 </td>
@@ -326,12 +329,15 @@
         <div *ngIf="users().length > 0" class="d-md-none">
           <div *ngFor="let u of users(); trackBy: trackByUid" class="user-card card">
             <div class="user-card-main">
-              <img *ngIf="u.photoURL" [src]="u.photoURL" class="avatar md" [alt]="u.displayName" loading="lazy"
-                   (error)="$any($event.target).style.display='none'">
-              <div *ngIf="!u.photoURL" class="avatar-initial md">{{ getInitial(u.displayName) }}</div>
+              <div *ngIf="u.role === 'admin'" class="avatar-brand md"></div>
+              <ng-container *ngIf="u.role !== 'admin'">
+                <img *ngIf="u.photoURL" [src]="u.photoURL" class="avatar md" [alt]="u.displayName" loading="lazy"
+                     (error)="$any($event.target).style.display='none'">
+                <div *ngIf="!u.photoURL" class="avatar-initial md">{{ getInitial(u.displayName) }}</div>
+              </ng-container>
               <div class="user-card-info">
-                <span class="user-name">{{ u.displayName || 'Anëtar' }}</span>
-                <span class="user-email">{{ u.email }}</span>
+                <span class="user-name">{{ u.role === 'admin' ? 'Ndreajt e Palçit' : (u.displayName || 'Anëtar') }}</span>
+                <span class="user-email">{{ u.role !== 'admin' ? u.email : '' }}</span>
               </div>
             </div>
             <div class="user-card-stats">

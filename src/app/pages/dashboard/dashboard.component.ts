@@ -18,6 +18,7 @@ interface UserWithStats {
   displayName?: string;
   email?: string;
   photoURL?: string;
+  role?: string;
   commentCount: number;
   likeCount: number;
   createdAt?: any;

@@ -80,7 +80,7 @@
                 <span class="author-name brand-name">Ndreajt e Palçit</span>
               </ng-container>
               <ng-template #detailRegularName>
-                <a [routerLink]="['/profile', post()!.authorId]" class="author-name">{{ post()!.authorName }}</a>
+                <span class="author-name">{{ post()!.authorName }}</span>
               </ng-template>
               <p class="author-sub">{{ 'post.author' | translate }}</p>
             </div>
@@ -165,7 +165,10 @@
                 </ng-template>
                 <div class="bubble">
                   <div class="bubble-header">
-                    <span class="c-author">{{ comment.authorName }}</span>
+                    <a *ngIf="comment.authorName !== 'Ndreajt e Palçit'"
+                       [routerLink]="['/profile', comment.authorId]"
+                       class="c-author c-author-link">{{ comment.authorName }}</a>
+                    <span *ngIf="comment.authorName === 'Ndreajt e Palçit'" class="c-author">{{ comment.authorName }}</span>
                     <button *ngIf="canDelete(comment)" class="c-delete" (click)="deleteComment(comment.id!)">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>

@@ -6,19 +6,19 @@
       <div class="avatar-brand md"></div>
     </ng-container>
     <ng-template #regularAuthorAvatar>
-      <a [routerLink]="['/profile', post.authorId]" class="author-link">
+      <div class="author-link">
         <img *ngIf="post.authorPhoto; else authorInitial" [src]="post.authorPhoto" class="avatar md" [alt]="post.authorName" loading="lazy">
         <ng-template #authorInitial>
           <div class="avatar-initial md">{{ getInitial(post.authorName) }}</div>
         </ng-template>
-      </a>
+      </div>
     </ng-template>
     <div class="author-info">
       <ng-container *ngIf="post.authorIsAdmin; else regularAuthorName">
         <span class="author-name brand-name">Ndreajt e Palçit</span>
       </ng-container>
       <ng-template #regularAuthorName>
-        <a [routerLink]="['/profile', post.authorId]" class="author-name">{{ post.authorName }}</a>
+        <span class="author-name">{{ post.authorName }}</span>
       </ng-template>
       <div class="author-meta">
         <span class="post-date">{{ formatDate(post.createdAt) }}</span>
@@ -115,7 +115,10 @@
         <!-- Bubble + actions -->
         <div class="comment-right">
           <div class="bubble">
-            <span class="c-author">{{ comment.authorName }}</span>
+            <a *ngIf="comment.authorName !== 'Ndreajt e Palçit'"
+               [routerLink]="['/profile', comment.authorId]"
+               class="c-author c-author-link">{{ comment.authorName }}</a>
+            <span *ngIf="comment.authorName === 'Ndreajt e Palçit'" class="c-author">{{ comment.authorName }}</span>
             <p class="c-text">{{ comment.textSq }}</p>
           </div>
 

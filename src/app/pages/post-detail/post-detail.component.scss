@@ -297,6 +297,7 @@
 }
 
 .c-author { font-weight: 600; font-size: 14px; }
+.c-author-link { color: var(--color-text); text-decoration: none; &:hover { text-decoration: underline; color: var(--color-accent); } }
 .c-text   { font-size: 14px; white-space: pre-wrap; word-break: break-word; margin: 0; }
 .c-meta   { font-size: 11px; color: var(--color-text-dim); display: block; margin-top: 4px; }
 .c-delete { background: transparent; border: none; cursor: pointer; color: var(--color-text-dim); padding: 2px; }

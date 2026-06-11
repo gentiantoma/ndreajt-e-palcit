@@ -55,13 +55,18 @@
       <ng-container *ngIf="auth.authReady()">
         <ng-container *ngIf="auth.isLoggedIn(); else loginBtn">
           <div class="user-menu" (click)="toggleDrop()">
-            <img *ngIf="showAvatarImg" [src]="auth.currentUser()!.photoURL!" class="user-avatar avatar md" [alt]="auth.currentUser()!.displayName!" (error)="onAvatarError()">
-            <div *ngIf="!showAvatarImg" class="avatar-initial md">{{ getInitial(auth.currentUser()?.displayName || '') }}</div>
+            <!-- Admin: always show brand avatar -->
+            <div *ngIf="auth.isAdmin()" class="avatar-brand md"></div>
+            <!-- Regular user: show photo or initials -->
+            <ng-container *ngIf="!auth.isAdmin()">
+              <img *ngIf="showAvatarImg" [src]="auth.currentUser()!.photoURL!" class="user-avatar avatar md" [alt]="auth.currentUser()!.displayName!" (error)="onAvatarError()">
+              <div *ngIf="!showAvatarImg" class="avatar-initial md">{{ getInitial(auth.currentUser()?.displayName || '') }}</div>
+            </ng-container>
 
             <div class="dropdown-menu" *ngIf="dropOpen()" (click)="$event.stopPropagation()">
               <div class="drop-user">
-                <span class="drop-name">{{ auth.currentUser()?.displayName }}</span>
-                <span class="drop-email">{{ auth.currentUser()?.email }}</span>
+                <span class="drop-name">{{ auth.publicDisplayName }}</span>
+                <span *ngIf="!auth.isAdmin()" class="drop-email">{{ auth.currentUser()?.email }}</span>
               </div>
               <hr class="drop-divider">
               <a [routerLink]="['/profile', auth.currentUser()!.uid]" class="drop-item" (click)="closeMenu()">

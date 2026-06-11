@@ -18,19 +18,25 @@
         <!-- View mode -->
         <div *ngIf="!editMode()" class="profile-header">
           <div class="avatar-wrap">
-            <img *ngIf="profile()!.photoURL && !profileAvatarError(); else profInit"
-                 [src]="profile()!.photoURL!"
-                 class="avatar xl profile-avatar"
-                 [alt]="profile()!.displayName"
-                 (error)="profileAvatarError.set(true)">
-            <ng-template #profInit>
-              <div class="avatar-initial xl" style="font-size:32px">{{ getInitial(profile()!.displayName) }}</div>
-            </ng-template>
-            <span *ngIf="profile()!.role === 'admin'" class="admin-badge">Admin</span>
+            <!-- Admin: always show brand avatar -->
+            <ng-container *ngIf="profile()!.role === 'admin'">
+              <div class="avatar-brand xl"></div>
+            </ng-container>
+            <!-- Regular user: show their photo or initials -->
+            <ng-container *ngIf="profile()!.role !== 'admin'">
+              <img *ngIf="profile()!.photoURL && !profileAvatarError(); else profInit"
+                   [src]="profile()!.photoURL!"
+                   class="avatar xl profile-avatar"
+                   [alt]="profile()!.displayName"
+                   (error)="profileAvatarError.set(true)">
+              <ng-template #profInit>
+                <div class="avatar-initial xl" style="font-size:32px">{{ getInitial(profile()!.displayName) }}</div>
+              </ng-template>
+            </ng-container>
           </div>
 
           <div class="profile-info">
-            <h1 class="profile-name">{{ profile()!.displayName }}</h1>
+            <h1 class="profile-name">{{ profile()!.role === 'admin' ? 'Ndreajt e Palçit' : profile()!.displayName }}</h1>
             <p *ngIf="profile()!.bio" class="profile-bio">{{ profile()!.bio }}</p>
             <p class="profile-joined">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -94,7 +100,7 @@
 
       <div class="user-posts">
         <h2 class="section-heading">
-          {{ 'profile.posts_by' | translate }} {{ profile()!.displayName }}
+          {{ 'profile.posts_by' | translate }} {{ profile()!.role === 'admin' ? 'Ndreajt e Palçit' : profile()!.displayName }}
           <span *ngIf="posts().length > 0" class="count-badge" style="font-size:13px">{{ posts().length }}</span>
         </h2>
 

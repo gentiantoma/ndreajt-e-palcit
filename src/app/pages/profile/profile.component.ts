@@ -102,7 +102,8 @@ export class ProfileComponent implements OnInit {
   startEdit() {
     const p = this.profile();
     if (!p) return;
-    this.editName.set(p.displayName);
+    const displayName = p.role === 'admin' ? 'Ndreajt e Palçit' : p.displayName;
+    this.editName.set(displayName);
     this.editBio.set(p.bio || '');
     this.editMode.set(true);
   }
