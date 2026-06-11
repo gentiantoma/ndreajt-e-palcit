@@ -155,7 +155,10 @@
             <p>{{ 'feed.empty' | translate }}</p>
           </div>
 
-          <app-post-card *ngFor="let post of posts(); trackBy: trackById" [post]="post" class="fade-in"></app-post-card>
+          <app-post-card *ngFor="let post of posts(); trackBy: trackById"
+              [post]="post"
+              [userState]="userFeedState().get(post.id!)"
+              class="fade-in"></app-post-card>
 
           <!-- Bottom feed indicator -->
           <div class="feed-bottom">

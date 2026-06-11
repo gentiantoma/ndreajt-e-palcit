@@ -35,6 +35,7 @@ interface CommentState {
 })
 export class PostCardComponent implements OnInit, OnDestroy {
   @Input({ required: true }) post!: Post;
+  @Input() userState?: { reaction: ReactionType | null; bookmarked: boolean };
 
   private fs      = inject(FirestoreService);
   private router  = inject(Router);
@@ -115,7 +116,13 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.likeCount.set(this.post.likeCount || 0);
-    this.loadUserState();
+    if (this.userState) {
+      // Pre-loaded by feed — zero extra Firestore calls
+      this.myReaction.set(this.userState.reaction);
+      this.bookmarked.set(this.userState.bookmarked);
+    } else {
+      this.loadUserState();
+    }
   }
 
   private async loadUserState() {

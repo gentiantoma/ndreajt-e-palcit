@@ -22,15 +22,17 @@ export class LoginComponent {
   async loginGoogle() {
     this.loading.set(true);
     try {
-      await this.auth.loginWithGoogle();
-      this.toast.success('Mirë se erdhe!');
-      this.router.navigate(['/']);
+      const user = await this.auth.loginWithGoogle();
+      // null means redirect was triggered (iOS) — page will navigate away automatically
+      if (user) {
+        this.toast.success('Mirë se erdhe!');
+        this.router.navigate(['/']);
+      }
     } catch (err: any) {
+      this.loading.set(false);
       if (err?.code !== 'auth/popup-closed-by-user') {
         this.toast.error('Ndodhi një gabim. Provoni sërish.');
       }
-    } finally {
-      this.loading.set(false);
     }
   }
 }

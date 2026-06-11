@@ -105,6 +105,35 @@ export class FirestoreService {
     return snap.exists();
   }
 
+  // Single-round-trip batch: get all reactions + bookmarks for a list of posts
+  async getUserFeedState(postIds: string[], userId: string): Promise<Map<string, { reaction: ReactionType | null; bookmarked: boolean }>> {
+    const result = new Map<string, { reaction: ReactionType | null; bookmarked: boolean }>();
+    postIds.forEach(id => result.set(id, { reaction: null, bookmarked: false }));
+    if (!postIds.length) return result;
+
+    // Firestore `in` supports up to 30 values — split if needed
+    const chunks: string[][] = [];
+    for (let i = 0; i < postIds.length; i += 30) chunks.push(postIds.slice(i, i + 30));
+
+    await Promise.all(chunks.flatMap(chunk => [
+      getDocs(query(collection(this.db, 'likes'),     where('userId', '==', userId), where('postId', 'in', chunk))),
+      getDocs(query(collection(this.db, 'favorites'), where('userId', '==', userId), where('postId', 'in', chunk))),
+    ])).then(snaps => {
+      // odd indices = likes, even = favorites per chunk pair
+      snaps.forEach((snap, i) => {
+        const isLikes = i % 2 === 0;
+        snap.docs.forEach((d: any) => {
+          const pid = d.data()['postId'] as string;
+          const entry = result.get(pid) ?? { reaction: null, bookmarked: false };
+          if (isLikes) entry.reaction = (d.data()['reaction'] as ReactionType) || 'like';
+          else entry.bookmarked = true;
+          result.set(pid, entry);
+        });
+      });
+    });
+    return result;
+  }
+
   async getUserFavorites(userId: string): Promise<Favorite[]> {
     // No orderBy to avoid requiring a composite index
     const q = query(collection(this.db, 'favorites'), where('userId', '==', userId));

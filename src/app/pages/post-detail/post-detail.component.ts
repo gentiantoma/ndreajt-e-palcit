@@ -85,12 +85,13 @@ export class PostDetailComponent implements OnInit, OnDestroy {
         description: postData.bodySq.slice(0, 160),
         image: postData.coverImage,
       });
-      await this.loadUserState();
+      // Show content immediately — load user state + comments in background
+      this.loading.set(false);
+      this.loadUserState();
+      this.commentsSub = this.fs.getComments$(this.postId).subscribe(c => this.comments.set(c));
+    } else {
+      this.loading.set(false);
     }
-    this.loading.set(false);
-
-    // Real-time comments
-    this.commentsSub = this.fs.getComments$(this.postId).subscribe(c => this.comments.set(c));
   }
 
   private async loadUserState() {

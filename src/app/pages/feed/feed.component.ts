@@ -7,7 +7,7 @@ import { FirestoreService } from '../../core/services/firestore.service';
 import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
 import { PostCardComponent } from '../../shared/components/post-card/post-card.component';
-import { Post } from '../../core/models';
+import { Post, ReactionType } from '../../core/models';
 import { DEMO_POSTS } from '../../data/demo-posts';
 
 interface CategoryFilter { key: string; label: string; }
@@ -30,6 +30,7 @@ export class FeedComponent implements OnInit {
   activeCategory = signal<string>('all');
   loadingMore    = signal(false);
   hasMore        = signal(false);
+  userFeedState  = signal(new Map<string, { reaction: ReactionType | null; bookmarked: boolean }>());
 
   readonly categories: CategoryFilter[] = [
     { key: 'all',      label: 'feed.all' },
@@ -74,13 +75,18 @@ export class FeedComponent implements OnInit {
       }
 
       if (data.length === 0) {
-        // Show demo posts when no real posts exist yet
         const filtered = cat === 'all' ? DEMO_POSTS : DEMO_POSTS.filter(p => p.category === cat);
         this.posts.set(filtered);
         this.villageStats.set({ posts: DEMO_POSTS.length, members: 12 });
       } else {
         this.posts.set(data);
         this.villageStats.set({ posts: data.length, members: 0 });
+        // Batch-load user state: 2 queries instead of N*2
+        const user = this.auth.currentUser();
+        if (user) {
+          this.fs.getUserFeedState(data.map(p => p.id!), user.uid)
+            .then(state => this.userFeedState.set(state));
+        }
       }
       this.hasMore.set(data.length === 30);
     } finally {
@@ -108,6 +114,12 @@ export class FeedComponent implements OnInit {
       const more = await this.fs.getPosts(filters);
       this.posts.update(p => [...p, ...more]);
       this.hasMore.set(more.length === 15);
+      const user = this.auth.currentUser();
+      if (user && more.length) {
+        this.fs.getUserFeedState(more.map(p => p.id!), user.uid).then(extra => {
+          this.userFeedState.update(m => { extra.forEach((v, k) => m.set(k, v)); return new Map(m); });
+        });
+      }
     } finally {
       this.loadingMore.set(false);
     }

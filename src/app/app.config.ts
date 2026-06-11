@@ -4,7 +4,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { getFirestore, provideFirestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -22,7 +22,11 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     importProvidersFrom(
       provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
-      provideFirestore(() => getFirestore()),
+      provideFirestore(() => {
+        const fs = getFirestore();
+        enableIndexedDbPersistence(fs).catch(() => {});
+        return fs;
+      }),
       provideAuth(() => getAuth()),
     ),
     provideTranslateService({ defaultLanguage: 'sq' }),

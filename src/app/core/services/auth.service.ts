@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Auth, GoogleAuthProvider, signInWithPopup, signOut, user } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, user } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, serverTimestamp } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { map, firstValueFrom } from 'rxjs';
@@ -29,7 +29,17 @@ export class AuthService {
   readonly authReady = signal(false);
   readonly userProfile = signal<UserProfile | null>(null);
 
+  private get isIOS(): boolean {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
   init() {
+    // Handle redirect result from iOS Google sign-in
+    getRedirectResult(this.auth)
+      .then(cred => { if (cred?.user) this.ensureUserDoc(cred.user).catch(() => {}); })
+      .catch(() => {});
+
     this.user$.subscribe(async u => {
       if (!this.authReady()) this.authReady.set(true);
       if (u) {
@@ -50,6 +60,11 @@ export class AuthService {
 
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
+    if (this.isIOS) {
+      // iOS Safari blocks popups — use redirect flow instead
+      await signInWithRedirect(this.auth, provider);
+      return null;
+    }
     const cred = await signInWithPopup(this.auth, provider);
     await this.ensureUserDoc(cred.user);
     return cred.user;
