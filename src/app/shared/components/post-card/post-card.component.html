@@ -1,0 +1,264 @@
+<article class="post-card card" (click)="navigateToPost($event)" style="cursor:pointer">
+
+  <!-- Author Row -->
+  <div class="post-author">
+    <ng-container *ngIf="post.authorIsAdmin; else regularAuthorAvatar">
+      <div class="avatar-brand md"></div>
+    </ng-container>
+    <ng-template #regularAuthorAvatar>
+      <a [routerLink]="['/profile', post.authorId]" class="author-link">
+        <img *ngIf="post.authorPhoto; else authorInitial" [src]="post.authorPhoto" class="avatar md" [alt]="post.authorName" loading="lazy">
+        <ng-template #authorInitial>
+          <div class="avatar-initial md">{{ getInitial(post.authorName) }}</div>
+        </ng-template>
+      </a>
+    </ng-template>
+    <div class="author-info">
+      <ng-container *ngIf="post.authorIsAdmin; else regularAuthorName">
+        <span class="author-name brand-name">Ndreajt e Palçit</span>
+      </ng-container>
+      <ng-template #regularAuthorName>
+        <a [routerLink]="['/profile', post.authorId]" class="author-name">{{ post.authorName }}</a>
+      </ng-template>
+      <div class="author-meta">
+        <span class="post-date">{{ formatDate(post.createdAt) }}</span>
+        <span class="meta-sep">·</span>
+        <span class="badge-category" [ngClass]="post.category">{{ 'categories.' + post.category | translate }}</span>
+      </div>
+    </div>
+    <button class="btn-icon bookmark-btn" (click)="toggleBookmark()" [class.bookmarked]="bookmarked()" title="Ruaj">
+      <svg *ngIf="bookmarked()" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <svg *ngIf="!bookmarked()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    </button>
+  </div>
+
+  <!-- Post Content -->
+  <div class="post-content">
+    <a [routerLink]="['/post', post.id]" class="post-title">{{ title }}</a>
+    <ng-container *ngIf="body">
+      <p class="post-body" [class.expanded]="expanded()">{{ expanded() ? body : bodyPreview() }}</p>
+      <button *ngIf="bodyTooLong" class="expand-btn" (click)="toggleExpanded()">
+        {{ expanded() ? ('post.show_less' | translate) : ('post.read_more' | translate) }}
+      </button>
+    </ng-container>
+  </div>
+
+  <!-- Images -->
+  <ng-container *ngIf="hasImages">
+    <div class="gallery-grid" [ngClass]="galleryClass">
+      <ng-container *ngFor="let img of allImages.slice(0, 4); let i = index; trackBy: trackByUrl">
+        <div class="gi" (click)="openLightbox(img); $event.stopPropagation()">
+          <img [lazyImg]="img" [alt]="title + ' ' + (i+1)">
+          <div *ngIf="isLastVisible(i)" class="more-overlay">+{{ extraImageCount }}</div>
+        </div>
+      </ng-container>
+    </div>
+  </ng-container>
+
+  <!-- Stats row -->
+  <div class="stats-row" *ngIf="hasLikes || hasComments">
+    <span *ngIf="hasLikes" class="stat-item stat-likes" (click)="showLikers()">
+      <span class="stat-heart">♥</span> {{ likeCount() }}
+    </span>
+    <span *ngIf="hasComments" class="stat-item stat-comments" (click)="toggleComments()">
+      {{ post.commentCount }} {{ 'post.comments' | translate }}
+    </span>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Action Bar -->
+  <div class="post-actions">
+    <button class="action-btn" [class.liked]="liked()" (click)="toggleLike()">
+      <svg *ngIf="liked()" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <svg *ngIf="!liked()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      {{ liked() ? ('post.liked' | translate) : ('post.like' | translate) }}
+    </button>
+
+    <button class="action-btn" [class.active]="showComments()" (click)="toggleComments()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      {{ 'post.comment' | translate }}
+    </button>
+
+    <button class="action-btn" (click)="share()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+      {{ 'post.share' | translate }}
+    </button>
+  </div>
+
+  <!-- Comments Section (inline) -->
+  <div class="comments-section slide-down" *ngIf="showComments()">
+    <hr class="divider">
+
+    <!-- Comment list -->
+    <ng-container *ngFor="let comment of comments(); trackBy: trackById">
+      <div class="comment-item">
+        <!-- Avatar: show initial unless user uploaded a custom photo (ibb.co) -->
+        <div class="comment-avatar-wrap">
+          <ng-container *ngIf="comment.authorPhoto; else cInit">
+            <img [src]="comment.authorPhoto" class="avatar sm" [alt]="comment.authorName"
+                 loading="lazy"
+                 (error)="$any($event.target).style.display='none'; cFallback.style.display='flex'"
+                 #cImg>
+            <div class="avatar-initial sm" style="display:none" #cFallback>{{ getInitial(comment.authorName) }}</div>
+          </ng-container>
+          <ng-template #cInit>
+            <div class="avatar-initial sm">{{ getInitial(comment.authorName) }}</div>
+          </ng-template>
+        </div>
+
+        <!-- Bubble + actions -->
+        <div class="comment-right">
+          <div class="bubble">
+            <span class="c-author">{{ comment.authorName }}</span>
+            <p class="c-text">{{ comment.textSq }}</p>
+          </div>
+
+          <!-- Comment meta row -->
+          <div class="c-meta-row">
+            <span class="c-meta">{{ formatTime(comment.createdAt) }}</span>
+            <button class="c-reply-btn" (click)="openReplyInput(comment)">
+              Përgjigju
+            </button>
+            <button *ngIf="canDelete(comment)" class="c-delete-btn" (click)="deleteComment(comment.id!)">Fshi</button>
+          </div>
+
+          <!-- View replies toggle -->
+          <ng-container *ngIf="comment.replyCount">
+            <button class="c-view-replies-btn" (click)="toggleReplies(comment)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline *ngIf="!getReplyState(comment.id!).showReplies" points="6 9 12 15 18 9"/>
+                <polyline *ngIf="getReplyState(comment.id!).showReplies" points="18 15 12 9 6 15"/>
+              </svg>
+              {{ getReplyState(comment.id!).showReplies ? 'Fshih' : 'Shfaq' }}
+              {{ comment.replyCount }} përgjigje
+            </button>
+          </ng-container>
+
+          <!-- Replies list -->
+          <div class="replies-wrap" *ngIf="getReplyState(comment.id!).showReplies">
+            <div class="reply-item" *ngFor="let reply of getReplyState(comment.id!).replies; trackBy: trackById">
+              <div class="comment-avatar-wrap">
+                <ng-container *ngIf="reply.authorPhoto; else rInit">
+                  <img [src]="reply.authorPhoto" class="avatar sm" [alt]="reply.authorName" loading="lazy"
+                       (error)="$any($event.target).style.display='none'; rFallback.style.display='flex'"
+                       #rImg>
+                  <div class="avatar-initial sm" style="display:none" #rFallback>{{ getInitial(reply.authorName) }}</div>
+                </ng-container>
+                <ng-template #rInit>
+                  <div class="avatar-initial sm">{{ getInitial(reply.authorName) }}</div>
+                </ng-template>
+              </div>
+              <div class="comment-right">
+                <div class="bubble">
+                  <span class="c-author">{{ reply.authorName }}</span>
+                  <p class="c-text">
+                    <span class="reply-mention" *ngIf="reply.mentionName">@{{ reply.mentionName }}</span>
+                    {{ reply.textSq }}
+                  </p>
+                </div>
+                <div class="c-meta-row">
+                  <span class="c-meta">{{ formatTime(reply.createdAt) }}</span>
+                  <button *ngIf="canDelete(reply)" class="c-delete-btn" (click)="deleteReply(comment.id!, reply.id!)">Fshi</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reply input -->
+          <div class="reply-input-wrap" *ngIf="getReplyState(comment.id!).showReplyInput">
+            <div class="comment-avatar-wrap" style="align-self:flex-start;margin-top:6px">
+              <div class="avatar-initial sm">{{ getInitial(auth.publicDisplayName) }}</div>
+            </div>
+            <div class="reply-input-inner">
+              <input
+                type="text"
+                [value]="getReplyState(comment.id!).replyText"
+                (input)="getReplyState(comment.id!).replyText = $any($event.target).value"
+                placeholder="Shkruaj një përgjigje..."
+                (keydown.enter)="submitReply(comment)"
+                [disabled]="getReplyState(comment.id!).submittingReply">
+              <button
+                (click)="submitReply(comment)"
+                [disabled]="!getReplyState(comment.id!).replyText.trim() || getReplyState(comment.id!).submittingReply">
+                <span *ngIf="getReplyState(comment.id!).submittingReply" class="spinner" style="width:12px;height:12px"></span>
+                <span *ngIf="!getReplyState(comment.id!).submittingReply">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <p *ngIf="comments().length === 0" class="no-comments">{{ 'post.no_comments' | translate }}</p>
+
+    <!-- Add comment -->
+    <ng-container *ngIf="auth.isLoggedIn(); else loginPrompt">
+      <div class="comment-input-row">
+        <div class="comment-avatar-wrap">
+          <div class="avatar-initial sm">{{ getInitial(auth.publicDisplayName) }}</div>
+        </div>
+        <input
+          type="text"
+          [value]="commentText()"
+          (input)="commentText.set($any($event.target).value)"
+          [placeholder]="'post.comment_placeholder' | translate"
+          (keydown.enter)="submitComment()"
+          [disabled]="submitting()">
+        <button (click)="submitComment()" [disabled]="!commentText().trim() || submitting()">
+          <span *ngIf="submitting()" class="spinner" style="width:14px;height:14px"></span>
+          <svg *ngIf="!submitting()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </ng-container>
+    <ng-template #loginPrompt>
+      <p class="login-to-comment"><a routerLink="/login">{{ 'post.login_to_comment' | translate }}</a></p>
+    </ng-template>
+  </div>
+</article>
+
+<!-- Lightbox -->
+<div class="lightbox-overlay" *ngIf="lightboxImg()" (click)="closeLightbox()">
+  <button class="lightbox-close" (click)="closeLightbox()" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+  <div class="lightbox-content" (click)="$event.stopPropagation()">
+    <img [src]="lightboxImg()!" class="lightbox-img" alt="Post image">
+  </div>
+</div>
+
+<!-- Likers Modal -->
+<div class="modal-overlay" *ngIf="showLikersModal()" (click)="closeLikersModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>♥ {{ likeCount() }} {{ 'post.likes' | translate }}</h3>
+      <button class="btn-icon" (click)="closeLikersModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div *ngIf="loadingLikers()" style="text-align:center;padding:1rem">
+        <span class="spinner"></span>
+      </div>
+      <ng-container *ngIf="!loadingLikers()">
+        <div *ngFor="let liker of likers()" class="liker-row">
+          <img *ngIf="liker.photoURL" [src]="liker.photoURL" class="avatar sm" [alt]="liker.displayName">
+          <div *ngIf="!liker.photoURL" class="avatar-initial sm">{{ getInitial(liker.displayName) }}</div>
+          <a [routerLink]="['/profile', liker.uid]" (click)="closeLikersModal()" class="liker-name">{{ liker.displayName }}</a>
+        </div>
+        <p *ngIf="likers().length === 0" style="color:var(--color-text-muted);text-align:center;margin:0">...</p>
+      </ng-container>
+    </div>
+  </div>
+</div>

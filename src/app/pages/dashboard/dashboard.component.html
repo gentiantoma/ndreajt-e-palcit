@@ -1,0 +1,374 @@
+<div class="dashboard-page">
+  <div class="container-fluid dashboard-container">
+
+    <div class="dashboard-header">
+      <div>
+        <h1 class="dash-title">Dashboard</h1>
+        <p class="dash-sub">{{ auth.currentUser()?.displayName }} · <span style="color:var(--color-accent)">Admin</span></p>
+      </div>
+      <button class="btn btn-primary" (click)="switchTab('create'); editingPost.set(null); resetForm()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        {{ 'dashboard.new_post' | translate }}
+      </button>
+    </div>
+
+    <div class="tabs-nav">
+      <button [class.active]="activeTab() === 'posts'" (click)="switchTab('posts')">
+        📋 {{ 'dashboard.posts_list' | translate }} <span class="tab-count">{{ posts().length }}</span>
+      </button>
+      <button [class.active]="activeTab() === 'create'" (click)="switchTab('create')">
+        {{ editingPost() ? '✏️ Redakto' : ('➕ ' + ('dashboard.new_post' | translate)) }}
+      </button>
+      <button [class.active]="activeTab() === 'comments'" (click)="switchTab('comments')">
+        💬 {{ 'dashboard.comments' | translate }}
+      </button>
+      <button [class.active]="activeTab() === 'users'" (click)="switchTab('users')">
+        👥 Auditimi <span class="tab-count">{{ users().length }}</span>
+      </button>
+    </div>
+
+    <!-- ─── POSTS TAB ─── -->
+    <ng-container *ngIf="activeTab() === 'posts'">
+      <ng-container *ngIf="loading(); else postsContent">
+        <div class="card" style="overflow:hidden">
+          <div *ngFor="let r of skeletonRows" class="sk-row">
+            <span class="skeleton-image" style="width:52px;height:40px;flex-shrink:0"></span>
+            <span class="skeleton-text" style="flex:1;margin:0 12px"></span>
+            <span class="skeleton-btn" style="width:70px"></span>
+            <span class="skeleton-btn" style="width:60px"></span>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #postsContent>
+        <div *ngIf="posts().length === 0" class="empty-state">
+          <div class="empty-icon">📰</div>
+          <p>{{ 'feed.empty' | translate }}</p>
+        </div>
+
+        <ng-container *ngIf="posts().length > 0">
+          <!-- Desktop table -->
+          <div class="card posts-table-wrap d-none d-md-block">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ 'dashboard.cover' | translate }}</th>
+                  <th>{{ 'dashboard.title' | translate }}</th>
+                  <th>{{ 'dashboard.category' | translate }}</th>
+                  <th>{{ 'dashboard.date' | translate }}</th>
+                  <th>❤</th>
+                  <th>💬</th>
+                  <th>{{ 'dashboard.published' | translate }}</th>
+                  <th>{{ 'general.actions' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let post of posts()">
+                  <td>
+                    <img *ngIf="post.coverImage; else noThumb" [src]="post.coverImage" class="table-thumb" [alt]="post.titleSq">
+                    <ng-template #noThumb><div class="table-thumb-placeholder">📰</div></ng-template>
+                  </td>
+                  <td><a [routerLink]="['/post', post.id]" class="table-title">{{ post.titleSq }}</a></td>
+                  <td><span class="badge-category" [ngClass]="post.category">{{ 'categories.' + post.category | translate }}</span></td>
+                  <td style="white-space:nowrap;font-size:12px;color:var(--color-text-dim)">{{ formatDate(post.createdAt) }}</td>
+                  <td style="color:var(--color-like)">{{ post.likeCount }}</td>
+                  <td style="color:var(--color-accent)">{{ post.commentCount }}</td>
+                  <td>
+                    <label class="toggle-switch">
+                      <input type="checkbox" [checked]="post.published" (change)="togglePublished(post)">
+                      <span class="slider"></span>
+                    </label>
+                  </td>
+                  <td>
+                    <div class="table-actions">
+                      <button class="btn btn-secondary btn-sm" (click)="editPost(post)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button class="btn btn-danger btn-sm" (click)="confirmDelete(post.id!)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile cards -->
+          <div class="d-md-none">
+            <div *ngFor="let post of posts()" class="mobile-post-row card">
+              <div class="mpr-top">
+                <img *ngIf="post.coverImage" [src]="post.coverImage" class="mpr-img" [alt]="post.titleSq">
+                <div class="mpr-info">
+                  <a [routerLink]="['/post', post.id]" class="mpr-title">{{ post.titleSq }}</a>
+                  <div class="mpr-meta">
+                    <span class="badge-category" [ngClass]="post.category">{{ 'categories.' + post.category | translate }}</span>
+                    <span style="font-size:11px;color:var(--color-text-dim)">{{ formatDate(post.createdAt) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mpr-actions">
+                <label class="toggle-switch" style="margin-right:auto">
+                  <input type="checkbox" [checked]="post.published" (change)="togglePublished(post)">
+                  <span class="slider"></span>
+                </label>
+                <button class="btn btn-secondary btn-sm" (click)="editPost(post)">✏️</button>
+                <button class="btn btn-danger btn-sm" (click)="confirmDelete(post.id!)">🗑</button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </ng-template>
+    </ng-container>
+
+    <!-- ─── CREATE/EDIT TAB ─── -->
+    <div *ngIf="activeTab() === 'create'" class="card create-form">
+      <h2 class="form-heading">{{ editingPost() ? ('dashboard.edit_post' | translate) : ('dashboard.new_post' | translate) }}</h2>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>{{ 'dashboard.title_sq' | translate }} *</label>
+            <input class="form-control" type="text" [value]="formTitleSq()" (input)="formTitleSq.set($any($event.target).value)" [placeholder]="'dashboard.title_sq_ph' | translate">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>{{ 'dashboard.title_en' | translate }}</label>
+            <input class="form-control" type="text" [value]="formTitleEn()" (input)="formTitleEn.set($any($event.target).value)" [placeholder]="'dashboard.title_en_ph' | translate">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8">
+          <div class="form-group">
+            <label>{{ 'dashboard.category' | translate }} *</label>
+            <select class="form-control" [value]="formCategory()" (change)="formCategory.set($any($event.target).value)">
+              <option *ngFor="let cat of categories" [value]="cat">{{ 'categories.' + cat | translate }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>{{ 'dashboard.published' | translate }}</label>
+            <div class="published-toggle">
+              <label class="toggle-switch">
+                <input type="checkbox" [checked]="formPublished()" (change)="formPublished.set($any($event.target).checked)">
+                <span class="slider"></span>
+              </label>
+              <span style="font-size:13px;color:var(--color-text-muted)">
+                {{ formPublished() ? ('dashboard.publish' | translate) : ('dashboard.draft' | translate) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'dashboard.cover_image' | translate }}</label>
+        <ng-container *ngIf="!formCoverPreview(); else coverPreviewTpl">
+          <div class="upload-area" (click)="coverInput.click()">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-dim)" stroke-width="1.5" style="margin-bottom:8px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p>{{ 'dashboard.click_to_upload' | translate }}</p>
+            <input #coverInput type="file" accept="image/*" (change)="onCoverChange($event)" style="display:none">
+          </div>
+        </ng-container>
+        <ng-template #coverPreviewTpl>
+          <div class="cover-preview">
+            <img [src]="formCoverPreview()!" alt="Cover preview">
+            <button class="remove-cover-btn" (click)="removeCover()">✕ {{ 'general.remove' | translate }}</button>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'dashboard.extra_images' | translate }}</label>
+        <div *ngIf="formExtraPreviews().length > 0" class="preview-grid">
+          <div *ngFor="let url of formExtraPreviews(); let i = index" class="prev">
+            <img [src]="url" alt="Extra image">
+            <button *ngIf="i >= (editingPost()?.images?.length || 0)" (click)="removeExtra(i)">✕</button>
+          </div>
+        </div>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin-top:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          {{ 'dashboard.add_images' | translate }}
+          <input type="file" accept="image/*" multiple (change)="onExtraChange($event)" style="display:none">
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'dashboard.body_sq' | translate }} *</label>
+        <textarea class="form-control" rows="8" [value]="formBodySq()" (input)="formBodySq.set($any($event.target).value)" [placeholder]="'dashboard.body_sq_ph' | translate"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'dashboard.body_en' | translate }}</label>
+        <textarea class="form-control" rows="6" [value]="formBodyEn()" (input)="formBodyEn.set($any($event.target).value)" [placeholder]="'dashboard.body_en_ph' | translate"></textarea>
+      </div>
+
+      <div *ngIf="uploadingImages()" class="upload-progress">
+        <span class="spinner"></span>
+        {{ 'dashboard.uploading_images' | translate }}
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="savePost()" [disabled]="saving()">
+          <span *ngIf="saving()" class="spinner"></span>
+          {{ editingPost() ? ('general.save' | translate) : ('dashboard.publish' | translate) }}
+        </button>
+        <button class="btn btn-ghost" (click)="switchTab('posts'); resetForm()" [disabled]="saving()">{{ 'general.cancel' | translate }}</button>
+      </div>
+    </div>
+
+    <!-- ─── COMMENTS TAB ─── -->
+    <ng-container *ngIf="activeTab() === 'comments'">
+      <div class="card" style="overflow:hidden">
+        <div *ngIf="comments().length === 0" class="empty-state">
+          <div class="empty-icon">💬</div>
+          <p>{{ 'dashboard.no_comments' | translate }}</p>
+        </div>
+        <table *ngIf="comments().length > 0" class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'dashboard.author' | translate }}</th>
+              <th>{{ 'post.comment' | translate }}</th>
+              <th>{{ 'dashboard.post' | translate }}</th>
+              <th>{{ 'dashboard.date' | translate }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let comment of comments()">
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="avatar-initial sm" style="font-size:11px">{{ comment.authorName[0].toUpperCase() }}</div>
+                  <span style="font-size:13px">{{ comment.authorName }}</span>
+                </div>
+              </td>
+              <td style="max-width:260px">
+                <span style="font-size:13px;color:var(--color-text-muted)">{{ comment.textSq }}</span>
+              </td>
+              <td>
+                <a [routerLink]="['/post', comment.postId]" style="font-size:12px;color:var(--color-accent)">{{ comment.postId.slice(0,12) }}...</a>
+              </td>
+              <td style="font-size:12px;color:var(--color-text-dim);white-space:nowrap">{{ formatDate(comment.createdAt) }}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" (click)="deleteComment(comment.postId, comment.id!)">🗑</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+    <!-- ─── USERS (AUDIT) TAB ─── -->
+    <ng-container *ngIf="activeTab() === 'users'">
+
+      <!-- Loading skeletons -->
+      <div *ngIf="loadingUsers()" class="card" style="overflow:hidden">
+        <div *ngFor="let r of skeletonRows" class="sk-row">
+          <span class="skeleton-circle" style="width:40px;height:40px;flex-shrink:0"></span>
+          <span class="skeleton-text" style="flex:1;margin:0 12px"></span>
+          <span class="skeleton-btn" style="width:60px"></span>
+          <span class="skeleton-btn" style="width:60px"></span>
+        </div>
+      </div>
+
+      <ng-container *ngIf="!loadingUsers()">
+        <div *ngIf="users().length === 0" class="empty-state">
+          <div class="empty-icon">👥</div>
+          <p>Nuk ka përdorues të regjistruar.</p>
+        </div>
+
+        <!-- Desktop table -->
+        <div *ngIf="users().length > 0" class="card posts-table-wrap d-none d-md-block">
+          <div class="audit-header">
+            <h3 class="audit-title">Anëtarët e Platformës</h3>
+            <span class="audit-badge">{{ users().length }} total</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Përdoruesi</th>
+                <th>Email</th>
+                <th style="text-align:center">💬 Komente</th>
+                <th style="text-align:center">❤ Pëlqime</th>
+                <th>Anëtarësuar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of users(); trackBy: trackByUid">
+                <td>
+                  <div class="user-cell">
+                    <img *ngIf="u.photoURL" [src]="u.photoURL" class="avatar sm" [alt]="u.displayName" loading="lazy"
+                         (error)="$any($event.target).style.display='none'">
+                    <div *ngIf="!u.photoURL" class="avatar-initial sm" style="font-size:11px">{{ getInitial(u.displayName) }}</div>
+                    <div>
+                      <span class="user-name">{{ u.displayName || 'Anëtar' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td style="font-size:12px;color:var(--color-text-dim)">{{ u.email }}</td>
+                <td style="text-align:center">
+                  <span class="user-stat-badge comment">{{ u.commentCount }}</span>
+                </td>
+                <td style="text-align:center">
+                  <span class="user-stat-badge like">{{ u.likeCount }}</span>
+                </td>
+                <td style="font-size:12px;color:var(--color-text-dim);white-space:nowrap">{{ formatDate(u.createdAt) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile cards -->
+        <div *ngIf="users().length > 0" class="d-md-none">
+          <div *ngFor="let u of users(); trackBy: trackByUid" class="user-card card">
+            <div class="user-card-main">
+              <img *ngIf="u.photoURL" [src]="u.photoURL" class="avatar md" [alt]="u.displayName" loading="lazy"
+                   (error)="$any($event.target).style.display='none'">
+              <div *ngIf="!u.photoURL" class="avatar-initial md">{{ getInitial(u.displayName) }}</div>
+              <div class="user-card-info">
+                <span class="user-name">{{ u.displayName || 'Anëtar' }}</span>
+                <span class="user-email">{{ u.email }}</span>
+              </div>
+            </div>
+            <div class="user-card-stats">
+              <div class="user-stat">
+                <span class="user-stat-badge comment lg">{{ u.commentCount }}</span>
+                <span class="user-stat-lbl">💬 Komente</span>
+              </div>
+              <div class="user-stat">
+                <span class="user-stat-badge like lg">{{ u.likeCount }}</span>
+                <span class="user-stat-lbl">❤ Pëlqime</span>
+              </div>
+              <div class="user-stat" *ngIf="u.createdAt">
+                <span class="user-stat-lbl" style="color:var(--color-text-dim)">{{ formatDate(u.createdAt) }}</span>
+                <span class="user-stat-lbl">Anëtarësuar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+
+  </div>
+</div>
+
+<!-- Delete confirmation modal -->
+<div class="modal-overlay" *ngIf="deleteTarget()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>{{ 'general.confirm_delete' | translate }}</h3>
+      <button class="btn-icon" (click)="cancelDelete()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--color-text-muted);margin:0">{{ 'dashboard.delete_confirm_text' | translate }}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="cancelDelete()">{{ 'general.cancel' | translate }}</button>
+      <button class="btn btn-danger" (click)="doDelete()">{{ 'general.delete' | translate }}</button>
+    </div>
+  </div>
+</div>

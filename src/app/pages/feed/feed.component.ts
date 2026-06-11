@@ -1,0 +1,132 @@
+import { Component, OnInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { where, orderBy, limit } from '@angular/fire/firestore';
+import { FirestoreService } from '../../core/services/firestore.service';
+import { AuthService } from '../../core/services/auth.service';
+import { SeoService } from '../../core/services/seo.service';
+import { PostCardComponent } from '../../shared/components/post-card/post-card.component';
+import { Post } from '../../core/models';
+import { DEMO_POSTS } from '../../data/demo-posts';
+
+interface CategoryFilter { key: string; label: string; }
+
+@Component({
+  selector: 'app-feed',
+  standalone: true,
+  imports: [CommonModule, RouterLink, TranslateModule, PostCardComponent],
+  templateUrl: './feed.component.html',
+  styleUrls: ['./feed.component.scss'],
+})
+export class FeedComponent implements OnInit {
+  private fs    = inject(FirestoreService);
+  auth          = inject(AuthService);
+  private seo   = inject(SeoService);
+  private translate = inject(TranslateService);
+
+  posts          = signal<Post[]>([]);
+  loading        = signal(true);
+  activeCategory = signal<string>('all');
+  loadingMore    = signal(false);
+  hasMore        = signal(false);
+
+  readonly categories: CategoryFilter[] = [
+    { key: 'all',      label: 'feed.all' },
+    { key: 'lajme',    label: 'categories.lajme' },
+    { key: 'histori',  label: 'categories.histori' },
+    { key: 'njoftim',  label: 'categories.njoftim' },
+    { key: 'events',   label: 'categories.events' },
+    { key: 'pajtimet', label: 'categories.pajtimet' },
+    { key: 'takimet',  label: 'categories.takimet' },
+    { key: 'other',    label: 'categories.other' },
+  ];
+
+  trackById(_i: number, p: Post) { return p.id ?? _i; }
+  trackByCatKey(_i: number, c: CategoryFilter) { return c.key; }
+
+  readonly villageStats = signal({ posts: 0, members: 0 });
+
+  async ngOnInit() {
+    this.seo.reset();
+    await this.loadPosts();
+  }
+
+  private async loadPosts() {
+    this.loading.set(true);
+    try {
+      const cat = this.activeCategory();
+      let data: Post[] = [];
+      try {
+        // Simple query without compound index requirement
+        const filters = cat === 'all'
+          ? [where('published', '==', true), limit(30)]
+          : [where('published', '==', true), where('category', '==', cat), limit(30)];
+        data = await this.fs.getPosts(filters);
+        // Sort client-side to avoid needing a Firestore composite index
+        data.sort((a: any, b: any) => {
+          const ta = a.createdAt?.toDate?.() ?? new Date(a.createdAt ?? 0);
+          const tb = b.createdAt?.toDate?.() ?? new Date(b.createdAt ?? 0);
+          return tb.getTime() - ta.getTime();
+        });
+      } catch (e) {
+        console.warn('Firestore query failed, using demo posts', e);
+      }
+
+      if (data.length === 0) {
+        // Show demo posts when no real posts exist yet
+        const filtered = cat === 'all' ? DEMO_POSTS : DEMO_POSTS.filter(p => p.category === cat);
+        this.posts.set(filtered);
+        this.villageStats.set({ posts: DEMO_POSTS.length, members: 12 });
+      } else {
+        this.posts.set(data);
+        this.villageStats.set({ posts: data.length, members: 0 });
+      }
+      this.hasMore.set(data.length === 30);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async filterBy(cat: string) {
+    this.activeCategory.set(cat);
+    await this.loadPosts();
+  }
+
+  async loadMore() {
+    if (this.loadingMore() || !this.hasMore()) return;
+    this.loadingMore.set(true);
+    try {
+      const cat = this.activeCategory();
+      const current = this.posts();
+      const last = current[current.length - 1];
+      if (!last?.createdAt) return;
+      const { startAfter } = await import('@angular/fire/firestore');
+      const filters = cat === 'all'
+        ? [where('published', '==', true), orderBy('createdAt', 'desc'), startAfter(last.createdAt), limit(15)]
+        : [where('published', '==', true), where('category', '==', cat), orderBy('createdAt', 'desc'), startAfter(last.createdAt), limit(15)];
+      const more = await this.fs.getPosts(filters);
+      this.posts.update(p => [...p, ...more]);
+      this.hasMore.set(more.length === 15);
+    } finally {
+      this.loadingMore.set(false);
+    }
+  }
+
+  @ViewChild('chipScroll')        chipScroll!: ElementRef<HTMLDivElement>;
+  @ViewChild('chipScrollDesktop') chipScrollDesktop!: ElementRef<HTMLDivElement>;
+
+  scrollChips(dir: 'left' | 'right') {
+    const el = this.chipScroll?.nativeElement;
+    if (el) el.scrollBy({ left: dir === 'right' ? 140 : -140, behavior: 'smooth' });
+  }
+
+  scrollChipsDesktop(dir: 'left' | 'right') {
+    const el = this.chipScrollDesktop?.nativeElement;
+    if (el) el.scrollBy({ left: dir === 'right' ? 140 : -140, behavior: 'smooth' });
+  }
+
+  get skeletonItems()  { return new Array(4); }
+  get hasPosts()       { return this.posts().length > 0; }
+  get trendingPosts()  { return this.posts().slice(0, 3); }
+}

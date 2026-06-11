@@ -1,0 +1,14 @@
+<div class="toast-container">
+  <div *ngFor="let toast of toastService.toasts()" class="toast-item fade-in" [ngClass]="'toast-' + toast.type">
+    <span class="toast-icon">
+      <ng-container [ngSwitch]="toast.type">
+        <span *ngSwitchCase="'success'">✓</span>
+        <span *ngSwitchCase="'error'">✕</span>
+        <span *ngSwitchCase="'warning'">⚠</span>
+        <span *ngSwitchDefault>ℹ</span>
+      </ng-container>
+    </span>
+    <span class="toast-msg">{{ toast.message }}</span>
+    <button class="toast-close" (click)="toastService.remove(toast.id)">✕</button>
+  </div>
+</div>

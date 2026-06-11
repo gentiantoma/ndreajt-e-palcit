@@ -1,0 +1,42 @@
+.favorites-page {
+  background: var(--color-bg);
+  min-height: 100vh;
+  padding: 1.5rem 0 3rem;
+}
+
+.favorites-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.page-sub {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.skeleton-card {
+  margin-bottom: 12px;
+}
+
+.sk-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+}

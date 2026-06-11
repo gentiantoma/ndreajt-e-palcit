@@ -1,0 +1,117 @@
+<div class="profile-page">
+  <div class="container profile-container">
+
+    <div *ngIf="loading()" class="profile-card card">
+      <div class="sk-profile-header">
+        <span class="skeleton-circle" style="width:96px;height:96px"></span>
+        <div class="sk-info">
+          <span class="skeleton-title" style="width:140px"></span>
+          <span class="skeleton-text" style="width:100px;margin-top:8px"></span>
+          <span class="skeleton-text" style="width:180px;margin-top:6px"></span>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="!loading() && profile()">
+      <div class="profile-card card">
+
+        <!-- View mode -->
+        <div *ngIf="!editMode()" class="profile-header">
+          <div class="avatar-wrap">
+            <img *ngIf="profile()!.photoURL && !profileAvatarError(); else profInit"
+                 [src]="profile()!.photoURL!"
+                 class="avatar xl profile-avatar"
+                 [alt]="profile()!.displayName"
+                 (error)="profileAvatarError.set(true)">
+            <ng-template #profInit>
+              <div class="avatar-initial xl" style="font-size:32px">{{ getInitial(profile()!.displayName) }}</div>
+            </ng-template>
+            <span *ngIf="profile()!.role === 'admin'" class="admin-badge">Admin</span>
+          </div>
+
+          <div class="profile-info">
+            <h1 class="profile-name">{{ profile()!.displayName }}</h1>
+            <p *ngIf="profile()!.bio" class="profile-bio">{{ profile()!.bio }}</p>
+            <p class="profile-joined">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              {{ 'profile.joined' | translate }}: {{ formatJoined(profile()!.createdAt) }}
+            </p>
+          </div>
+
+          <button *ngIf="isOwn()" class="btn btn-secondary btn-sm edit-btn" (click)="startEdit()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            {{ 'profile.edit' | translate }}
+          </button>
+        </div>
+
+        <!-- Edit mode -->
+        <div *ngIf="editMode()" class="edit-form">
+          <h3 class="edit-heading">{{ 'profile.edit' | translate }}</h3>
+
+          <div class="photo-upload-row">
+            <div class="current-photo">
+              <img *ngIf="previewPhoto() || (profile()!.photoURL && !profileAvatarError()); else editInit"
+                   [src]="previewPhoto() || profile()!.photoURL!"
+                   class="avatar xl profile-avatar"
+                   alt="Preview"
+                   (error)="profileAvatarError.set(true)">
+              <ng-template #editInit>
+                <div class="avatar-initial xl" style="font-size:32px">{{ getInitial(editName()) }}</div>
+              </ng-template>
+            </div>
+            <div class="photo-actions">
+              <label class="btn btn-secondary btn-sm" style="cursor:pointer">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                {{ 'profile.change_photo' | translate }}
+                <input type="file" accept="image/*" (change)="onPhotoChange($event)" style="display:none">
+              </label>
+              <span *ngIf="uploading()" class="spinner"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>{{ 'profile.display_name' | translate }}</label>
+            <input class="form-control" type="text" [value]="editName()" (input)="editName.set($any($event.target).value)" maxlength="60">
+          </div>
+
+          <div class="form-group">
+            <label>{{ 'profile.bio' | translate }}</label>
+            <textarea class="form-control" rows="3" maxlength="300"
+              [value]="editBio()" (input)="editBio.set($any($event.target).value)"
+              [placeholder]="'profile.bio_placeholder' | translate"></textarea>
+            <div class="char-counter" [class.warn]="bioCount > 250" [class.over]="bioCount > 300">{{ bioCount }}/300</div>
+          </div>
+
+          <div class="edit-actions">
+            <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+              <span *ngIf="saving()" class="spinner"></span>
+              {{ 'general.save' | translate }}
+            </button>
+            <button class="btn btn-ghost" (click)="cancelEdit()" [disabled]="saving()">{{ 'general.cancel' | translate }}</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-posts">
+        <h2 class="section-heading">
+          {{ 'profile.posts_by' | translate }} {{ profile()!.displayName }}
+          <span *ngIf="posts().length > 0" class="count-badge" style="font-size:13px">{{ posts().length }}</span>
+        </h2>
+
+        <div *ngIf="posts().length === 0" class="empty-state">
+          <div class="empty-icon">📝</div>
+          <p>{{ 'profile.no_posts' | translate }}</p>
+        </div>
+
+        <app-post-card *ngFor="let post of posts(); trackBy: trackById" [post]="post"></app-post-card>
+      </div>
+    </ng-container>
+
+    <div *ngIf="!loading() && !profile()" class="empty-state">
+      <div class="empty-icon">👤</div>
+      <p>{{ 'profile.not_found' | translate }}</p>
+      <a routerLink="/" class="btn btn-primary" style="margin-top:1rem">{{ 'nav.feed' | translate }}</a>
+    </div>
+
+  </div>
+</div>

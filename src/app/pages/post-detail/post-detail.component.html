@@ -1,0 +1,181 @@
+<div class="post-detail-page">
+  <div class="container post-container">
+
+    <!-- Loading skeleton -->
+    <div *ngIf="loading()" class="skeleton-detail">
+      <span class="skeleton-image" style="height:360px;display:block;border-radius:var(--radius-card)"></span>
+      <div style="padding:1.5rem 0">
+        <span class="skeleton-circle" style="width:44px;height:44px;display:inline-block"></span>
+        <span class="skeleton-title" style="width:70%;margin:14px 0 10px;height:28px;display:block"></span>
+        <span class="skeleton-text" style="width:100%;margin-bottom:6px;display:block"></span>
+        <span class="skeleton-text" style="width:90%;margin-bottom:6px;display:block"></span>
+        <span class="skeleton-text" style="width:80%;display:block"></span>
+      </div>
+    </div>
+
+    <ng-container *ngIf="!loading() && post()">
+      <a routerLink="/" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        {{ 'post.back' | translate }}
+      </a>
+
+      <article class="post-article">
+
+        <div *ngIf="post()!.coverImage" class="hero-image">
+          <img [lazyImg]="post()!.coverImage!" [alt]="title" class="hero-img">
+        </div>
+
+        <div class="article-body">
+
+          <div class="article-meta-top">
+            <span class="badge-category" [ngClass]="post()!.category">{{ 'categories.' + post()!.category | translate }}</span>
+            <span class="meta-date">{{ formatDate(post()!.createdAt) }}</span>
+          </div>
+
+          <h1 class="article-title">{{ title }}</h1>
+
+          <div class="author-row">
+            <ng-container *ngIf="post()!.authorIsAdmin; else detailRegularAvatar">
+              <div class="avatar-brand md"></div>
+            </ng-container>
+            <ng-template #detailRegularAvatar>
+              <img *ngIf="post()!.authorPhoto && !authorAvatarError(); else detailAuthorInit"
+                   [src]="post()!.authorPhoto!"
+                   class="avatar md"
+                   [alt]="post()!.authorName"
+                   (error)="authorAvatarError.set(true)">
+              <ng-template #detailAuthorInit>
+                <div class="avatar-initial md">{{ getInitial(post()!.authorName) }}</div>
+              </ng-template>
+            </ng-template>
+            <div>
+              <ng-container *ngIf="post()!.authorIsAdmin; else detailRegularName">
+                <span class="author-name brand-name">Ndreajt e Palçit</span>
+              </ng-container>
+              <ng-template #detailRegularName>
+                <a [routerLink]="['/profile', post()!.authorId]" class="author-name">{{ post()!.authorName }}</a>
+              </ng-template>
+              <p class="author-sub">{{ 'post.author' | translate }}</p>
+            </div>
+          </div>
+
+          <div class="article-text">{{ body }}</div>
+
+          <!-- Gallery -->
+          <div *ngIf="allImages.length > 1" class="extra-gallery">
+            <h3 class="gallery-heading">{{ 'post.gallery' | translate }}</h3>
+            <div class="photo-grid">
+              <div *ngFor="let img of allImages.slice(1); trackBy: trackByUrl" class="photo-item" (click)="openLightbox(img)">
+                <img [lazyImg]="img" alt="Gallery image">
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Bar -->
+          <div class="action-bar">
+            <button class="action-btn-lg" [class.liked]="liked()" (click)="toggleLike()">
+              <svg *ngIf="liked()" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+              <svg *ngIf="!liked()" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+              {{ likeCount() }} {{ 'post.likes' | translate }}
+            </button>
+
+            <button class="action-btn-lg" [class.bookmarked]="bookmarked()" (click)="toggleBookmark()">
+              <svg *ngIf="bookmarked()" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+              <svg *ngIf="!bookmarked()" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+              {{ 'post.save' | translate }}
+            </button>
+
+            <button class="action-btn-lg" (click)="share()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              {{ 'post.share' | translate }}
+            </button>
+          </div>
+
+          <!-- Comments -->
+          <section class="comments-full">
+            <h3 class="comments-heading">
+              {{ 'post.comments' | translate }}
+              <span *ngIf="comments().length > 0" class="count-badge">{{ comments().length }}</span>
+            </h3>
+
+            <ng-container *ngIf="auth.isLoggedIn(); else loginPrompt">
+              <div class="add-comment">
+                <img *ngIf="auth.currentUser()?.photoURL && !myAvatarError(); else myInit"
+                     [src]="auth.currentUser()!.photoURL!"
+                     class="avatar md"
+                     [alt]="auth.currentUser()!.displayName!"
+                     (error)="myAvatarError.set(true)">
+                <ng-template #myInit>
+                  <div class="avatar-initial md">{{ getInitial(auth.publicDisplayName) }}</div>
+                </ng-template>
+                <div class="comment-compose">
+                  <textarea class="form-control"
+                    [placeholder]="'post.comment_placeholder' | translate"
+                    [value]="commentText()"
+                    (input)="commentText.set($any($event.target).value)"
+                    rows="2"
+                    [disabled]="submitting()"></textarea>
+                  <div class="compose-footer">
+                    <button class="btn btn-primary btn-sm" (click)="submitComment()" [disabled]="!commentText().trim() || submitting()">
+                      <span *ngIf="submitting()" class="spinner"></span>
+                      {{ 'post.send' | translate }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #loginPrompt>
+              <div class="login-prompt">
+                <a routerLink="/login" class="btn btn-secondary btn-sm">{{ 'post.login_to_comment' | translate }}</a>
+              </div>
+            </ng-template>
+
+            <p *ngIf="comments().length === 0" class="no-comments-msg">{{ 'post.no_comments' | translate }}</p>
+
+            <ng-container *ngFor="let comment of comments(); trackBy: trackById">
+              <div class="comment-item">
+                <ng-container *ngIf="comment.authorPhoto; else cInit">
+                  <img [src]="comment.authorPhoto" class="avatar md" [alt]="comment.authorName" loading="lazy"
+                       (error)="$any($event.target).style.display='none'; dcFallback.style.display='flex'"
+                       #dcImg>
+                  <div class="avatar-initial md" style="display:none" #dcFallback>{{ getInitial(comment.authorName) }}</div>
+                </ng-container>
+                <ng-template #cInit>
+                  <div class="avatar-initial md">{{ getInitial(comment.authorName) }}</div>
+                </ng-template>
+                <div class="bubble">
+                  <div class="bubble-header">
+                    <span class="c-author">{{ comment.authorName }}</span>
+                    <button *ngIf="canDelete(comment)" class="c-delete" (click)="deleteComment(comment.id!)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <p class="c-text">{{ comment.textSq }}</p>
+                  <span class="c-meta">{{ formatCommentTime(comment.createdAt) }}</span>
+                </div>
+              </div>
+            </ng-container>
+          </section>
+        </div>
+      </article>
+    </ng-container>
+
+    <div *ngIf="!loading() && !post()" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <p>{{ 'post.not_found' | translate }}</p>
+      <a routerLink="/" class="btn btn-primary" style="margin-top:1rem">{{ 'nav.feed' | translate }}</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="modal-overlay" *ngIf="lightboxImg()" (click)="closeLightbox()">
+  <img [src]="lightboxImg()!" class="lightbox-img" alt="Gallery" (click)="$event.stopPropagation()">
+  <button class="lightbox-close" (click)="closeLightbox()">✕</button>
+</div>

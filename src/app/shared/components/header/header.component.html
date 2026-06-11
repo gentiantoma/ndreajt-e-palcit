@@ -1,0 +1,145 @@
+<header class="site-header">
+  <div class="header-inner container-fluid">
+
+    <!-- Logo -->
+    <a routerLink="/" class="logo" (click)="closeMenu()">
+      <span class="logo-icon">
+        <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="24" fill="#1877f2"/>
+          <polygon points="8,38 20,18 32,38" fill="rgba(255,255,255,0.3)"/>
+          <polygon points="18,38 30,14 42,38" fill="rgba(255,255,255,0.65)"/>
+          <polygon points="30,14 26,22 34,22" fill="#ffffff"/>
+        </svg>
+      </span>
+      <span class="logo-text">Ndreajt<span class="logo-accent"> e Palçit</span></span>
+    </a>
+
+    <!-- Desktop Nav -->
+    <nav class="nav-desktop">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        {{ 'nav.feed' | translate }}
+      </a>
+      <a *ngIf="auth.isLoggedIn()" routerLink="/favorites" routerLinkActive="active" class="nav-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+        </svg>
+        {{ 'nav.favorites' | translate }}
+      </a>
+      <a *ngIf="auth.isLoggedIn()" [routerLink]="['/profile', auth.currentUser()!.uid]" routerLinkActive="active" class="nav-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        {{ 'nav.profile' | translate }}
+      </a>
+      <a *ngIf="auth.isAdmin()" routerLink="/dashboard" routerLinkActive="active" class="nav-link admin-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </a>
+    </nav>
+
+    <!-- Right controls -->
+    <div class="header-right">
+      <button class="lang-btn" (click)="switchLang()" type="button">
+        {{ currentLang() === 'sq' ? 'SQ' : 'EN' }}
+      </button>
+
+      <!-- Auth placeholder while Firebase resolves — prevents login-button flash -->
+      <div *ngIf="!auth.authReady()" class="auth-skeleton"></div>
+
+      <ng-container *ngIf="auth.authReady()">
+        <ng-container *ngIf="auth.isLoggedIn(); else loginBtn">
+          <div class="user-menu" (click)="toggleDrop()">
+            <img *ngIf="showAvatarImg" [src]="auth.currentUser()!.photoURL!" class="user-avatar avatar md" [alt]="auth.currentUser()!.displayName!" (error)="onAvatarError()">
+            <div *ngIf="!showAvatarImg" class="avatar-initial md">{{ getInitial(auth.currentUser()?.displayName || '') }}</div>
+
+            <div class="dropdown-menu" *ngIf="dropOpen()" (click)="$event.stopPropagation()">
+              <div class="drop-user">
+                <span class="drop-name">{{ auth.currentUser()?.displayName }}</span>
+                <span class="drop-email">{{ auth.currentUser()?.email }}</span>
+              </div>
+              <hr class="drop-divider">
+              <a [routerLink]="['/profile', auth.currentUser()!.uid]" class="drop-item" (click)="closeMenu()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+                {{ 'nav.profile' | translate }}
+              </a>
+              <a routerLink="/favorites" class="drop-item" (click)="closeMenu()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                </svg>
+                {{ 'nav.favorites' | translate }}
+              </a>
+              <a *ngIf="auth.isAdmin()" routerLink="/dashboard" class="drop-item" (click)="closeMenu()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Dashboard
+              </a>
+              <hr class="drop-divider">
+              <button class="drop-item danger" (click)="logout()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                {{ 'nav.logout' | translate }}
+              </button>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #loginBtn>
+          <a routerLink="/login" class="login-cta">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            {{ 'nav.login' | translate }}
+          </a>
+        </ng-template>
+      </ng-container>
+
+      <button class="hamburger" (click)="toggleMenu()" type="button" [class.open]="menuOpen()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu fade-in" *ngIf="menuOpen()">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="mobile-nav-link" (click)="closeMenu()">
+      🏠 {{ 'nav.feed' | translate }}
+    </a>
+    <ng-container *ngIf="auth.isLoggedIn()">
+      <a routerLink="/favorites" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+        🔖 {{ 'nav.favorites' | translate }}
+      </a>
+      <a [routerLink]="['/profile', auth.currentUser()!.uid]" class="mobile-nav-link" (click)="closeMenu()">
+        👤 {{ 'nav.profile' | translate }}
+      </a>
+    </ng-container>
+    <a *ngIf="auth.isAdmin()" routerLink="/dashboard" class="mobile-nav-link" (click)="closeMenu()">
+      ⚙️ Dashboard
+    </a>
+    <div class="mobile-bottom">
+      <button class="lang-btn" (click)="switchLang()" type="button">
+        {{ currentLang() === 'sq' ? '🇦🇱 Shqip' : '🇬🇧 English' }}
+      </button>
+      <ng-container *ngIf="auth.isLoggedIn(); else mobileLogin">
+        <button class="btn btn-ghost btn-sm" (click)="logout()">{{ 'nav.logout' | translate }}</button>
+      </ng-container>
+      <ng-template #mobileLogin>
+        <a routerLink="/login" class="btn btn-primary btn-sm" (click)="closeMenu()">{{ 'nav.login' | translate }}</a>
+      </ng-template>
+    </div>
+  </div>
+</header>
+
+<div class="header-backdrop" *ngIf="dropOpen()" (click)="closeMenu()"></div>

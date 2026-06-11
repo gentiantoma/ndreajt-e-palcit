@@ -1,0 +1,221 @@
+<div class="feed-page">
+  <div class="container-fluid feed-container">
+    <div class="row g-0 feed-row">
+
+      <!-- ═══════════════ LEFT SIDEBAR ═══════════════ -->
+      <aside class="col-lg-3 sidebar-left d-none d-lg-block">
+        <div class="sidebar-sticky">
+
+          <div class="village-widget">
+            <!-- Cover banner -->
+            <div class="vc-cover">
+              <div class="vc-cover-pattern"></div>
+              <div class="vc-badge">Komunitet</div>
+              <div class="vc-logo">
+                <svg width="44" height="44" viewBox="0 0 48 48" fill="none">
+                  <circle cx="24" cy="24" r="24" fill="rgba(255,255,255,0.18)"/>
+                  <polygon points="8,38 20,18 32,38" fill="rgba(255,255,255,0.3)"/>
+                  <polygon points="18,38 30,14 42,38" fill="rgba(255,255,255,0.7)"/>
+                  <polygon points="30,14 26,22 34,22" fill="#ffffff"/>
+                </svg>
+              </div>
+              <div class="vc-name-wrap">
+                <h2 class="vc-name">Palç</h2>
+                <p class="vc-loc">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2.5">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  Tropojë, Shqipëri
+                </p>
+              </div>
+            </div>
+            <!-- Body -->
+            <div class="vc-body">
+              <p class="vc-desc">Platforma sociale e fshatit Palç, Tropojë — lajme, kulturë dhe histori nga komuniteti ynë.</p>
+              <div class="vc-stats">
+                <div class="vc-stat">
+                  <span class="vc-stat-num">{{ villageStats().posts }}</span>
+                  <span class="vc-stat-lbl">Postime</span>
+                </div>
+                <div class="vc-stat-sep"></div>
+                <div class="vc-stat">
+                  <span class="vc-stat-num">🇦🇱</span>
+                  <span class="vc-stat-lbl">Shqipëri</span>
+                </div>
+                <div class="vc-stat-sep"></div>
+                <div class="vc-stat">
+                  <span class="vc-stat-num">∞</span>
+                  <span class="vc-stat-lbl">Kujtime</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="widget">
+            <div class="widget-title">{{ 'feed.categories' | translate }}</div>
+            <div class="widget-scroll">
+              <ng-container *ngFor="let cat of categories; trackBy: trackByCatKey">
+                <button
+                  class="sidebar-cat-btn"
+                  [class.active]="activeCategory() === cat.key"
+                  (click)="filterBy(cat.key)">
+                  <span class="cat-dot" [ngClass]="cat.key !== 'all' ? cat.key : ''"></span>
+                  {{ cat.label | translate }}
+                </button>
+              </ng-container>
+            </div>
+          </div>
+
+
+        </div>
+      </aside>
+
+      <!-- ═══════════════ MAIN FEED ═══════════════ -->
+      <main class="col-12 col-lg-6 feed-main">
+
+        <!-- Mobile category scroll with prev/next arrows -->
+        <div class="cat-scroll-wrap d-lg-none">
+          <button class="cat-nav-btn" (click)="scrollChips('left')" type="button" aria-label="Scroll left">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <div class="cat-scroll-bar" #chipScroll>
+            <div class="cat-scroll-inner">
+              <button *ngFor="let cat of categories; trackBy: trackByCatKey"
+                class="cat-pill"
+                [class.active]="activeCategory() === cat.key"
+                (click)="filterBy(cat.key)">
+                {{ cat.label | translate }}
+              </button>
+            </div>
+          </div>
+          <button class="cat-nav-btn" (click)="scrollChips('right')" type="button" aria-label="Scroll right">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Desktop feed header -->
+        <div class="feed-header d-none d-lg-block">
+          <h1 class="feed-title">{{ 'feed.title' | translate }}</h1>
+          <div class="cat-scroll-wrap cat-scroll-wrap--desktop">
+            <button class="cat-nav-btn" (click)="scrollChipsDesktop('left')" type="button" aria-label="Scroll left">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <div class="cat-scroll-bar" #chipScrollDesktop>
+              <div class="cat-scroll-inner">
+                <button *ngFor="let cat of categories; trackBy: trackByCatKey"
+                  class="cat-pill"
+                  [class.active]="activeCategory() === cat.key"
+                  (click)="filterBy(cat.key)">
+                  {{ cat.label | translate }}
+                </button>
+              </div>
+            </div>
+            <button class="cat-nav-btn" (click)="scrollChipsDesktop('right')" type="button" aria-label="Scroll right">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading skeletons -->
+        <ng-container *ngIf="loading()">
+          <div *ngFor="let item of skeletonItems" class="skeleton-card card">
+            <div class="sk-author">
+              <span class="skeleton-circle" style="width:40px;height:40px"></span>
+              <div class="sk-meta">
+                <span class="skeleton-text" style="width:120px"></span>
+                <span class="skeleton-text" style="width:80px;margin-top:5px"></span>
+              </div>
+            </div>
+            <div style="padding:0 16px 10px">
+              <span class="skeleton-title" style="width:85%;margin-bottom:8px;display:block"></span>
+              <span class="skeleton-text" style="width:100%;margin-bottom:5px;display:block"></span>
+              <span class="skeleton-text" style="width:75%;display:block"></span>
+            </div>
+            <span class="skeleton-image" style="height:280px;border-radius:0;display:block"></span>
+            <div class="sk-actions">
+              <span class="skeleton-btn" style="width:80px"></span>
+              <span class="skeleton-btn" style="width:80px"></span>
+              <span class="skeleton-btn" style="width:80px"></span>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Posts -->
+        <ng-container *ngIf="!loading()">
+          <div *ngIf="posts().length === 0" class="empty-state card" style="border-radius:var(--radius-card)">
+            <div class="empty-icon">📰</div>
+            <p>{{ 'feed.empty' | translate }}</p>
+          </div>
+
+          <app-post-card *ngFor="let post of posts(); trackBy: trackById" [post]="post" class="fade-in"></app-post-card>
+
+          <!-- Load More — admin only -->
+          <div *ngIf="auth.isAdmin() && hasMore" class="load-more-wrap">
+            <button class="btn btn-secondary" (click)="loadMore()" [disabled]="loadingMore()">
+              <span *ngIf="loadingMore()" class="spinner"></span>
+              {{ 'feed.load_more' | translate }}
+            </button>
+          </div>
+        </ng-container>
+      </main>
+
+      <!-- ═══════════════ RIGHT SIDEBAR ═══════════════ -->
+      <aside class="col-lg-3 sidebar-right d-none d-lg-block">
+        <div class="sidebar-sticky">
+
+          <div class="widget">
+            <div class="widget-title">{{ 'feed.about_village' | translate }}</div>
+            <p class="about-text">Palç është një fshat i bukur në rrethin e Tropojës, me histori të pasur dhe njerëz të ngrohtë. Kjo platformë synon të mbajë gjallë kulturën dhe komunitetin.</p>
+          </div>
+
+          <div class="widget">
+            <div class="widget-title">{{ 'feed.trending' | translate }}</div>
+            <ng-container *ngIf="hasPosts; else noTrending">
+              <div class="widget-scroll">
+              <a *ngFor="let post of trendingPosts; trackBy: trackById" [routerLink]="['/post', post.id]" class="trending-item">
+                <div class="tr-img">
+                  <img *ngIf="post.coverImage" [src]="post.coverImage" [alt]="post.titleSq" loading="lazy">
+                  <div *ngIf="!post.coverImage" class="tr-placeholder">📰</div>
+                </div>
+                <div class="tr-info">
+                  <span class="tr-title">{{ post.titleSq }}</span>
+                  <span class="tr-meta">♥ {{ post.likeCount }} · 💬 {{ post.commentCount }}</span>
+                </div>
+              </a>
+              </div>
+            </ng-container>
+            <ng-template #noTrending>
+              <p style="font-size:13px;color:var(--color-text-muted);margin:0">{{ 'feed.empty' | translate }}</p>
+            </ng-template>
+          </div>
+
+          <div class="widget">
+            <div class="widget-title">{{ 'feed.village_stats' | translate }}</div>
+            <div class="stat-row">
+              <span class="stat-icon">📝</span>
+              <span class="stat-text">{{ villageStats().posts }} {{ 'feed.posts' | translate }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-icon">🌿</span>
+              <span class="stat-text">Palç, Tropojë</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-icon">🇦🇱</span>
+              <span class="stat-text">Shqipëri</span>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</div>
