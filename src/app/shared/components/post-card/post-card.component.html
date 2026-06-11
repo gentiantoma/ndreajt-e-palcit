@@ -3,7 +3,9 @@
   <!-- Author Row -->
   <div class="post-author">
     <ng-container *ngIf="post.authorIsAdmin; else regularAuthorAvatar">
-      <div class="avatar-brand md"></div>
+      <img *ngIf="post.authorPhoto; else brandAvatarFb"
+           [src]="post.authorPhoto" class="avatar md" alt="Ndreajt e Palçit" loading="lazy">
+      <ng-template #brandAvatarFb><div class="avatar-brand md"></div></ng-template>
     </ng-container>
     <ng-template #regularAuthorAvatar>
       <div class="author-link">

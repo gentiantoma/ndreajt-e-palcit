@@ -55,8 +55,15 @@
       <ng-container *ngIf="auth.authReady()">
         <ng-container *ngIf="auth.isLoggedIn(); else loginBtn">
           <div class="user-menu" (click)="toggleDrop()">
-            <!-- Admin: always show brand avatar -->
-            <div *ngIf="auth.isAdmin()" class="avatar-brand md"></div>
+            <!-- Admin: show uploaded brand photo, fallback to CSS avatar -->
+            <ng-container *ngIf="auth.isAdmin()">
+              <img *ngIf="auth.userProfile()?.photoURL && !adminAvatarError; else adminBrandAvatar"
+                   [src]="auth.userProfile()!.photoURL!"
+                   class="user-avatar avatar md"
+                   alt="Ndreajt e Palçit"
+                   (error)="adminAvatarError = true">
+              <ng-template #adminBrandAvatar><div class="avatar-brand md"></div></ng-template>
+            </ng-container>
             <!-- Regular user: show photo or initials -->
             <ng-container *ngIf="!auth.isAdmin()">
               <img *ngIf="showAvatarImg" [src]="auth.currentUser()!.photoURL!" class="user-avatar avatar md" [alt]="auth.currentUser()!.displayName!" (error)="onAvatarError()">

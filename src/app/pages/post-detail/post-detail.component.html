@@ -63,7 +63,9 @@
 
           <div class="author-row">
             <ng-container *ngIf="post()!.authorIsAdmin; else detailRegularAvatar">
-              <div class="avatar-brand md"></div>
+              <img *ngIf="post()!.authorPhoto; else brandAvatarDetail"
+                   [src]="post()!.authorPhoto!" class="avatar md" alt="Ndreajt e Palçit" loading="lazy">
+              <ng-template #brandAvatarDetail><div class="avatar-brand md"></div></ng-template>
             </ng-container>
             <ng-template #detailRegularAvatar>
               <img *ngIf="post()!.authorPhoto && !authorAvatarError(); else detailAuthorInit"

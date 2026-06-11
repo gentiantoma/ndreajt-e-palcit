@@ -183,17 +183,18 @@ export class FirestoreService {
     });
   }
 
-  /** Retroactively anonymises all posts authored by the given admin UID */
-  async migrateAdminPosts(adminUid: string): Promise<void> {
+  /** Anonymises all posts authored by the given admin UID and applies the brand photo */
+  async migrateAdminPosts(adminUid: string, brandPhoto = ''): Promise<void> {
     const q = query(collection(this.db, 'posts'), where('authorId', '==', adminUid));
     const snap = await getDocs(q);
     const batch = writeBatch(this.db);
     snap.docs.forEach(d => {
       const data = d.data();
-      if (!data['authorIsAdmin']) {
+      const needsUpdate = !data['authorIsAdmin'] || (brandPhoto && data['authorPhoto'] !== brandPhoto);
+      if (needsUpdate) {
         batch.update(d.ref, {
           authorName: 'Ndreajt e Palçit',
-          authorPhoto: '',
+          authorPhoto: brandPhoto,
           authorIsAdmin: true,
         });
       }

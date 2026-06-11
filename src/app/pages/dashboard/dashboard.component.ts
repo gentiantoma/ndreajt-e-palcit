@@ -64,7 +64,11 @@ export class DashboardComponent implements OnInit {
 
   async ngOnInit() {
     const user = this.auth.currentUser();
-    if (user) this.fs.migrateAdminPosts(user.uid).catch(() => {});
+    if (user) {
+      this.fs.getUser(user.uid).then(profile => {
+        this.fs.migrateAdminPosts(user.uid, profile?.photoURL || '').catch(() => {});
+      });
+    }
     await this.loadPosts();
     this.loading.set(false);
   }
@@ -186,7 +190,7 @@ export class DashboardComponent implements OnInit {
         images,
         authorId: user.uid,
         authorName: 'Ndreajt e Palçit',
-        authorPhoto: '',
+        authorPhoto: (await this.fs.getUser(user.uid))?.photoURL || '',
         authorIsAdmin: true,
       };
 

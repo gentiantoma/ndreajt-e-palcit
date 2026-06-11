@@ -147,6 +147,10 @@ export class ProfileComponent implements OnInit {
       this.editMode.set(false);
       this.previewPhoto.set(null);
       this.newPhotoFile.set(null);
+      await this.auth.refreshProfile();
+      if (this.auth.isAdmin() && photoURL) {
+        this.fs.migrateAdminPosts(user.uid, photoURL).catch(() => {});
+      }
       this.toast.success('Profili u përditësua.');
     } catch { this.toast.error('Gabim gjatë ruajtjes.'); }
     finally { this.saving.set(false); this.uploading.set(false); }

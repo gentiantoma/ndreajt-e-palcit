@@ -120,7 +120,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
       await this.fs.addComment(this.postId, {
         authorId: user.uid,
         authorName: this.auth.isAdmin() ? 'Ndreajt e Palçit' : (user.displayName || 'Anëtar'),
-        authorPhoto: this.auth.isAdmin() ? '' : (user.photoURL || ''),
+        authorPhoto: (() => { const p = this.auth.userProfile()?.photoURL || ''; return this.auth.isAdmin() ? p : (p.includes('ibb.co') ? p : ''); })(),
         textSq: text,
       });
       this.commentText.set('');

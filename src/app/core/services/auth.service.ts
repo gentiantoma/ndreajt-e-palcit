@@ -25,11 +25,18 @@ export class AuthService {
   );
 
   readonly authReady = signal(false);
+  readonly userProfile = signal<UserProfile | null>(null);
 
   init() {
-    this.user$.subscribe(u => {
+    this.user$.subscribe(async u => {
       if (!this.authReady()) this.authReady.set(true);
-      if (u) this.ensureUserDoc(u);
+      if (u) {
+        await this.ensureUserDoc(u);
+        const snap = await getDoc(doc(this.firestore, 'users', u.uid));
+        if (snap.exists()) this.userProfile.set(snap.data() as UserProfile);
+      } else {
+        this.userProfile.set(null);
+      }
     });
   }
 
@@ -52,6 +59,13 @@ export class AuthService {
   /** Returns "Ndreajt e Palçit" for admin users — use everywhere a name is displayed publicly */
   get publicDisplayName(): string {
     return this.isAdmin() ? 'Ndreajt e Palçit' : (this.currentUser()?.displayName || 'Anëtar');
+  }
+
+  async refreshProfile(): Promise<void> {
+    const u = this.currentUser();
+    if (!u) return;
+    const snap = await getDoc(doc(this.firestore, 'users', u.uid));
+    if (snap.exists()) this.userProfile.set(snap.data() as UserProfile);
   }
 
   private async ensureUserDoc(fireUser: any) {

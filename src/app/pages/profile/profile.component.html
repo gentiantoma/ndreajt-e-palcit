@@ -18,21 +18,19 @@
         <!-- View mode -->
         <div *ngIf="!editMode()" class="profile-header">
           <div class="avatar-wrap">
-            <!-- Admin: always show brand avatar -->
-            <ng-container *ngIf="profile()!.role === 'admin'">
-              <div class="avatar-brand xl"></div>
-            </ng-container>
-            <!-- Regular user: show their photo or initials -->
-            <ng-container *ngIf="profile()!.role !== 'admin'">
-              <img *ngIf="profile()!.photoURL && !profileAvatarError(); else profInit"
-                   [src]="profile()!.photoURL!"
-                   class="avatar xl profile-avatar"
-                   [alt]="profile()!.displayName"
-                   (error)="profileAvatarError.set(true)">
+            <img *ngIf="profile()!.photoURL && !profileAvatarError(); else profFallback"
+                 [src]="profile()!.photoURL!"
+                 class="avatar xl profile-avatar"
+                 [alt]="profile()!.role === 'admin' ? 'Ndreajt e Palçit' : profile()!.displayName"
+                 (error)="profileAvatarError.set(true)">
+            <ng-template #profFallback>
+              <ng-container *ngIf="profile()!.role === 'admin'; else profInit">
+                <div class="avatar-brand xl"></div>
+              </ng-container>
               <ng-template #profInit>
                 <div class="avatar-initial xl" style="font-size:32px">{{ getInitial(profile()!.displayName) }}</div>
               </ng-template>
-            </ng-container>
+            </ng-template>
           </div>
 
           <div class="profile-info">

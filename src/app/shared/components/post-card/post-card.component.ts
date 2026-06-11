@@ -143,7 +143,8 @@ export class PostCardComponent implements OnInit, OnDestroy {
     if (!text) return;
     this.submitting.set(true);
     try {
-      const photo = !this.auth.isAdmin() && user.photoURL?.includes('ibb.co') ? user.photoURL : '';
+      const profilePhoto = this.auth.userProfile()?.photoURL || '';
+      const photo = this.auth.isAdmin() ? profilePhoto : (profilePhoto.includes('ibb.co') ? profilePhoto : '');
       await this.fs.addComment(this.post.id!, {
         authorId: user.uid,
         authorName: this.auth.isAdmin() ? 'Ndreajt e Palçit' : (user.displayName || 'Anëtar'),
@@ -206,7 +207,8 @@ export class PostCardComponent implements OnInit, OnDestroy {
     if (!text) return;
     s.submittingReply = true;
     try {
-      const photo = !this.auth.isAdmin() && user.photoURL?.includes('ibb.co') ? user.photoURL : '';
+      const profilePhoto = this.auth.userProfile()?.photoURL || '';
+      const photo = this.auth.isAdmin() ? profilePhoto : (profilePhoto.includes('ibb.co') ? profilePhoto : '');
       await this.fs.addReply(this.post.id!, comment.id!, {
         authorId: user.uid,
         authorName: this.auth.isAdmin() ? 'Ndreajt e Palçit' : (user.displayName || 'Anëtar'),

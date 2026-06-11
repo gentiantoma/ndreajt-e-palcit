@@ -49,6 +49,7 @@ export class HeaderComponent {
   }
 
   avatarError = false;
+  adminAvatarError = false;
 
   onAvatarError() { this.avatarError = true; }
 
