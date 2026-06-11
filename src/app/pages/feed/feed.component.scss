@@ -260,15 +260,19 @@
 .cat-nav-btn {
   flex-shrink: 0;
   width: 32px;
+  min-width: 32px;
   height: 32px;
+  min-height: 32px;
   border-radius: 50%;
-  background: var(--color-bg-card);
+  background: #ffffff;
   border: 1.5px solid var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
+  padding: 0;
   transition: background var(--transition-fast), border-color var(--transition-fast);
 
   &:hover { background: var(--color-bg-elevated); border-color: #c4c9d1; }
