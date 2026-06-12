@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -19,7 +19,7 @@ interface CategoryFilter { key: string; label: string; }
   templateUrl: './feed.component.html',
   styleUrls: ['./feed.component.scss'],
 })
-export class FeedComponent implements OnInit {
+export class FeedComponent implements OnInit, AfterViewInit {
   private fs    = inject(FirestoreService);
   auth          = inject(AuthService);
   private seo   = inject(SeoService);
@@ -127,6 +127,35 @@ export class FeedComponent implements OnInit {
 
   @ViewChild('chipScroll')        chipScroll!: ElementRef<HTMLDivElement>;
   @ViewChild('chipScrollDesktop') chipScrollDesktop!: ElementRef<HTMLDivElement>;
+
+  canScrollLeftMobile   = signal(false);
+  canScrollRightMobile  = signal(false);
+  canScrollLeftDesktop  = signal(false);
+  canScrollRightDesktop = signal(false);
+
+  ngAfterViewInit() {
+    this.attachScrollWatcher(this.chipScroll?.nativeElement, 'mobile');
+    this.attachScrollWatcher(this.chipScrollDesktop?.nativeElement, 'desktop');
+  }
+
+  private attachScrollWatcher(el: HTMLElement | undefined, side: 'mobile' | 'desktop') {
+    if (!el) return;
+    const update = () => this.updateScrollBounds(el, side);
+    el.addEventListener('scroll', update, { passive: true });
+    setTimeout(update, 60);
+  }
+
+  private updateScrollBounds(el: HTMLElement, side: 'mobile' | 'desktop') {
+    const atStart = el.scrollLeft <= 2;
+    const atEnd   = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+    if (side === 'mobile') {
+      this.canScrollLeftMobile.set(!atStart);
+      this.canScrollRightMobile.set(!atEnd);
+    } else {
+      this.canScrollLeftDesktop.set(!atStart);
+      this.canScrollRightDesktop.set(!atEnd);
+    }
+  }
 
   scrollChips(dir: 'left' | 'right') {
     const el = this.chipScroll?.nativeElement;

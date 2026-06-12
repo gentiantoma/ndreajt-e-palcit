@@ -288,8 +288,14 @@
   -webkit-appearance: none;
   transition: background var(--transition-fast), border-color var(--transition-fast);
 
-  &:hover { background: var(--color-bg-elevated) !important; border-color: #c4c9d1; }
-  &:active { background: var(--color-bg-elevated) !important; }
+  &:hover:not(:disabled) { background: var(--color-bg-elevated) !important; border-color: #c4c9d1; }
+  &:active:not(:disabled) { background: var(--color-bg-elevated) !important; }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
+  }
 
   svg { display: block; flex-shrink: 0; }
 }

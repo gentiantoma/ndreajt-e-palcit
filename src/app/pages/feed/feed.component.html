@@ -75,7 +75,8 @@
 
         <!-- Mobile category scroll with prev/next arrows -->
         <div class="cat-scroll-wrap d-lg-none">
-          <button class="cat-nav-btn" (click)="scrollChips('left')" type="button" aria-label="Scroll left">
+          <button class="cat-nav-btn" (click)="scrollChips('left')" type="button" aria-label="Scroll left"
+                  [disabled]="!canScrollLeftMobile()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="15 18 9 12 15 6"/>
             </svg>
@@ -90,7 +91,8 @@
               </button>
             </div>
           </div>
-          <button class="cat-nav-btn" (click)="scrollChips('right')" type="button" aria-label="Scroll right">
+          <button class="cat-nav-btn" (click)="scrollChips('right')" type="button" aria-label="Scroll right"
+                  [disabled]="!canScrollRightMobile()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
@@ -101,7 +103,8 @@
         <div class="feed-header d-none d-lg-block">
           <h1 class="feed-title">{{ 'feed.title' | translate }}</h1>
           <div class="cat-scroll-wrap cat-scroll-wrap--desktop">
-            <button class="cat-nav-btn" (click)="scrollChipsDesktop('left')" type="button" aria-label="Scroll left">
+            <button class="cat-nav-btn" (click)="scrollChipsDesktop('left')" type="button" aria-label="Scroll left"
+                    [disabled]="!canScrollLeftDesktop()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="15 18 9 12 15 6"/>
               </svg>
@@ -116,7 +119,8 @@
                 </button>
               </div>
             </div>
-            <button class="cat-nav-btn" (click)="scrollChipsDesktop('right')" type="button" aria-label="Scroll right">
+            <button class="cat-nav-btn" (click)="scrollChipsDesktop('right')" type="button" aria-label="Scroll right"
+                    [disabled]="!canScrollRightDesktop()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
