@@ -94,15 +94,16 @@
   position: relative;
 }
 
-/* Auth skeleton placeholder (prevents login-button flash on refresh) */
+/* Auth skeleton placeholder — circular to match avatar size */
 .auth-skeleton {
-  width: 80px;
-  height: 32px;
-  border-radius: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   background: var(--color-bg-elevated);
   animation: shimmer 1.2s infinite linear;
   background-size: 200% 100%;
-  background-image: linear-gradient(90deg, var(--color-bg-elevated) 25%, #e8eaed 50%, var(--color-bg-elevated) 75%);
+  background-image: linear-gradient(90deg, var(--color-bg-elevated) 25%, rgba(255,255,255,0.15) 50%, var(--color-bg-elevated) 75%);
+  flex-shrink: 0;
 }
 
 /* Login CTA button */
@@ -150,6 +151,29 @@
     width: 36px;
     height: 36px;
     font-size: 14px;
+  }
+
+}
+
+/* Avatar wrapper: skeleton shown until image paints on top */
+.avatar-img-wrap {
+  position: relative;
+  width: 36px; height: 36px; flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+
+  .avatar-skeleton-pulse {
+    position: absolute; inset: 0;
+    background: var(--color-bg-elevated);
+    background-image: linear-gradient(90deg, var(--color-bg-elevated) 25%, rgba(255,255,255,0.15) 50%, var(--color-bg-elevated) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite linear;
+  }
+
+  .user-avatar {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border-radius: 0;
   }
 }
 

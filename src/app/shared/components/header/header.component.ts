@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -20,6 +20,30 @@ export class HeaderComponent {
   menuOpen    = signal(false);
   dropOpen    = signal(false);
   currentLang = signal(localStorage.getItem('lang') || 'sq');
+
+  adminAvatarError = false;
+  private readonly _avatarErrored = signal(false);
+  onAvatarError() { this._avatarErrored.set(true); }
+
+  /** Resolved photo URL — Firestore profile first, Firebase Auth fallback */
+  readonly avatarPhotoUrl = computed(() => {
+    if (this._avatarErrored()) return null;
+    const profile  = this.auth.userProfile();
+    const fireUser = this.auth.currentUser();
+    return profile?.photoURL || fireUser?.photoURL || null;
+  });
+
+  /**
+   * True  → show the avatar-img-wrap (skeleton + img when URL known)
+   * False → show initials (only when profile is loaded AND has no photo)
+   */
+  readonly showAvatarSection = computed(() => {
+    const loggedIn = this.auth.isLoggedIn();
+    if (!loggedIn) return false;
+    const profile = this.auth.userProfile();
+    if (profile === null) return true;   // profile still loading → keep skeleton
+    return !!this.avatarPhotoUrl();      // profile loaded → show section only if has photo
+  });
 
   toggleMenu()   { this.menuOpen.update(v => !v); }
   closeMenu()    { this.menuOpen.set(false); this.dropOpen.set(false); }
@@ -46,15 +70,6 @@ export class HeaderComponent {
     await this.auth.logout();
     this.dropOpen.set(false);
     this.toast.info('Shihemi!');
-  }
-
-  avatarError = false;
-  adminAvatarError = false;
-
-  onAvatarError() { this.avatarError = true; }
-
-  get showAvatarImg() {
-    return !!this.auth.currentUser()?.photoURL && !this.avatarError;
   }
 
   getInitial(name: string) {

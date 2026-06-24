@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { where, orderBy, limit } from '@angular/fire/firestore';
 import { FirestoreService } from '../../core/services/firestore.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -23,7 +23,7 @@ export class FeedComponent implements OnInit, AfterViewInit {
   private fs    = inject(FirestoreService);
   auth          = inject(AuthService);
   private seo   = inject(SeoService);
-  private translate = inject(TranslateService);
+
 
   posts          = signal<Post[]>([]);
   loading        = signal(true);
@@ -61,15 +61,17 @@ export class FeedComponent implements OnInit, AfterViewInit {
       try {
         // Simple query without compound index requirement
         const filters = cat === 'all'
-          ? [where('published', '==', true), limit(30)]
+          ? [where('published', '==', true), orderBy('createdAt', 'desc'), limit(30)]
           : [where('published', '==', true), where('category', '==', cat), limit(30)];
         data = await this.fs.getPosts(filters);
-        // Sort client-side to avoid needing a Firestore composite index
-        data.sort((a: any, b: any) => {
-          const ta = a.createdAt?.toDate?.() ?? new Date(a.createdAt ?? 0);
-          const tb = b.createdAt?.toDate?.() ?? new Date(b.createdAt ?? 0);
-          return tb.getTime() - ta.getTime();
-        });
+        // Client-side sort only needed for category queries (no composite index yet)
+        if (cat !== 'all') {
+          data.sort((a: any, b: any) => {
+            const ta = a.createdAt?.toDate?.() ?? new Date(a.createdAt ?? 0);
+            const tb = b.createdAt?.toDate?.() ?? new Date(b.createdAt ?? 0);
+            return tb.getTime() - ta.getTime();
+          });
+        }
       } catch (e) {
         console.warn('Firestore query failed, using demo posts', e);
       }

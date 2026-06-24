@@ -17,7 +17,13 @@
     "village_stats": "Statistics",
     "posts": "posts",
     "village": "Palç, Albania",
-    "load_more": "Load More"
+    "load_more": "Load More",
+    "community": "Community",
+    "village_location": "Tropojë, Albania",
+    "village_desc": "The social platform of Palç village, Tropojë — news, culture and history from our community.",
+    "memories": "Memories",
+    "about_text": "Palç is a beautiful village in the Tropojë district, with a rich history and warm people. This platform aims to keep the culture and community alive.",
+    "country": "Albania"
   },
   "post": {
     "like": "Like",
@@ -37,7 +43,16 @@
     "login_to_comment": "Sign in to comment",
     "not_found": "Post not found.",
     "show_less": "Show less",
-    "read_more": "Read more"
+    "read_more": "Read more",
+    "reply": "Reply",
+    "hide_replies": "Hide",
+    "show_replies": "Show",
+    "replies": "replies",
+    "reply_placeholder": "Write a reply...",
+    "view_all_comments": "View all {{count}} comments",
+    "load_more_comments": "Show {{count}} more comments",
+    "reactions": "Reactions",
+    "no_reactions": "No reactions yet"
   },
   "auth": {
     "brand_sub": "The informative platform of Palç village, Albania",

@@ -6,7 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription, filter, firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { Post, Comment, Reply, UserProfile, ReactionType, REACTIONS } from '../../../core/models';
+import { Post, Comment, Reply, ReactionType, REACTIONS } from '../../../core/models';
 import { FirestoreService } from '../../../core/services/firestore.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -63,17 +63,22 @@ export class PostCardComponent implements OnInit, OnDestroy {
   get liked() { return this.myReaction() !== null; }
 
   reactionEmoji(r: ReactionType | null) {
-    return REACTIONS.find(x => x.type === r)?.emoji ?? '❤️';
+    return REACTIONS.find(x => x.type === r)?.emoji ?? '🤝';
   }
   reactionLabel(r: ReactionType | null) {
-    return REACTIONS.find(x => x.type === r)?.label ?? 'Pëlqej';
+    return REACTIONS.find(x => x.type === r)?.label ?? 'Respekt';
   }
   getReactionColor(r: ReactionType | null): string {
     const colors: Record<ReactionType, string> = {
-      like: '#e0245e', haha: '#f7c948', wow: '#f7c948',
-      sad: '#4fa3e0', angry: '#e05e30', celebrate: '#9b59b6',
+      like:    '#e0245e',
+      respect: '#2563eb',
+      strong:  '#dc2626',
+      bravo:   '#16a34a',
+      honor:   '#7c3aed',
+      fire:    '#ea580c',
+      sad:     '#4a90d9',
     };
-    return r ? colors[r] : '';
+    return r ? (colors[r] ?? '') : '';
   }
 
   reactionTabs = computed(() => {
@@ -148,7 +153,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     const btn  = event.currentTarget as HTMLElement;
     const rect = btn.getBoundingClientRect();
-    const pickerWidth  = window.innerWidth <= 600 ? 268 : 370;
+    const pickerWidth  = window.innerWidth <= 600 ? 300 : 420;
     const pickerHeight = window.innerWidth <= 600 ? 50  : 62;
     const top  = rect.top - pickerHeight - 15;
     // Center on the card; card is the closest <article> ancestor
@@ -338,8 +343,10 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   getInitial(name: string) { return (name || 'A')[0].toUpperCase(); }
 
-  trackById(_i: number, item: { id?: string }) { return item.id ?? _i; }
-  trackByUrl(_i: number, url: string)           { return url; }
+  trackById(_i: number, item: { id?: string })                        { return item.id ?? _i; }
+  trackByUrl(_i: number, url: string)                                  { return url; }
+  trackByType(_i: number, item: { type: string })                      { return item.type; }
+  trackByUid(_i: number, item: { uid: string })                        { return item.uid; }
 
   navigateToPost(e: MouseEvent) {
     const target = e.target as HTMLElement;
@@ -351,7 +358,6 @@ export class PostCardComponent implements OnInit, OnDestroy {
   formatDate(ts: any): string { return fmtDateShort(ts, this.lang); }
   formatTime(ts: any): string { return fmtDateDay(ts, this.lang); }
 
-  get bodyTooLong()    { return this.body.length > 280; }
   get hasImages()      { return this.allImages.length > 0; }
   get extraImageCount(){ return Math.max(0, this.allImages.length - 4); }
   get hasMoreImages()  { return this.allImages.length > 4; }
@@ -359,10 +365,6 @@ export class PostCardComponent implements OnInit, OnDestroy {
   get hasComments()    { return this.post.commentCount > 0; }
   isLastVisible(i: number) { return i === 3 && this.allImages.length > 4; }
 
-  bodyPreview = computed(() => {
-    const b = this.body;
-    return b.length > 280 ? b.slice(0, 280) : b;
-  });
 
   ngOnDestroy() {
     this.commentsSub?.unsubscribe();

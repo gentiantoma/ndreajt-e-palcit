@@ -10,7 +10,7 @@
             <!-- Cover banner -->
             <div class="vc-cover">
               <div class="vc-cover-pattern"></div>
-              <div class="vc-badge">Komunitet</div>
+              <div class="vc-badge">{{ 'feed.community' | translate }}</div>
               <div class="vc-logo">
                 <svg width="44" height="44" viewBox="0 0 48 48" fill="none">
                   <circle cx="24" cy="24" r="24" fill="rgba(255,255,255,0.18)"/>
@@ -25,27 +25,27 @@
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2.5">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
                   </svg>
-                  Tropojë, Shqipëri
+                  {{ 'feed.village_location' | translate }}
                 </p>
               </div>
             </div>
             <!-- Body -->
             <div class="vc-body">
-              <p class="vc-desc">Platforma sociale e fshatit Palç, Tropojë — lajme, kulturë dhe histori nga komuniteti ynë.</p>
+              <p class="vc-desc">{{ 'feed.village_desc' | translate }}</p>
               <div class="vc-stats">
                 <div class="vc-stat">
                   <span class="vc-stat-num">{{ villageStats().posts }}</span>
-                  <span class="vc-stat-lbl">Postime</span>
+                  <span class="vc-stat-lbl">{{ 'feed.posts' | translate }}</span>
                 </div>
                 <div class="vc-stat-sep"></div>
                 <div class="vc-stat">
                   <span class="vc-stat-num">🇦🇱</span>
-                  <span class="vc-stat-lbl">Shqipëri</span>
+                  <span class="vc-stat-lbl">{{ 'feed.country' | translate }}</span>
                 </div>
                 <div class="vc-stat-sep"></div>
                 <div class="vc-stat">
                   <span class="vc-stat-num">∞</span>
-                  <span class="vc-stat-lbl">Kujtime</span>
+                  <span class="vc-stat-lbl">{{ 'feed.memories' | translate }}</span>
                 </div>
               </div>
             </div>
@@ -196,7 +196,7 @@
 
           <div class="widget">
             <div class="widget-title">{{ 'feed.about_village' | translate }}</div>
-            <p class="about-text">Palç është një fshat i bukur në rrethin e Tropojës, me histori të pasur dhe njerëz të ngrohtë. Kjo platformë synon të mbajë gjallë kulturën dhe komunitetin.</p>
+            <p class="about-text">{{ 'feed.about_text' | translate }}</p>
           </div>
 
           <div class="widget">
@@ -228,11 +228,11 @@
             </div>
             <div class="stat-row">
               <span class="stat-icon">🌿</span>
-              <span class="stat-text">Palç, Tropojë</span>
+              <span class="stat-text">{{ 'feed.village' | translate }}</span>
             </div>
             <div class="stat-row">
               <span class="stat-icon">🇦🇱</span>
-              <span class="stat-text">Shqipëri</span>
+              <span class="stat-text">{{ 'feed.country' | translate }}</span>
             </div>
           </div>
 

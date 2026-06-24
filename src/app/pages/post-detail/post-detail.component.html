@@ -163,7 +163,7 @@
 
             <p *ngIf="comments().length === 0" class="no-comments-msg">{{ 'post.no_comments' | translate }}</p>
 
-            <ng-container *ngFor="let comment of comments(); trackBy: trackById">
+            <ng-container *ngFor="let comment of visibleComments(); trackBy: trackById">
               <div class="comment-item">
                 <ng-container *ngIf="comment.authorPhoto; else cInit">
                   <img [src]="comment.authorPhoto" class="avatar md" [alt]="comment.authorName" loading="lazy"
@@ -191,6 +191,11 @@
                 </div>
               </div>
             </ng-container>
+
+            <!-- Load more comments -->
+            <button *ngIf="hasMoreComments" class="load-more-comments" (click)="loadMoreComments()">
+              {{ 'post.load_more_comments' | translate:{ count: nextBatchCount } }}
+            </button>
           </section>
         </div>
       </article>

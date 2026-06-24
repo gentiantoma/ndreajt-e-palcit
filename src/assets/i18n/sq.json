@@ -17,7 +17,13 @@
     "village_stats": "Statistikat",
     "posts": "postime",
     "village": "Palç, Shqipëri",
-    "load_more": "Ngarko Më Shumë"
+    "load_more": "Ngarko Më Shumë",
+    "community": "Komunitet",
+    "village_location": "Tropojë, Shqipëri",
+    "village_desc": "Platforma sociale e fshatit Palç, Tropojë — lajme, kulturë dhe histori nga komuniteti ynë.",
+    "memories": "Kujtime",
+    "about_text": "Palç është një fshat i bukur në rrethin e Tropojës, me histori të pasur dhe njerëz të ngrohtë. Kjo platformë synon të mbajë gjallë kulturën dhe komunitetin.",
+    "country": "Shqipëri"
   },
   "post": {
     "like": "Pëlqej",
@@ -37,7 +43,16 @@
     "login_to_comment": "Hyni për të komentuar",
     "not_found": "Postimi nuk u gjet.",
     "show_less": "Shfaq më pak",
-    "read_more": "Lexo më shumë"
+    "read_more": "Lexo më shumë",
+    "reply": "Përgjigju",
+    "hide_replies": "Fshih",
+    "show_replies": "Shfaq",
+    "replies": "përgjigje",
+    "reply_placeholder": "Shkruaj një përgjigje...",
+    "view_all_comments": "Shiko të gjitha {{count}} komentet",
+    "load_more_comments": "Shiko {{count}} komente të tjera",
+    "reactions": "Reagime",
+    "no_reactions": "Asnjë reagim akoma"
   },
   "auth": {
     "brand_sub": "Platforma informative e fshatit Palç, Shqipëri",

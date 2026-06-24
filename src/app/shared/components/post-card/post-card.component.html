@@ -37,19 +37,36 @@
   <!-- Post Content -->
   <div class="post-content">
     <a [routerLink]="['/post', post.id]" class="post-title">{{ title }}</a>
-    <ng-container *ngIf="body">
-      <p class="post-body">
-        {{ bodyTooLong ? bodyPreview() : body }}<a *ngIf="bodyTooLong" [routerLink]="['/post', post.id]" class="read-more-link" (click)="$event.stopPropagation()">... më shumë</a>
-      </p>
-    </ng-container>
+    <p *ngIf="body" class="post-body">{{ body }}</p>
   </div>
 
-  <!-- Cover image preview -->
-  <a *ngIf="allImages.length > 0" [routerLink]="['/post', post.id]" class="card-cover-link" (click)="$event.stopPropagation()">
-    <div class="card-cover">
-      <img [lazyImg]="allImages[0]" [alt]="title" class="card-cover-img">
-    </div>
-  </a>
+  <!-- Image grid: 1 / 2 / 3+ images -->
+  <ng-container *ngIf="allImages.length > 0">
+
+    <!-- 1 image — full width -->
+    <a *ngIf="allImages.length === 1"
+       [routerLink]="['/post', post.id]" class="img-grid img-grid--1" (click)="$event.stopPropagation()">
+      <div class="img-cell">
+        <img [lazyImg]="allImages[0]" [alt]="title">
+      </div>
+    </a>
+
+    <!-- 2 images — side by side -->
+    <a *ngIf="allImages.length === 2"
+       [routerLink]="['/post', post.id]" class="img-grid img-grid--2" (click)="$event.stopPropagation()">
+      <div class="img-cell"><img [lazyImg]="allImages[0]" [alt]="title"></div>
+      <div class="img-cell"><img [lazyImg]="allImages[1]" [alt]="title"></div>
+    </a>
+
+    <!-- 3+ images — 1 top full width, 2 bottom -->
+    <a *ngIf="allImages.length >= 3"
+       [routerLink]="['/post', post.id]" class="img-grid img-grid--3" (click)="$event.stopPropagation()">
+      <div class="img-cell img-cell--top"><img [lazyImg]="allImages[0]" [alt]="title"></div>
+      <div class="img-cell"><img [lazyImg]="allImages[1]" [alt]="title"></div>
+      <div class="img-cell"><img [lazyImg]="allImages[2]" [alt]="title"></div>
+    </a>
+
+  </ng-container>
 
   <!-- Stats row -->
   <div class="stats-row" *ngIf="hasLikes || hasComments">
@@ -103,8 +120,8 @@
   <div class="comments-section slide-down" *ngIf="showComments()">
     <hr class="divider">
 
-    <!-- Comment list -->
-    <ng-container *ngFor="let comment of comments(); trackBy: trackById">
+    <!-- Comment list (max 3 in feed) -->
+    <ng-container *ngFor="let comment of comments().slice(0, 3); trackBy: trackById">
       <div class="comment-item">
         <!-- Avatar: show initial unless user uploaded a custom photo (ibb.co) -->
         <div class="comment-avatar-wrap">
@@ -134,9 +151,9 @@
           <div class="c-meta-row">
             <span class="c-meta">{{ formatTime(comment.createdAt) }}</span>
             <button class="c-reply-btn" (click)="openReplyInput(comment)">
-              Përgjigju
+              {{ 'post.reply' | translate }}
             </button>
-            <button *ngIf="canDelete(comment)" class="c-delete-btn" (click)="deleteComment(comment.id!)">Fshi</button>
+            <button *ngIf="canDelete(comment)" class="c-delete-btn" (click)="deleteComment(comment.id!)">{{ 'general.delete' | translate }}</button>
           </div>
 
           <!-- View replies toggle -->
@@ -146,8 +163,8 @@
                 <polyline *ngIf="!getReplyState(comment.id!).showReplies" points="6 9 12 15 18 9"/>
                 <polyline *ngIf="getReplyState(comment.id!).showReplies" points="18 15 12 9 6 15"/>
               </svg>
-              {{ getReplyState(comment.id!).showReplies ? 'Fshih' : 'Shfaq' }}
-              {{ comment.replyCount }} përgjigje
+              {{ (getReplyState(comment.id!).showReplies ? 'post.hide_replies' : 'post.show_replies') | translate }}
+              {{ comment.replyCount }} {{ 'post.replies' | translate }}
             </button>
           </ng-container>
 
@@ -175,7 +192,7 @@
                 </div>
                 <div class="c-meta-row">
                   <span class="c-meta">{{ formatTime(reply.createdAt) }}</span>
-                  <button *ngIf="canDelete(reply)" class="c-delete-btn" (click)="deleteReply(comment.id!, reply.id!)">Fshi</button>
+                  <button *ngIf="canDelete(reply)" class="c-delete-btn" (click)="deleteReply(comment.id!, reply.id!)">{{ 'general.delete' | translate }}</button>
                 </div>
               </div>
             </div>
@@ -191,7 +208,7 @@
                 type="text"
                 [value]="getReplyState(comment.id!).replyText"
                 (input)="getReplyState(comment.id!).replyText = $any($event.target).value"
-                placeholder="Shkruaj një përgjigje..."
+                [placeholder]="'post.reply_placeholder' | translate"
                 (keydown.enter)="submitReply(comment)"
                 [disabled]="getReplyState(comment.id!).submittingReply">
               <button
@@ -211,6 +228,14 @@
     </ng-container>
 
     <p *ngIf="comments().length === 0" class="no-comments">{{ 'post.no_comments' | translate }}</p>
+
+    <!-- View all link when more than 3 comments -->
+    <a *ngIf="comments().length > 3"
+       [routerLink]="['/post', post.id]"
+       class="view-all-comments"
+       (click)="$event.stopPropagation()">
+      {{ 'post.view_all_comments' | translate:{ count: comments().length } }}
+    </a>
 
     <!-- Add comment -->
     <ng-container *ngIf="auth.isLoggedIn(); else loginPrompt">
@@ -255,7 +280,7 @@
 <div class="modal-overlay" *ngIf="showLikersModal()" (click)="closeLikersModal()">
   <div class="modal-box reactions-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <span class="reactions-title">{{ likeCount() }} Reagime</span>
+      <span class="reactions-title">{{ likeCount() }} {{ 'post.reactions' | translate }}</span>
       <button class="btn-icon modal-close-btn" (click)="closeLikersModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -266,9 +291,9 @@
     <!-- Reaction tabs -->
     <div class="reaction-tabs" *ngIf="!loadingLikers() && reactionTabs().length > 1">
       <button class="reaction-tab" [class.active]="reactionFilter() === null" (click)="reactionFilter.set(null)">
-        Të gjitha <span class="tab-count">{{ likeCount() }}</span>
+        {{ 'feed.all' | translate }} <span class="tab-count">{{ likeCount() }}</span>
       </button>
-      <button *ngFor="let tab of reactionTabs()"
+      <button *ngFor="let tab of reactionTabs(); trackBy: trackByType"
               class="reaction-tab"
               [class.active]="reactionFilter() === tab.type"
               (click)="reactionFilter.set(tab.type)">
@@ -281,7 +306,7 @@
         <span class="spinner"></span>
       </div>
       <ng-container *ngIf="!loadingLikers()">
-        <div *ngFor="let liker of filteredLikers()" class="liker-row">
+        <div *ngFor="let liker of filteredLikers(); trackBy: trackByUid" class="liker-row">
           <div class="liker-avatar-wrap">
             <img *ngIf="liker.photoURL" [src]="liker.photoURL" class="avatar sm" [alt]="liker.displayName">
             <div *ngIf="!liker.photoURL" class="avatar-initial sm">{{ getInitial(liker.displayName) }}</div>
@@ -290,7 +315,7 @@
           <a [routerLink]="['/profile', liker.uid]" (click)="closeLikersModal()" class="liker-name">{{ liker.displayName }}</a>
           <span class="liker-reaction-label">{{ reactionLabel(liker.reaction) }}</span>
         </div>
-        <p *ngIf="filteredLikers().length === 0" class="reactions-empty">Asnjë reagim akoma</p>
+        <p *ngIf="filteredLikers().length === 0" class="reactions-empty">{{ 'post.no_reactions' | translate }}</p>
       </ng-container>
     </div>
   </div>

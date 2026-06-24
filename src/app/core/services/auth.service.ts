@@ -28,6 +28,7 @@ export class AuthService {
 
   readonly authReady = signal(false);
   readonly userProfile = signal<UserProfile | null>(null);
+  private migrationDone = false;
 
   private get isIOS(): boolean {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -48,7 +49,8 @@ export class AuthService {
         if (snap.exists()) {
           const profile = snap.data() as UserProfile;
           this.userProfile.set(profile);
-          if (ADMIN_EMAILS.includes(u.email ?? '') && profile.photoURL) {
+          if (!this.migrationDone && ADMIN_EMAILS.includes(u.email ?? '') && profile.photoURL) {
+            this.migrationDone = true;
             this.fs.migrateAdminPosts(u.uid, profile.photoURL).catch(() => {});
           }
         }

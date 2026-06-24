@@ -2,15 +2,16 @@ import { Timestamp } from 'firebase/firestore';
 
 export type PostCategory = 'lajme' | 'histori' | 'njoftim' | 'events' | 'pajtimet' | 'takimet' | 'other';
 export type UserRole = 'member' | 'admin';
-export type ReactionType = 'like' | 'haha' | 'wow' | 'sad' | 'angry' | 'celebrate';
+export type ReactionType = 'like' | 'respect' | 'strong' | 'bravo' | 'honor' | 'fire' | 'sad';
 
 export const REACTIONS: { type: ReactionType; emoji: string; label: string }[] = [
-  { type: 'like',      emoji: '❤️',  label: 'Pëlqej'   },
-  { type: 'haha',      emoji: '😂',  label: 'Haha'     },
-  { type: 'wow',       emoji: '😮',  label: 'Wow'      },
-  { type: 'sad',       emoji: '😢',  label: 'Pikëllim' },
-  { type: 'angry',     emoji: '😡',  label: 'Zemërim'  },
-  { type: 'celebrate', emoji: '🎉',  label: 'Festoj'   },
+  { type: 'like',    emoji: '❤️', label: 'Pëlqej'   },
+  { type: 'respect', emoji: '🤝', label: 'Respekt'  },
+  { type: 'strong',  emoji: '💪', label: 'Forcë'    },
+  { type: 'bravo',   emoji: '🙌', label: 'Bravo'    },
+  { type: 'honor',   emoji: '🫡', label: 'Nderim'   },
+  { type: 'fire',    emoji: '🔥', label: 'Zjarr'    },
+  { type: 'sad',     emoji: '💔', label: 'Pikëllim' },
 ];
 
 export interface Post {

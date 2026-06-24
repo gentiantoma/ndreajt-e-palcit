@@ -49,10 +49,7 @@
         {{ currentLang() === 'sq' ? 'SQ' : 'EN' }}
       </button>
 
-      <!-- Auth placeholder while Firebase resolves — prevents login-button flash -->
-      <div *ngIf="!auth.authReady()" class="auth-skeleton"></div>
-
-      <ng-container *ngIf="auth.authReady()">
+      <ng-container *ngIf="auth.authReady(); else authSkeletonTpl">
         <ng-container *ngIf="auth.isLoggedIn(); else loginBtn">
           <div class="user-menu" (click)="toggleDrop()">
             <!-- Admin: show uploaded brand photo, fallback to CSS avatar -->
@@ -64,10 +61,17 @@
                    (error)="adminAvatarError = true">
               <ng-template #adminBrandAvatar><div class="avatar-brand md"></div></ng-template>
             </ng-container>
-            <!-- Regular user: show photo or initials -->
+            <!-- Regular user: skeleton while loading/has-photo, initials only if confirmed no photo -->
             <ng-container *ngIf="!auth.isAdmin()">
-              <img *ngIf="showAvatarImg" [src]="auth.currentUser()!.photoURL!" class="user-avatar avatar md" [alt]="auth.currentUser()!.displayName!" (error)="onAvatarError()">
-              <div *ngIf="!showAvatarImg" class="avatar-initial md">{{ getInitial(auth.currentUser()?.displayName || '') }}</div>
+              <div *ngIf="showAvatarSection()" class="avatar-img-wrap">
+                <div class="avatar-skeleton-pulse"></div>
+                <img *ngIf="avatarPhotoUrl()"
+                     [src]="avatarPhotoUrl()!"
+                     class="user-avatar avatar md"
+                     [alt]="auth.currentUser()?.displayName || ''"
+                     (error)="onAvatarError()">
+              </div>
+              <div *ngIf="!showAvatarSection()" class="avatar-initial md">{{ getInitial(auth.currentUser()?.displayName || '') }}</div>
             </ng-container>
 
             <div class="dropdown-menu" *ngIf="dropOpen()" (click)="$event.stopPropagation()">
@@ -117,6 +121,10 @@
           </a>
         </ng-template>
       </ng-container>
+
+      <ng-template #authSkeletonTpl>
+        <div class="auth-skeleton"></div>
+      </ng-template>
 
       <button class="hamburger" (click)="toggleMenu()" type="button" [class.open]="menuOpen()">
         <span></span><span></span><span></span>

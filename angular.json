@@ -34,6 +34,7 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
+              "src/favicon.svg",
               "src/assets",
               { "glob": "_redirects", "input": "public", "output": "/" },
               { "glob": "manifest.webmanifest", "input": "src", "output": "/" }
@@ -80,7 +81,7 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": ["src/favicon.ico", "src/favicon.svg", "src/assets"],
             "styles": ["node_modules/bootstrap/dist/css/bootstrap-grid.min.css", "src/styles.scss"],
             "scripts": []
           }

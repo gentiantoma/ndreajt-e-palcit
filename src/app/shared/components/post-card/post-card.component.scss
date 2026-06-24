@@ -58,21 +58,43 @@
   padding: 0 16px 12px;
 }
 
-.card-cover-link { display: block; text-decoration: none; }
-.card-cover {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+/* ─── IMAGE GRID ─── */
+.img-grid {
+  display: grid;
+  gap: 2px;
+  text-decoration: none;
+  background: #000;
   overflow: hidden;
-  background: var(--color-bg-elevated);
-}
-.card-cover-img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 300ms ease;
-  .card-cover:hover & { transform: scale(1.03); }
 }
+
+.img-grid--1 { grid-template-columns: 1fr; }
+.img-grid--2 { grid-template-columns: 1fr 1fr; }
+.img-grid--3 {
+  grid-template-columns: 1fr 1fr;
+  .img-cell--top { grid-column: 1 / -1; }
+}
+
+.img-cell {
+  overflow: hidden;
+  background: #111;
+  position: relative;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 280ms ease;
+  }
+  &:hover img { transform: scale(1.04); }
+}
+
+/* Heights per layout */
+.img-grid--1 .img-cell          { aspect-ratio: 4 / 3; }
+.img-grid--2 .img-cell          { aspect-ratio: 1 / 1; }
+.img-grid--3 .img-cell--top                { aspect-ratio: 16 / 9; }
+.img-grid--3 .img-cell:not(.img-cell--top) { aspect-ratio: 3 / 2; }
 
 .post-title {
   display: block;
@@ -89,9 +111,12 @@
   font-size: 14px;
   color: var(--color-text-muted);
   line-height: 1.6;
-  white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .read-more-link {
@@ -320,6 +345,17 @@
 /* Comments */
 .comments-section {
   padding: 0 12px 14px;
+}
+
+.view-all-comments {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent);
+  text-decoration: none;
+  padding: 8px 0 4px;
+  &:hover { text-decoration: underline; }
 }
 
 .no-comments {

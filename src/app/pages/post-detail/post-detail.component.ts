@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -34,7 +34,12 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   authorAvatarError = signal(false);
   myAvatarError     = signal(false);
   loading     = signal(true);
-  comments    = signal<Comment[]>([]);
+  comments       = signal<Comment[]>([]);
+  commentsLimit  = signal(10);
+  visibleComments = computed(() => this.comments().slice(0, this.commentsLimit()));
+  get hasMoreComments() { return this.comments().length > this.commentsLimit(); }
+  get nextBatchCount()  { return Math.min(10, this.comments().length - this.commentsLimit()); }
+  loadMoreComments()    { this.commentsLimit.update(n => n + 10); }
   commentText = signal('');
   submitting  = signal(false);
   myReaction  = signal<ReactionType | null>(null);
@@ -45,11 +50,14 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
   readonly reactions = REACTIONS;
   get liked() { return this.myReaction() !== null; }
-  reactionEmoji(r: ReactionType | null) { return REACTIONS.find(x => x.type === r)?.emoji ?? '❤️'; }
-  reactionLabel(r: ReactionType | null) { return REACTIONS.find(x => x.type === r)?.label ?? 'Pëlqej'; }
+  reactionEmoji(r: ReactionType | null) { return REACTIONS.find(x => x.type === r)?.emoji ?? '🤝'; }
+  reactionLabel(r: ReactionType | null) { return REACTIONS.find(x => x.type === r)?.label ?? 'Respekt'; }
   getReactionColor(r: ReactionType | null): string {
-    const c: Record<ReactionType, string> = { like: '#e0245e', haha: '#f7c948', wow: '#f7c948', sad: '#4fa3e0', angry: '#e05e30', celebrate: '#9b59b6' };
-    return r ? c[r] : '';
+    const c: Record<ReactionType, string> = {
+      like: '#e0245e', respect: '#2563eb', strong: '#dc2626',
+      bravo: '#16a34a', honor: '#7c3aed', fire: '#ea580c', sad: '#4a90d9',
+    };
+    return r ? (c[r] ?? '') : '';
   }
 
   private commentsSub?: Subscription;
@@ -109,7 +117,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     const btn  = event.currentTarget as HTMLElement;
     const rect = btn.getBoundingClientRect();
-    const pickerWidth  = window.innerWidth <= 600 ? 268 : 380;
+    const pickerWidth  = window.innerWidth <= 600 ? 300 : 420;
     const pickerHeight = window.innerWidth <= 600 ? 50  : 62;
     const top  = rect.top - pickerHeight - 15;
     const article     = btn.closest('article') as HTMLElement;
