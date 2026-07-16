@@ -80,21 +80,36 @@ export class AuthService {
 
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
-    if (this.isIOS) {
-      // iOS Safari blocks popups — use redirect flow instead
-      await signInWithRedirect(this.auth, provider);
-      return null;
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Popup works on modern iOS Safari (16+) and desktop, and — unlike
+    // signInWithRedirect — is not broken by Safari's tracking prevention.
+    // Redirect is kept only as a fallback if the popup is blocked.
+    try {
+      const cred = await signInWithPopup(this.auth, provider);
+      await this.ensureUserDoc(cred.user);
+      // Refuse the session outright if the account is suspended
+      const snap = await getDoc(doc(this.firestore, 'users', cred.user.uid));
+      const profile = snap.exists() ? (snap.data() as UserProfile) : null;
+      if (profile?.suspended && !ADMIN_EMAILS.includes(cred.user.email ?? '')) {
+        await signOut(this.auth);
+        throw { code: 'auth/suspended' };
+      }
+      return cred.user;
+    } catch (err: any) {
+      if (err?.code === 'auth/suspended') throw err;
+      // Popup blocked / not supported (older iOS, some in-app browsers) → redirect
+      if (
+        err?.code === 'auth/popup-blocked' ||
+        err?.code === 'auth/cancelled-popup-request' ||
+        err?.code === 'auth/popup-closed-by-user' && this.isIOS ||
+        err?.code === 'auth/operation-not-supported-in-this-environment'
+      ) {
+        await signInWithRedirect(this.auth, provider);
+        return null;
+      }
+      throw err;
     }
-    const cred = await signInWithPopup(this.auth, provider);
-    await this.ensureUserDoc(cred.user);
-    // Refuse the session outright if the account is suspended
-    const snap = await getDoc(doc(this.firestore, 'users', cred.user.uid));
-    const profile = snap.exists() ? (snap.data() as UserProfile) : null;
-    if (profile?.suspended && !ADMIN_EMAILS.includes(cred.user.email ?? '')) {
-      await signOut(this.auth);
-      throw { code: 'auth/suspended' };
-    }
-    return cred.user;
   }
 
   async logout() {

@@ -99,8 +99,10 @@ html { scroll-behavior: smooth; font-size: 16px; background-color: #241f15; }
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg);
-  /* Never scroll sideways; stop rubber-band overscroll revealing content above the header */
-  overflow-x: hidden;
+  /* `clip` (not `hidden`) prevents sideways scroll WITHOUT turning body into a
+     scroll container — `hidden` forces overflow-y to `auto`, which breaks the
+     fixed header on iOS Safari and lets content show above it. */
+  overflow-x: clip;
   overscroll-behavior-y: none;
   /* Antique paper: top light, sepia age-stains scattered around, fine grain */
   background-image:
