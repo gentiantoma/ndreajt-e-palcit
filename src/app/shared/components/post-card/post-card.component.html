@@ -28,7 +28,7 @@
         <span class="badge-category" [ngClass]="post.category">{{ 'categories.' + post.category | translate }}</span>
       </div>
     </div>
-    <button class="btn-icon bookmark-btn" (click)="toggleBookmark()" [class.bookmarked]="bookmarked()" title="Ruaj">
+    <button class="btn-icon bookmark-btn" (click)="toggleBookmark()" [class.bookmarked]="bookmarked()" [title]="'post.save' | translate" [attr.aria-label]="'post.save' | translate">
       <svg *ngIf="bookmarked()" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
       <svg *ngIf="!bookmarked()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
     </button>
@@ -71,7 +71,9 @@
   <!-- Stats row -->
   <div class="stats-row" *ngIf="hasLikes || hasComments">
     <span *ngIf="hasLikes" class="stat-item stat-likes" (click)="showLikers(); $event.stopPropagation()">
-      <span class="stat-reaction-emoji">{{ myReaction() ? reactionEmoji(myReaction()) : '❤️' }}</span>
+      <span class="stat-emoji-stack">
+        <span *ngFor="let emoji of topReactions()" class="stat-reaction-emoji">{{ emoji }}</span>
+      </span>
       {{ likeCount() }}
     </span>
     <span *ngIf="hasComments" class="stat-item stat-comments" (click)="toggleComments(); $event.stopPropagation()">
@@ -272,7 +274,7 @@
     </svg>
   </button>
   <div class="lightbox-content" (click)="$event.stopPropagation()">
-    <img [src]="lightboxImg()!" class="lightbox-img" alt="Post image">
+    <img [src]="lightboxImg()!" class="lightbox-img" [alt]="'post.gallery_image' | translate">
   </div>
 </div>
 

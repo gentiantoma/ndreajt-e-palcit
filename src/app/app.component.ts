@@ -1,7 +1,7 @@
 import { Component, OnInit, HostListener, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { HeaderComponent } from './shared/components/header/header.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { AuthService } from './core/services/auth.service';
@@ -11,7 +11,7 @@ import { REACTIONS } from './core/models';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, HeaderComponent, ToastComponent],
+  imports: [RouterOutlet, CommonModule, TranslateModule, HeaderComponent, ToastComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })

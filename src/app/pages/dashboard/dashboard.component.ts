@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 import { where, orderBy } from '@angular/fire/firestore';
 import { fmtDateShort } from '../../core/utils/date.util';
@@ -36,6 +36,7 @@ export class DashboardComponent implements OnInit {
   auth          = inject(AuthService);
   private imgUp = inject(ImageUploadService);
   private toast = inject(ToastService);
+  private translate = inject(TranslateService);
 
   activeTab    = signal<Tab>('posts');
   posts        = signal<Post[]>([]);
@@ -157,7 +158,7 @@ export class DashboardComponent implements OnInit {
 
   async savePost() {
     if (!this.formTitleSq().trim() || !this.formBodySq().trim()) {
-      this.toast.error('Titulli dhe teksti janë të detyrueshëm.'); return;
+      this.toast.error(this.translate.instant('toast.required_title_body')); return;
     }
     const user = this.auth.currentUser();
     if (!user) return;
@@ -199,17 +200,17 @@ export class DashboardComponent implements OnInit {
       const editing = this.editingPost();
       if (editing?.id) {
         await this.fs.updatePost(editing.id, postData);
-        this.toast.success('Postimi u përditësua.');
+        this.toast.success(this.translate.instant('toast.post_updated'));
       } else {
         await this.fs.createPost(postData);
-        this.toast.success('Postimi u krijua.');
+        this.toast.success(this.translate.instant('toast.post_created'));
       }
 
       await this.loadPosts();
       this.resetForm();
       this.activeTab.set('posts');
     } catch (e) {
-      this.toast.error('Gabim gjatë ruajtjes.');
+      this.toast.error(this.translate.instant('toast.error_saving'));
       console.error(e);
     } finally {
       this.saving.set(false);
@@ -232,13 +233,13 @@ export class DashboardComponent implements OnInit {
     await this.fs.deletePost(id);
     this.posts.update(list => list.filter(p => p.id !== id));
     this.deleteTarget.set(null);
-    this.toast.success('Postimi u fshi.');
+    this.toast.success(this.translate.instant('toast.post_deleted'));
   }
 
   async deleteComment(postId: string, commentId: string) {
     await this.fs.deleteComment(postId, commentId);
     this.comments.update(list => list.filter(c => c.id !== commentId));
-    this.toast.success('Komenti u fshi.');
+    this.toast.success(this.translate.instant('toast.comment_deleted'));
   }
 
   formatDate(ts: any): string { return fmtDateShort(ts, 'sq') || '—'; }

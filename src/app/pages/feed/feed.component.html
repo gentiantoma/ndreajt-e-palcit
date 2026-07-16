@@ -73,6 +73,16 @@
       <!-- ═══════════════ MAIN FEED ═══════════════ -->
       <main class="col-12 col-lg-6 feed-main">
 
+        <!-- Newspaper masthead -->
+        <header class="masthead">
+          <div class="masthead-inner">
+            <h1 class="masthead-title">{{ 'feed.title' | translate }}</h1>
+            <div class="masthead-sub">
+              <span class="masthead-date">{{ todayLine }}</span>
+            </div>
+          </div>
+        </header>
+
         <!-- Mobile category scroll with prev/next arrows -->
         <div class="cat-scroll-wrap d-lg-none">
           <button class="cat-nav-btn" (click)="scrollChips('left')" type="button" aria-label="Scroll left"
@@ -101,7 +111,6 @@
 
         <!-- Desktop feed header -->
         <div class="feed-header d-none d-lg-block">
-          <h1 class="feed-title">{{ 'feed.title' | translate }}</h1>
           <div class="cat-scroll-wrap cat-scroll-wrap--desktop">
             <button class="cat-nav-btn" (click)="scrollChipsDesktop('left')" type="button" aria-label="Scroll left"
                     [disabled]="!canScrollLeftDesktop()">

@@ -4,14 +4,15 @@ export type PostCategory = 'lajme' | 'histori' | 'njoftim' | 'events' | 'pajtime
 export type UserRole = 'member' | 'admin';
 export type ReactionType = 'like' | 'respect' | 'strong' | 'bravo' | 'honor' | 'fire' | 'sad';
 
+/* `label` is an ngx-translate key — resolved per active language (sq/en) */
 export const REACTIONS: { type: ReactionType; emoji: string; label: string }[] = [
-  { type: 'like',    emoji: '❤️', label: 'Pëlqej'   },
-  { type: 'respect', emoji: '🤝', label: 'Respekt'  },
-  { type: 'strong',  emoji: '💪', label: 'Forcë'    },
-  { type: 'bravo',   emoji: '🙌', label: 'Bravo'    },
-  { type: 'honor',   emoji: '🫡', label: 'Nderim'   },
-  { type: 'fire',    emoji: '🔥', label: 'Zjarr'    },
-  { type: 'sad',     emoji: '💔', label: 'Pikëllim' },
+  { type: 'like',    emoji: '❤️', label: 'reactions.like'    },
+  { type: 'respect', emoji: '🤝', label: 'reactions.respect' },
+  { type: 'strong',  emoji: '💪', label: 'reactions.strong'  },
+  { type: 'bravo',   emoji: '🙌', label: 'reactions.bravo'   },
+  { type: 'honor',   emoji: '🫡', label: 'reactions.honor'   },
+  { type: 'fire',    emoji: '🔥', label: 'reactions.fire'    },
+  { type: 'sad',     emoji: '💔', label: 'reactions.sad'     },
 ];
 
 export interface Post {
@@ -28,6 +29,8 @@ export interface Post {
   authorIsAdmin?: boolean;
   category: PostCategory;
   likeCount: number;
+  /** Per-reaction counters (e.g. { respect: 12, fire: 3 }) — used to render the top-3 emoji stack */
+  reactionCounts?: Partial<Record<ReactionType, number>>;
   commentCount: number;
   published: boolean;
   createdAt?: Timestamp | Date | any;

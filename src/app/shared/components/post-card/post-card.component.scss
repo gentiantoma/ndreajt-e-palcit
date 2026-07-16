@@ -85,9 +85,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 280ms ease;
   }
-  &:hover img { transform: scale(1.04); }
 }
 
 /* Heights per layout */
@@ -96,21 +94,27 @@
 .img-grid--3 .img-cell--top                { aspect-ratio: 16 / 9; }
 .img-grid--3 .img-cell:not(.img-cell--top) { aspect-ratio: 3 / 2; }
 
+/* Newspaper headline */
 .post-title {
   display: block;
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   color: var(--color-text);
   text-decoration: none;
-  line-height: 1.4;
+  line-height: 1.25;
   margin-bottom: 8px;
+
+  &::first-letter { text-transform: uppercase; }
 }
 
+/* Newspaper deck / excerpt — serif body copy */
 .post-body {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  line-height: 1.6;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: #3c3c3c;
+  line-height: 1.65;
   word-break: break-word;
   margin: 0;
   display: -webkit-box;
@@ -125,7 +129,6 @@
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
-  &:hover { text-decoration: underline; }
 }
 
 /* Stats */
@@ -145,7 +148,19 @@
   gap: 4px;
 }
 
-.stat-reaction-emoji { font-size: 14px; line-height: 1; }
+/* Up to 3 distinct reaction emojis, slightly overlapped like Facebook */
+.stat-emoji-stack {
+  display: inline-flex;
+  align-items: center;
+
+  .stat-reaction-emoji + .stat-reaction-emoji { margin-left: -5px; }
+}
+
+.stat-reaction-emoji {
+  font-size: 14px;
+  line-height: 1;
+  filter: drop-shadow(0 0 1.5px var(--color-bg-card));
+}
 .stat-likes { cursor: pointer; }
 .stat-comments { cursor: pointer; margin-left: auto; }
 
@@ -159,7 +174,6 @@
   width: 28px; height: 28px; border-radius: 50%;
   background: var(--color-bg-elevated); border: none; cursor: pointer;
   color: var(--color-text-muted);
-  &:hover { background: var(--color-border); }
 }
 
 .reaction-tabs {
@@ -198,8 +212,6 @@
 .liker-row {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 16px;
-  transition: background 120ms;
-  &:hover { background: var(--color-bg-elevated); }
 }
 
 .liker-avatar-wrap {
@@ -215,7 +227,6 @@
 .liker-name {
   flex: 1; font-size: 14px; font-weight: 500;
   color: var(--color-text); text-decoration: none;
-  &:hover { text-decoration: underline; }
 }
 
 .liker-reaction-label {
@@ -355,7 +366,6 @@
   color: var(--color-accent);
   text-decoration: none;
   padding: 8px 0 4px;
-  &:hover { text-decoration: underline; }
 }
 
 .no-comments {
@@ -403,7 +413,6 @@
 .c-author-link {
   color: var(--color-text);
   text-decoration: none;
-  &:hover { text-decoration: underline; color: var(--color-accent); }
 }
 
 .c-reply-btn {
@@ -501,8 +510,7 @@
     cursor: pointer;
     flex-shrink: 0;
     box-shadow: 0 2px 7px rgba(24,119,242,0.35);
-    transition: transform 150ms ease, box-shadow 150ms ease;
-    &:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 3px 12px rgba(24,119,242,0.48); }
+    transition: transform 150ms ease;
     &:active:not(:disabled) { transform: scale(0.93); }
     &:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
   }

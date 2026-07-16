@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 
@@ -13,9 +13,10 @@ import { ToastService } from '../../core/services/toast.service';
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
-  private auth   = inject(AuthService);
-  private toast  = inject(ToastService);
-  private router = inject(Router);
+  private auth      = inject(AuthService);
+  private toast     = inject(ToastService);
+  private router    = inject(Router);
+  private translate = inject(TranslateService);
 
   loading = signal(false);
 
@@ -25,13 +26,13 @@ export class LoginComponent {
       const user = await this.auth.loginWithGoogle();
       // null means redirect was triggered (iOS) — page will navigate away automatically
       if (user) {
-        this.toast.success('Mirë se erdhe!');
+        this.toast.success(this.translate.instant('auth.welcome'));
         this.router.navigate(['/']);
       }
     } catch (err: any) {
       this.loading.set(false);
       if (err?.code !== 'auth/popup-closed-by-user') {
-        this.toast.error('Ndodhi një gabim. Provoni sërish.');
+        this.toast.error(this.translate.instant('toast.login_error'));
       }
     }
   }

@@ -60,16 +60,16 @@ export class HeaderComponent {
   async login() {
     try {
       await this.auth.loginWithGoogle();
-      this.toast.success('Mirë se erdhe!');
+      this.toast.success(this.translate.instant('auth.welcome'));
     } catch {
-      this.toast.error('Ndodhi një gabim gjatë hyrjes.');
+      this.toast.error(this.translate.instant('toast.login_error'));
     }
   }
 
   async logout() {
     await this.auth.logout();
     this.dropOpen.set(false);
-    this.toast.info('Shihemi!');
+    this.toast.info(this.translate.instant('auth.goodbye'));
   }
 
   getInitial(name: string) {

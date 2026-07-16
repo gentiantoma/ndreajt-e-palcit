@@ -236,11 +236,60 @@
   margin-bottom: 16px;
 }
 
-.feed-title {
-  font-family: var(--font-serif);
-  font-size: 1.4rem;
-  color: var(--color-text);
+/* ─── NEWSPAPER MASTHEAD ─── */
+.masthead {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 14px 16px 0;
   margin-bottom: 12px;
+  text-align: center;
+
+  @media (max-width: 600px) {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 8px;
+  }
+}
+
+.masthead-inner {
+  padding: 8px 0 14px;
+}
+
+/* Spaced uppercase wordmark, like classic print mastheads */
+.masthead-title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(1.05rem, 3.8vw, 1.5rem);
+  letter-spacing: 0.28em;
+  text-indent: 0.28em; /* re-centers text that letter-spacing shifts left */
+  line-height: 1.2;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+/* Small centered date between short rules: ——— 11 Qer 2026 ——— */
+.masthead-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 11.5px;
+  color: var(--color-text-dim);
+
+  &::before,
+  &::after {
+    content: '';
+    width: 44px;
+    height: 1px;
+    background: var(--color-border);
+  }
 }
 
 /* Mobile chip bar wrapper — sticky, full-width, with arrow buttons */
@@ -288,7 +337,6 @@
   -webkit-appearance: none;
   transition: background var(--transition-fast), border-color var(--transition-fast);
 
-  &:hover:not(:disabled) { background: var(--color-bg-elevated) !important; border-color: #c4c9d1; }
   &:active:not(:disabled) { background: var(--color-bg-elevated) !important; }
 
   &:disabled {
@@ -365,7 +413,6 @@
   &:hover:not(.active) {
     background: var(--color-bg-elevated);
     color: var(--color-text);
-    border-color: #c4c9d1;
   }
 
   &.active {
@@ -425,12 +472,11 @@
   border: 1.5px solid var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 150ms, border-color 150ms, transform 150ms;
+  transition: background 150ms, border-color 150ms;
 
-  &:hover {
+  &:active {
     background: var(--color-border);
     border-color: var(--color-text-dim);
-    transform: translateY(2px);
   }
 }
 

@@ -21,7 +21,8 @@
   --radius-sm:          6px;
   --shadow-card:        0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-elevated:    0 4px 16px rgba(0,0,0,0.14);
-  --font-serif:         'Georgia', serif;
+  --font-serif:         'Georgia', 'Times New Roman', serif;
+  --font-display:       'Playfair Display', 'Georgia', 'Times New Roman', serif;
   --font-sans:          'Segoe UI', system-ui, -apple-system, sans-serif;
   --header-height:      56px;
   --transition-fast:    150ms ease;
@@ -107,10 +108,11 @@ input, textarea, select {
 .btn-icon      { background: transparent; color: var(--color-text-muted); border: none; padding: 6px; border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 
 /* ─── BADGES ─── */
+/* Newspaper "kicker" — squared, spaced small caps */
 .badge-category {
   display: inline-flex; align-items: center; padding: 3px 10px;
-  border-radius: 20px; font-size: 11px; font-weight: 600;
-  letter-spacing: 0.4px; text-transform: uppercase;
+  border-radius: 3px; font-size: 10.5px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
   &.lajme    { background: rgba(24,119,242,0.1);   color: #1877f2; }
   &.histori  { background: rgba(230,128,0,0.12);   color: #c27303; }
   &.njoftim  { background: rgba(21,170,80,0.12);   color: #158a45; }
@@ -155,10 +157,18 @@ input, textarea, select {
   }
 }
 
-/* ─── TYPOGRAPHY ─── */
-h1, h2, h3 { font-family: var(--font-sans); font-weight: 700; }
+/* ─── TYPOGRAPHY — newspaper voice: serif display headings, sans UI ─── */
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; }
 h4, h5, h6 { font-family: var(--font-sans); font-weight: 600; }
 a { color: var(--color-accent); text-decoration: none; }
+
+/* ─── FEED RENDERING AT SCALE ───
+   Off-screen post cards are skipped entirely during layout/paint,
+   so the feed stays smooth even with thousands of posts loaded. */
+app-post-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 560px;
+}
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -392,9 +402,8 @@ select.form-control {
     color: #fff; border: none;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0; padding: 0;
-    transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+    transition: transform 150ms ease, opacity 150ms ease;
     box-shadow: 0 2px 8px rgba(24, 119, 242, 0.38);
-    &:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 4px 14px rgba(24, 119, 242, 0.5); }
     &:active:not(:disabled) { transform: scale(0.94); }
     &:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
   }

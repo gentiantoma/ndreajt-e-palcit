@@ -55,14 +55,24 @@ export class FirestoreService {
       const current = (snap.data()['reaction'] as ReactionType) || 'like';
       if (current === reaction) {
         await deleteDoc(likeRef);
-        await updateDoc(postRef, { likeCount: increment(-1) });
+        await updateDoc(postRef, {
+          likeCount: increment(-1),
+          [`reactionCounts.${current}`]: increment(-1),
+        });
         return null;
       }
       await updateDoc(likeRef, { reaction });
+      await updateDoc(postRef, {
+        [`reactionCounts.${current}`]: increment(-1),
+        [`reactionCounts.${reaction}`]: increment(1),
+      });
       return reaction;
     }
     await setDoc(likeRef, { postId, userId, reaction, createdAt: serverTimestamp() });
-    await updateDoc(postRef, { likeCount: increment(1) });
+    await updateDoc(postRef, {
+      likeCount: increment(1),
+      [`reactionCounts.${reaction}`]: increment(1),
+    });
     return reaction;
   }
 

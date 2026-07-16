@@ -39,7 +39,7 @@
           <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
           <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
         </svg>
-        Dashboard
+        {{ 'nav.dashboard' | translate }}
       </a>
     </nav>
 
@@ -97,7 +97,7 @@
                   <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
                   <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
                 </svg>
-                Dashboard
+                {{ 'nav.dashboard' | translate }}
               </a>
               <hr class="drop-divider">
               <button class="drop-item danger" (click)="logout()">
@@ -146,7 +146,7 @@
       </a>
     </ng-container>
     <a *ngIf="auth.isAdmin()" routerLink="/dashboard" class="mobile-nav-link" (click)="closeMenu()">
-      ⚙️ Dashboard
+      ⚙️ {{ 'nav.dashboard' | translate }}
     </a>
     <div class="mobile-bottom">
       <button class="lang-btn" (click)="switchLang()" type="button">

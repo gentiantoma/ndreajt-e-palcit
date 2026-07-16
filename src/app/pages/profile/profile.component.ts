@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { filter, firstValueFrom } from 'rxjs';
 import { fmtMonthYear } from '../../core/utils/date.util';
 import { FirestoreService } from '../../core/services/firestore.service';
@@ -25,6 +25,7 @@ export class ProfileComponent implements OnInit {
   auth            = inject(AuthService);
   private imgUp   = inject(ImageUploadService);
   private toast   = inject(ToastService);
+  private translate = inject(TranslateService);
 
   profile     = signal<UserProfile | null>(null);
   posts       = signal<Post[]>([]);
@@ -124,8 +125,8 @@ export class ProfileComponent implements OnInit {
   async save() {
     const user = this.auth.currentUser();
     if (!user) return;
-    if (this.editName().trim().length < 2) { this.toast.error('Emri duhet të ketë të paktën 2 karaktere.'); return; }
-    if (this.editBio().length > 300) { this.toast.error('Bio nuk mund të ketë më shumë se 300 karaktere.'); return; }
+    if (this.editName().trim().length < 2) { this.toast.error(this.translate.instant('toast.name_too_short')); return; }
+    if (this.editBio().length > 300) { this.toast.error(this.translate.instant('toast.bio_too_long')); return; }
 
     this.saving.set(true);
     try {
@@ -151,8 +152,8 @@ export class ProfileComponent implements OnInit {
       if (this.auth.isAdmin() && photoURL) {
         this.fs.migrateAdminPosts(user.uid, photoURL).catch(() => {});
       }
-      this.toast.success('Profili u përditësua.');
-    } catch { this.toast.error('Gabim gjatë ruajtjes.'); }
+      this.toast.success(this.translate.instant('toast.profile_updated'));
+    } catch { this.toast.error(this.translate.instant('toast.error_saving')); }
     finally { this.saving.set(false); this.uploading.set(false); }
   }
 

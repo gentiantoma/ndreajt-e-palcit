@@ -10,9 +10,18 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { SeoService } from '../../core/services/seo.service';
 import { LazyImgDirective } from '../../shared/directives/lazy-img.directive';
-import { Post, Comment, ReactionType, REACTIONS } from '../../core/models';
+import { Post, Comment, Reply, ReactionType, REACTIONS } from '../../core/models';
 import { ReactionPickerService } from '../../core/services/reaction-picker.service';
 import { DEMO_POSTS } from '../../data/demo-posts';
+
+interface CommentState {
+  replies: Reply[];
+  showReplies: boolean;
+  replySub?: Subscription;
+  replyText: string;
+  showReplyInput: boolean;
+  submittingReply: boolean;
+}
 
 @Component({
   selector: 'app-post-detail',
@@ -44,6 +53,20 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   submitting  = signal(false);
   myReaction  = signal<ReactionType | null>(null);
   likeCount   = signal(0);
+  reactionCounts = signal<Partial<Record<ReactionType, number>>>({});
+
+  /* Top reaction emojis: 1 type → 1 emoji, 2 → 2, 3+ → 3 (most frequent first).
+     Older posts have no per-type counters — fall back to a single emoji. */
+  topReactions = computed(() => {
+    const entries = (Object.entries(this.reactionCounts()) as [ReactionType, number][])
+      .filter(([, n]) => (n ?? 0) > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+    if (entries.length === 0) {
+      return this.likeCount() > 0 ? [this.reactionEmoji(this.myReaction() ?? 'like')] : [];
+    }
+    return entries.map(([type]) => this.reactionEmoji(type));
+  });
   bookmarked  = signal(false);
   lightboxImg = signal<string | null>(null);
   carouselIndex = signal(0);
@@ -51,7 +74,10 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   readonly reactions = REACTIONS;
   get liked() { return this.myReaction() !== null; }
   reactionEmoji(r: ReactionType | null) { return REACTIONS.find(x => x.type === r)?.emoji ?? '🤝'; }
-  reactionLabel(r: ReactionType | null) { return REACTIONS.find(x => x.type === r)?.label ?? 'Respekt'; }
+  reactionLabel(r: ReactionType | null) {
+    const key = REACTIONS.find(x => x.type === r)?.label ?? 'reactions.respect';
+    return this.translate.instant(key);
+  }
   getReactionColor(r: ReactionType | null): string {
     const c: Record<ReactionType, string> = {
       like: '#e0245e', respect: '#2563eb', strong: '#dc2626',
@@ -88,6 +114,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
       this.post.set(postData);
       this.carouselIndex.set(0);
       this.likeCount.set(postData.likeCount || 0);
+      this.reactionCounts.set({ ...(postData.reactionCounts ?? {}) });
       this.seo.set({
         title: postData.titleSq,
         description: postData.bodySq.slice(0, 160),
@@ -131,11 +158,17 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
   async setReaction(reaction: ReactionType) {
     const user = this.auth.currentUser();
-    if (!user) { this.toast.info('Duhet të hyni.'); return; }
+    if (!user) { this.toast.info(this.translate.instant('toast.login_to_react')); return; }
     this.pickerSvc.dismiss();
     const prev = this.myReaction();
     const result = await this.fs.setReaction(this.postId, user.uid, reaction);
     this.myReaction.set(result);
+    this.reactionCounts.update(c => {
+      const n = { ...c };
+      if (prev && prev !== result) n[prev] = Math.max(0, (n[prev] ?? 0) - 1);
+      if (result && prev !== result) n[result] = (n[result] ?? 0) + 1;
+      return n;
+    });
     if (result === null) this.likeCount.update(c => Math.max(0, c - 1));
     else if (prev === null) this.likeCount.update(c => c + 1);
     this.post.update(p => p ? { ...p, likeCount: this.likeCount() } : p);
@@ -143,10 +176,10 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
   async toggleBookmark() {
     const user = this.auth.currentUser();
-    if (!user) { this.toast.info('Duhet të hyni.'); return; }
+    if (!user) { this.toast.info(this.translate.instant('toast.login_to_save')); return; }
     const saved = await this.fs.toggleFavorite(this.postId, user.uid);
     this.bookmarked.set(saved);
-    this.toast.success(saved ? 'Postimi u ruajt.' : 'Postimi u hoq.');
+    this.toast.success(this.translate.instant(saved ? 'toast.post_saved' : 'toast.post_unsaved'));
   }
 
   async submitComment() {
@@ -163,18 +196,79 @@ export class PostDetailComponent implements OnInit, OnDestroy {
         textSq: text,
       });
       this.commentText.set('');
-    } catch { this.toast.error('Gabim.'); }
+    } catch { this.toast.error(this.translate.instant('toast.error_generic')); }
     finally { this.submitting.set(false); }
   }
 
   async deleteComment(id: string) {
     await this.fs.deleteComment(this.postId, id);
+    this.replyStates[id]?.replySub?.unsubscribe();
+    delete this.replyStates[id];
+  }
+
+  /* ── Replies (same behaviour as the feed cards) ── */
+
+  replyStates: Record<string, CommentState> = {};
+
+  getReplyState(commentId: string): CommentState {
+    if (!this.replyStates[commentId]) {
+      this.replyStates[commentId] = {
+        replies: [], showReplies: false,
+        replyText: '', showReplyInput: false, submittingReply: false,
+      };
+    }
+    return this.replyStates[commentId];
+  }
+
+  toggleReplies(comment: Comment) {
+    const s = this.getReplyState(comment.id!);
+    s.showReplies = !s.showReplies;
+    if (s.showReplies && !s.replySub) {
+      s.replySub = this.fs.getReplies$(this.postId, comment.id!).subscribe(r => { s.replies = r; });
+    }
+  }
+
+  openReplyInput(comment: Comment) {
+    const s = this.getReplyState(comment.id!);
+    s.showReplyInput = !s.showReplyInput;
+    s.replyText = '';
+    if (!s.showReplies) this.toggleReplies(comment);
+  }
+
+  async submitReply(comment: Comment) {
+    const user = this.auth.currentUser();
+    if (!user) { this.toast.info(this.translate.instant('toast.login_to_comment')); return; }
+    const s = this.getReplyState(comment.id!);
+    const text = s.replyText.trim();
+    if (!text) return;
+    s.submittingReply = true;
+    try {
+      const profilePhoto = this.auth.userProfile()?.photoURL || '';
+      const photo = this.auth.isAdmin() ? profilePhoto : (profilePhoto.includes('ibb.co') ? profilePhoto : '');
+      await this.fs.addReply(this.postId, comment.id!, {
+        authorId: user.uid,
+        authorName: this.auth.isAdmin() ? 'Ndreajt e Palçit' : (user.displayName || 'Anëtar'),
+        authorPhoto: photo,
+        textSq: text,
+        mentionName: comment.authorName,
+      });
+      s.replyText = '';
+      s.showReplyInput = false;
+    } catch {
+      this.toast.error(this.translate.instant('toast.error_generic'));
+    } finally {
+      s.submittingReply = false;
+    }
+  }
+
+  async deleteReply(commentId: string, replyId: string) {
+    await this.fs.deleteReply(this.postId, commentId, replyId);
   }
 
   async share() {
     const url = `${window.location.origin}/post/${this.postId}`;
     if ('share' in navigator) await navigator.share({ title: this.title, url });
-    else { await (navigator as any).clipboard.writeText(url); this.toast.success('Linku u kopjua!'); }
+    else { await (navigator as any).clipboard.writeText(url); this.toast.success(this.translate.instant('toast.link_copied')); }
   }
 
   openLightbox(img: string) { this.lightboxImg.set(img); }
@@ -198,10 +292,13 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   formatDate(ts: any): string { return fmtDateFull(ts, this.lang); }
   formatCommentTime(ts: any): string { return fmtDateWithTime(ts, this.lang); }
 
-  canDelete(comment: Comment): boolean {
+  canDelete(item: Comment | Reply): boolean {
     const u = this.auth.currentUser();
-    return !!u && (u.uid === comment.authorId || (this.auth.isAdmin() ?? false));
+    return !!u && (u.uid === item.authorId || (this.auth.isAdmin() ?? false));
   }
 
-  ngOnDestroy() { this.commentsSub?.unsubscribe(); }
+  ngOnDestroy() {
+    this.commentsSub?.unsubscribe();
+    Object.values(this.replyStates).forEach(s => s.replySub?.unsubscribe());
+  }
 }

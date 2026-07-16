@@ -48,6 +48,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
   myReaction   = signal<ReactionType | null>(null);
   bookmarked   = signal(false);
   likeCount    = signal(0);
+  reactionCounts = signal<Partial<Record<ReactionType, number>>>({});
   showComments = signal(false);
   comments     = signal<Comment[]>([]);
   commentText  = signal('');
@@ -66,7 +67,8 @@ export class PostCardComponent implements OnInit, OnDestroy {
     return REACTIONS.find(x => x.type === r)?.emoji ?? '🤝';
   }
   reactionLabel(r: ReactionType | null) {
-    return REACTIONS.find(x => x.type === r)?.label ?? 'Respekt';
+    const key = REACTIONS.find(x => x.type === r)?.label ?? 'reactions.respect';
+    return this.translate.instant(key);
   }
   getReactionColor(r: ReactionType | null): string {
     const colors: Record<ReactionType, string> = {
@@ -80,6 +82,19 @@ export class PostCardComponent implements OnInit, OnDestroy {
     };
     return r ? (colors[r] ?? '') : '';
   }
+
+  /* Top reaction emojis for the stats row: 1 type → 1 emoji, 2 → 2, 3+ → 3 (most frequent first).
+     Older posts have no per-type counters — fall back to a single emoji. */
+  topReactions = computed(() => {
+    const entries = (Object.entries(this.reactionCounts()) as [ReactionType, number][])
+      .filter(([, n]) => (n ?? 0) > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+    if (entries.length === 0) {
+      return this.likeCount() > 0 ? [this.reactionEmoji(this.myReaction() ?? 'like')] : [];
+    }
+    return entries.map(([type]) => this.reactionEmoji(type));
+  });
 
   reactionTabs = computed(() => {
     const counts = new Map<ReactionType, number>();
@@ -121,6 +136,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.likeCount.set(this.post.likeCount || 0);
+    this.reactionCounts.set({ ...(this.post.reactionCounts ?? {}) });
     if (this.userState) {
       // Pre-loaded by feed — zero extra Firestore calls
       this.myReaction.set(this.userState.reaction);
@@ -168,13 +184,14 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   async setReaction(reaction: ReactionType) {
     const user = await this.getResolvedUser();
-    if (!user) { this.toast.info('Duhet të hyni për të reaguar.'); return; }
+    if (!user) { this.toast.info(this.translate.instant('toast.login_to_react')); return; }
     if (!this.post.id) return;
     this.pickerSvc.dismiss();
     try {
       const prev = this.myReaction();
       const result = await this.fs.setReaction(this.post.id, user.uid, reaction);
       this.myReaction.set(result);
+      this.applyReactionDelta(prev, result);
       if (result === null) {
         this.likeCount.update(c => Math.max(0, c - 1));
         this.audio.unlike();
@@ -183,18 +200,28 @@ export class PostCardComponent implements OnInit, OnDestroy {
         this.audio.like();
       }
     } catch (e: any) {
-      this.toast.error('Gabim: ' + (e?.message ?? 'Provo sërish'));
+      this.toast.error(this.translate.instant('toast.error_generic'));
     }
+  }
+
+  /** Mirror the Firestore reaction-counter change locally so the emoji stack updates instantly */
+  private applyReactionDelta(prev: ReactionType | null, next: ReactionType | null) {
+    this.reactionCounts.update(c => {
+      const n = { ...c };
+      if (prev && prev !== next) n[prev] = Math.max(0, (n[prev] ?? 0) - 1);
+      if (next && prev !== next) n[next] = (n[next] ?? 0) + 1;
+      return n;
+    });
   }
 
   async toggleBookmark() {
     const user = this.auth.currentUser();
-    if (!user) { this.toast.info('Duhet të hyni për të ruajtur.'); return; }
+    if (!user) { this.toast.info(this.translate.instant('toast.login_to_save')); return; }
     if (!this.post.id) return;
     const saved = await this.fs.toggleFavorite(this.post.id, user.uid);
     this.bookmarked.set(saved);
     this.audio.bookmark();
-    this.toast.success(saved ? 'Postimi u ruajt.' : 'Postimi u hoq nga të ruajturit.');
+    this.toast.success(this.translate.instant(saved ? 'toast.post_saved' : 'toast.post_unsaved'));
   }
 
   toggleComments() {
@@ -207,7 +234,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   async submitComment() {
     const user = this.auth.currentUser();
-    if (!user) { this.toast.info('Duhet të hyni për të komentuar.'); return; }
+    if (!user) { this.toast.info(this.translate.instant('toast.login_to_comment')); return; }
     const text = this.commentText().trim();
     if (!text) return;
     this.submitting.set(true);
@@ -223,7 +250,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
       this.commentText.set('');
       this.audio.commentSend();
     } catch {
-      this.toast.error('Ndodhi një gabim.');
+      this.toast.error(this.translate.instant('toast.error_generic'));
     } finally {
       this.submitting.set(false);
     }
@@ -270,7 +297,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   async submitReply(comment: Comment) {
     const user = this.auth.currentUser();
-    if (!user) { this.toast.info('Duhet të hyni.'); return; }
+    if (!user) { this.toast.info(this.translate.instant('toast.login_required')); return; }
     const s = this.getReplyState(comment.id!);
     const text = s.replyText.trim();
     if (!text) return;
@@ -289,7 +316,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
       s.showReplyInput = false;
       this.audio.commentSend();
     } catch {
-      this.toast.error('Ndodhi një gabim.');
+      this.toast.error(this.translate.instant('toast.error_generic'));
     } finally {
       s.submittingReply = false;
     }
@@ -312,7 +339,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
       await navigator.share({ title: this.title, url });
     } else {
       await (navigator as any).clipboard.writeText(url);
-      this.toast.success('Linku u kopjua!');
+      this.toast.success(this.translate.instant('toast.link_copied'));
     }
   }
 

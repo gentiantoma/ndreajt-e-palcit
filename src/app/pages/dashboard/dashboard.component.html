@@ -17,13 +17,13 @@
         📋 {{ 'dashboard.posts_list' | translate }} <span class="tab-count">{{ posts().length }}</span>
       </button>
       <button [class.active]="activeTab() === 'create'" (click)="switchTab('create')">
-        {{ editingPost() ? '✏️ Redakto' : ('➕ ' + ('dashboard.new_post' | translate)) }}
+        {{ editingPost() ? ('✏️ ' + ('dashboard.edit_post' | translate)) : ('➕ ' + ('dashboard.new_post' | translate)) }}
       </button>
       <button [class.active]="activeTab() === 'comments'" (click)="switchTab('comments')">
         💬 {{ 'dashboard.comments' | translate }}
       </button>
       <button [class.active]="activeTab() === 'users'" (click)="switchTab('users')">
-        👥 Auditimi <span class="tab-count">{{ users().length }}</span>
+        👥 {{ 'dashboard.members' | translate }} <span class="tab-count">{{ users().length }}</span>
       </button>
     </div>
 
@@ -278,23 +278,23 @@
       <ng-container *ngIf="!loadingUsers()">
         <div *ngIf="users().length === 0" class="empty-state">
           <div class="empty-icon">👥</div>
-          <p>Nuk ka përdorues të regjistruar.</p>
+          <p>{{ 'dashboard.no_members' | translate }}</p>
         </div>
 
         <!-- Desktop table -->
         <div *ngIf="users().length > 0" class="card posts-table-wrap d-none d-md-block">
           <div class="audit-header">
-            <h3 class="audit-title">Anëtarët e Platformës</h3>
-            <span class="audit-badge">{{ users().length }} total</span>
+            <h3 class="audit-title">{{ 'dashboard.members_title' | translate }}</h3>
+            <span class="audit-badge">{{ users().length }}</span>
           </div>
           <table class="data-table">
             <thead>
               <tr>
-                <th>Përdoruesi</th>
+                <th>{{ 'dashboard.user' | translate }}</th>
                 <th>Email</th>
-                <th style="text-align:center">💬 Komente</th>
-                <th style="text-align:center">❤ Pëlqime</th>
-                <th>Anëtarësuar</th>
+                <th style="text-align:center">💬 {{ 'dashboard.comments' | translate }}</th>
+                <th style="text-align:center">❤ {{ 'post.likes' | translate }}</th>
+                <th>{{ 'dashboard.member_since' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -308,7 +308,7 @@
                       <div *ngIf="!u.photoURL" class="avatar-initial sm" style="font-size:11px">{{ getInitial(u.displayName) }}</div>
                     </ng-container>
                     <div>
-                      <span class="user-name">{{ u.role === 'admin' ? 'Ndreajt e Palçit' : (u.displayName || 'Anëtar') }}</span>
+                      <span class="user-name">{{ u.role === 'admin' ? 'Ndreajt e Palçit' : (u.displayName || ('dashboard.member_fallback' | translate)) }}</span>
                     </div>
                   </div>
                 </td>
@@ -336,22 +336,22 @@
                 <div *ngIf="!u.photoURL" class="avatar-initial md">{{ getInitial(u.displayName) }}</div>
               </ng-container>
               <div class="user-card-info">
-                <span class="user-name">{{ u.role === 'admin' ? 'Ndreajt e Palçit' : (u.displayName || 'Anëtar') }}</span>
+                <span class="user-name">{{ u.role === 'admin' ? 'Ndreajt e Palçit' : (u.displayName || ('dashboard.member_fallback' | translate)) }}</span>
                 <span class="user-email">{{ u.role !== 'admin' ? u.email : '' }}</span>
               </div>
             </div>
             <div class="user-card-stats">
               <div class="user-stat">
                 <span class="user-stat-badge comment lg">{{ u.commentCount }}</span>
-                <span class="user-stat-lbl">💬 Komente</span>
+                <span class="user-stat-lbl">💬 {{ 'dashboard.comments' | translate }}</span>
               </div>
               <div class="user-stat">
                 <span class="user-stat-badge like lg">{{ u.likeCount }}</span>
-                <span class="user-stat-lbl">❤ Pëlqime</span>
+                <span class="user-stat-lbl">❤ {{ 'post.likes' | translate }}</span>
               </div>
               <div class="user-stat" *ngIf="u.createdAt">
                 <span class="user-stat-lbl" style="color:var(--color-text-dim)">{{ formatDate(u.createdAt) }}</span>
-                <span class="user-stat-lbl">Anëtarësuar</span>
+                <span class="user-stat-lbl">{{ 'dashboard.member_since' | translate }}</span>
               </div>
             </div>
           </div>

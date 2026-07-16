@@ -1,8 +1,9 @@
 import { Component, OnInit, AfterViewInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { where, orderBy, limit } from '@angular/fire/firestore';
+import { fmtDateFull } from '../../core/utils/date.util';
 import { FirestoreService } from '../../core/services/firestore.service';
 import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
@@ -23,6 +24,12 @@ export class FeedComponent implements OnInit, AfterViewInit {
   private fs    = inject(FirestoreService);
   auth          = inject(AuthService);
   private seo   = inject(SeoService);
+  private translate = inject(TranslateService);
+
+  /** Newspaper-style dateline shown under the masthead, in the active language */
+  get todayLine(): string {
+    return fmtDateFull(new Date(), this.translate.currentLang || 'sq');
+  }
 
 
   posts          = signal<Post[]>([]);

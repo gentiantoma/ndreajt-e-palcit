@@ -102,8 +102,7 @@
   transition: background 150ms ease, transform 150ms ease;
   z-index: 2;
 
-  &:hover { background: rgba(0, 0, 0, 0.8); }
-  &:active { transform: translateY(-50%) scale(0.92); }
+  &:active { background: rgba(0, 0, 0, 0.8); transform: translateY(-50%) scale(0.92); }
 
   &.carousel-prev { left: 12px; }
   &.carousel-next { right: 12px; }
@@ -156,8 +155,6 @@
     opacity: 1;
     border-color: rgba(255, 255, 255, 0.9);
   }
-
-  &:hover:not(.active) { opacity: 0.8; }
 }
 
 .article-body {
@@ -173,18 +170,25 @@
   margin-bottom: 14px;
 }
 
+/* Newspaper dateline — italic serif */
 .meta-date {
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 13px;
   color: var(--color-text-dim);
 }
 
+/* Newspaper headline — first letter always capitalized */
 .article-title {
-  font-family: var(--font-serif);
-  font-size: clamp(1.5rem, 4vw, 2.2rem);
-  font-weight: 700;
-  line-height: 1.3;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.18;
   color: var(--color-text);
   margin-bottom: 1.25rem;
+
+  &::first-letter { text-transform: uppercase; }
 }
 
 .author-row {
@@ -206,17 +210,34 @@
 }
 
 .author-sub {
+  font-family: var(--font-serif);
+  font-style: italic;
   font-size: 12px;
   color: var(--color-text-dim);
   margin: 2px 0 0;
 }
 
+/* Newspaper article body — serif; short posts just get a capital first letter */
 .article-text {
-  font-size: 16px;
-  line-height: 1.8;
-  color: var(--color-text);
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.85;
+  color: #262626;
   white-space: pre-wrap;
   word-break: break-word;
+
+  &::first-letter { text-transform: uppercase; }
+
+  /* Drop cap only on long article text (class set from the template) */
+  &.with-dropcap::first-letter {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 3em;
+    float: left;
+    line-height: 0.82;
+    padding: 6px 8px 0 0;
+    color: var(--color-accent);
+  }
 }
 
 
@@ -246,7 +267,7 @@
   height: 44px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-btn);
+  border-radius: 999px;
   color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 500;
@@ -273,6 +294,15 @@
   line-height: 1;
 
   @media (max-width: 600px) { font-size: 17px; }
+}
+
+/* Up to 3 reaction emojis, slightly overlapped */
+.stat-emoji-stack {
+  display: inline-flex;
+  align-items: center;
+
+  .reaction-active-emoji-lg + .reaction-active-emoji-lg { margin-left: -7px; }
+  .reaction-active-emoji-lg { filter: drop-shadow(0 0 1.5px var(--color-bg-card)); }
 }
 
 .reaction-wrap-detail {
@@ -365,35 +395,49 @@
   margin-bottom: 6px;
 }
 
+/* Click-pagination pill: "Shiko edhe N komente të tjera" */
 .load-more-comments {
-  display: block;
-  width: 100%;
-  margin: 12px 0 4px;
-  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 14px auto 4px;
+  padding: 9px 22px;
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-btn);
+  border-radius: 999px;
   color: var(--color-accent);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: var(--font-sans);
   cursor: pointer;
   text-align: center;
   transition: background var(--transition-fast);
-  &:hover { background: var(--color-border); }
+  &:active { background: var(--color-border); }
 }
 
 /* Comments */
 .comments-full { margin-top: 0; }
 
+/* Newspaper section header — small caps with a hairline rule */
 .comments-heading {
-  font-size: 1.1rem;
+  font-size: 12.5px;
   font-family: var(--font-sans);
   font-weight: 700;
-  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: var(--color-text-muted);
   margin-bottom: 1.25rem;
   display: flex;
   align-items: center;
   gap: 10px;
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
 }
 
 .count-badge {
@@ -442,9 +486,8 @@
   transition: background 150ms ease, transform 150ms ease, opacity 150ms ease;
   flex-shrink: 0;
 
-  &:hover:not(:disabled) {
-    background: var(--color-accent-dark, #3fa87a);
-    transform: scale(1.08);
+  &:active:not(:disabled) {
+    transform: scale(0.94);
   }
 
   &:disabled {
@@ -478,10 +521,111 @@
 }
 
 .c-author { font-weight: 600; font-size: 14px; }
-.c-author-link { color: var(--color-text); text-decoration: none; &:hover { text-decoration: underline; color: var(--color-accent); } }
+.c-author-link { color: var(--color-text); text-decoration: none; }
 .c-text   { font-size: 14px; white-space: pre-wrap; word-break: break-word; margin: 0; }
-.c-meta   { font-size: 11px; color: var(--color-text-dim); display: block; margin-top: 4px; }
+.c-meta   { font-size: 11px; color: var(--color-text-dim); }
 .c-delete { background: transparent; border: none; cursor: pointer; color: var(--color-text-dim); padding: 2px; }
+
+/* ── Reply thread (mirrors the feed cards) ── */
+.comment-right { flex: 1; min-width: 0; }
+
+.c-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 3px 6px 0;
+}
+
+.c-reply-btn,
+.c-delete-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  padding: 0;
+}
+.c-delete-btn { color: var(--color-text-dim); font-weight: 400; margin-left: auto; }
+
+.c-view-replies-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  padding: 4px 6px 0;
+}
+
+.replies-wrap {
+  margin-top: 8px;
+  border-left: 2px solid var(--color-border);
+  padding-left: 10px;
+}
+
+.reply-item {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+
+  .avatar, .avatar-initial { margin-top: 2px; flex-shrink: 0; }
+}
+
+.reply-mention {
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.reply-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 8px;
+
+  > .avatar-initial { margin-top: 4px; flex-shrink: 0; }
+}
+
+.reply-input-inner {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+
+  input {
+    flex: 1;
+    padding: 7px 14px;
+    border-radius: 18px;
+    background: var(--color-bg-elevated);
+    border: 1.5px solid transparent;
+    color: var(--color-text);
+    font-size: 13px;
+    font-family: var(--font-sans);
+    outline: none;
+    &:focus { border-color: var(--color-border-focus); background: #fff; }
+    &::placeholder { color: var(--color-text-dim); }
+  }
+
+  button {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    border: none;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 150ms ease;
+    &:active:not(:disabled) { transform: scale(0.93); }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+}
 
 /* Skeleton */
 .skeleton-detail { padding: 0; }
