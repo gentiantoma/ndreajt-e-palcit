@@ -9,7 +9,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
 import { PostCardComponent } from '../../shared/components/post-card/post-card.component';
 import { Post, ReactionType } from '../../core/models';
-import { DEMO_POSTS } from '../../data/demo-posts';
 
 interface CategoryFilter { key: string; label: string; }
 
@@ -83,19 +82,13 @@ export class FeedComponent implements OnInit, AfterViewInit {
         console.warn('Firestore query failed, using demo posts', e);
       }
 
-      if (data.length === 0) {
-        const filtered = cat === 'all' ? DEMO_POSTS : DEMO_POSTS.filter(p => p.category === cat);
-        this.posts.set(filtered);
-        this.villageStats.set({ posts: DEMO_POSTS.length, members: 12 });
-      } else {
-        this.posts.set(data);
-        this.villageStats.set({ posts: data.length, members: 0 });
-        // Batch-load user state: 2 queries instead of N*2
-        const user = this.auth.currentUser();
-        if (user) {
-          this.fs.getUserFeedState(data.map(p => p.id!), user.uid)
-            .then(state => this.userFeedState.set(state));
-        }
+      this.posts.set(data);
+      this.villageStats.set({ posts: data.length, members: 0 });
+      // Batch-load user state: 2 queries instead of N*2
+      const user = this.auth.currentUser();
+      if (user && data.length) {
+        this.fs.getUserFeedState(data.map(p => p.id!), user.uid)
+          .then(state => this.userFeedState.set(state));
       }
       this.hasMore.set(data.length === 30);
     } finally {

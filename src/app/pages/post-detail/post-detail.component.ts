@@ -12,7 +12,6 @@ import { SeoService } from '../../core/services/seo.service';
 import { LazyImgDirective } from '../../shared/directives/lazy-img.directive';
 import { Post, Comment, Reply, ReactionType, REACTIONS } from '../../core/models';
 import { ReactionPickerService } from '../../core/services/reaction-picker.service';
-import { DEMO_POSTS } from '../../data/demo-posts';
 
 interface CommentState {
   replies: Reply[];
@@ -106,10 +105,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     this.postId = this.route.snapshot.paramMap.get('id') || '';
     if (!this.postId) return;
 
-    let postData = await this.fs.getPost(this.postId);
-    if (!postData && this.postId.startsWith('demo-')) {
-      postData = DEMO_POSTS.find(p => p.id === this.postId) ?? null;
-    }
+    const postData = await this.fs.getPost(this.postId);
     if (postData) {
       this.post.set(postData);
       this.carouselIndex.set(0);

@@ -464,20 +464,26 @@
   align-items: flex-start;
 }
 
+/* Textarea and send button side by side, button anchored to the bottom of the box */
 .comment-compose {
   flex: 1;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
 
   textarea {
+    flex: 1;
     width: 100%;
     border-radius: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 0;
     min-height: 80px;
   }
 }
 
 .compose-footer {
   display: flex;
-  justify-content: flex-end;
+  align-items: flex-end;
+  padding-bottom: 2px;
 }
 
 .btn-send {
