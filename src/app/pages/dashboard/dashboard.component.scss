@@ -4,6 +4,29 @@
   padding: 1.5rem 0 3rem;
 }
 
+/* Suspended member styling */
+.suspended-tag {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: rgba(179,40,45,0.12);
+  color: #b3282d;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.row-suspended {
+  opacity: 0.62;
+}
+
+.user-card-action {
+  width: 100%;
+  margin-top: 10px;
+}
+
 .dashboard-container {
   max-width: 1200px;
   margin: 0 auto;

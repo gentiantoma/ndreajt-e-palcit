@@ -20,8 +20,9 @@
           <div class="avatar-wrap">
             <img *ngIf="profile()!.photoURL && !profileAvatarError(); else profFallback"
                  [src]="profile()!.photoURL!"
-                 class="avatar xl profile-avatar"
+                 class="avatar xl profile-avatar clickable-avatar"
                  [alt]="profile()!.role === 'admin' ? 'Ndreajt e Palçit' : profile()!.displayName"
+                 (click)="openAvatarViewer()"
                  (error)="profileAvatarError.set(true)">
             <ng-template #profFallback>
               <ng-container *ngIf="profile()!.role === 'admin'; else profInit">
@@ -118,4 +119,15 @@
     </div>
 
   </div>
+</div>
+
+<!-- Profile photo viewer -->
+<div class="avatar-lightbox" *ngIf="avatarViewer() && profile()" (click)="closeAvatarViewer()">
+  <button class="avatar-lightbox-close" (click)="closeAvatarViewer()" type="button">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+  <img [src]="profile()!.photoURL!" class="avatar-lightbox-img"
+       [alt]="profile()!.displayName" (click)="$event.stopPropagation()">
 </div>

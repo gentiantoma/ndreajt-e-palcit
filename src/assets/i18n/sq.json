@@ -85,6 +85,9 @@
     "post_updated": "Postimi u përditësua me sukses.",
     "post_deleted": "Postimi u fshi.",
     "comment_deleted": "Komenti u fshi.",
+    "user_suspended": "Llogaria u pezullua.",
+    "user_unsuspended": "Llogaria u riaktivizua.",
+    "account_suspended": "Llogaria juaj është pezulluar nga administratori.",
     "required_title_body": "Titulli dhe teksti janë të detyrueshëm.",
     "name_too_short": "Emri duhet të ketë të paktën 2 shkronja.",
     "bio_too_long": "Bio nuk mund të kalojë 300 karaktere."
@@ -134,7 +137,12 @@
     "click_to_upload": "Klikoni për të ngarkuar foton kryesore",
     "uploading_images": "Duke ngarkuar fotot...",
     "publish": "Publiko",
-    "draft": "Draft"
+    "draft": "Draft",
+    "suspend": "Pezullo",
+    "unsuspend": "Riaktivizo",
+    "suspended": "I pezulluar",
+    "suspend_confirm": "Jeni i sigurt që dëshironi ta pezulloni këtë përdorues? Ai nuk do të mund të hyjë më në platformë.",
+    "unsuspend_confirm": "Riaktivizo llogarinë e këtij përdoruesi? Ai do të mund të hyjë sërish në platformë."
   },
   "profile": {
     "edit": "Ndrysho profilin",
@@ -161,6 +169,16 @@
     "takimet": "Takimet",
     "other": "Të tjera"
   },
+  "notif": {
+    "title": "Njoftimet",
+    "all_title": "Të gjitha njoftimet",
+    "empty": "Ende s'ka njoftime.",
+    "view_all": "Shiko të gjitha",
+    "mark_all_read": "Shënoji të gjitha si të lexuara",
+    "comment_suffix": "komentoi postimin tuaj",
+    "reply_suffix": "iu përgjigj komentit tuaj",
+    "reaction_suffix": "reagoi në postimin tuaj"
+  },
   "general": {
     "loading": "Duke ngarkuar...",
     "save": "Ruaj",
@@ -168,6 +186,7 @@
     "delete": "Fshi",
     "remove": "Hiq",
     "actions": "Veprime",
-    "confirm_delete": "Konfirmo fshirjen"
+    "confirm_delete": "Konfirmo fshirjen",
+    "delete_comment_confirm": "Jeni i sigurt që dëshironi ta fshini këtë koment? Ky veprim nuk mund të zhbëhet."
   }
 }

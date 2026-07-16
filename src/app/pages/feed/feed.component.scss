@@ -1,12 +1,15 @@
 .feed-page {
   background: var(--color-bg);
   min-height: 100vh;
+  /* clip the quill overhang etc. so the page never scrolls sideways on mobile */
+  overflow-x: clip;
 }
 
 .feed-container {
   max-width: 1300px;
   margin: 0 auto;
   padding: 0;
+  overflow-x: clip;
 }
 
 .feed-row {
@@ -46,8 +49,6 @@
   background-color: #55504a;
   background-image:
     linear-gradient(180deg, rgba(255,250,235,0.10) 0%, transparent 32%, transparent 62%, rgba(8,7,5,0.42) 100%),
-    linear-gradient(76deg,  transparent 30.7%, rgba(15,12,8,0.30) 30.85%, transparent 31.05%),
-    linear-gradient(118deg, transparent 63.2%, rgba(15,12,8,0.26) 63.35%, transparent 63.55%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.06' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)' opacity='0.35'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.09' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.82 0 0 0 0 0.74 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)' opacity='0.10'/%3E%3C/svg%3E"),
     var(--paper-noise);
@@ -337,7 +338,7 @@
   align-items: center;
   gap: 6px;
   position: sticky;
-  top: var(--header-height);
+  top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   z-index: 10;
   background: var(--color-bg-card);
   padding: 6px 0;
@@ -346,6 +347,10 @@
   @media (max-width: 991px) {
     padding-left: 10px;
     padding-right: 10px;
+    /* iOS sticky jitters ("sea waves") as the address bar collapses — pin it
+       normally in the flow on phones so it stays rock-steady while scrolling */
+    position: static;
+    top: auto;
   }
 }
 
@@ -499,11 +504,19 @@
 
 .sk-meta { display: flex; flex-direction: column; gap: 0; }
 
+/* Stats + action rows mirror the real card footer exactly */
+.sk-stats {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+}
+
 .sk-actions {
   display: flex;
   gap: 8px;
-  padding: 10px 16px;
-  margin-top: 6px;
+  padding: 8px 16px 18px;
+
+  .skeleton-btn { flex: 1; }
 }
 
 /* ─── Bottom feed indicator ─── */

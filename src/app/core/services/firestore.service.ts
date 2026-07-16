@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import {
   Firestore, collection, doc, getDoc, getDocs, setDoc, addDoc,
-  updateDoc, deleteDoc, query, where, orderBy, limit, collectionData,
+  updateDoc, deleteDoc, query, where, orderBy, limit, collectionData, docData,
   collectionGroup, QueryConstraint, serverTimestamp, increment, writeBatch,
   DocumentData
 } from '@angular/fire/firestore';
@@ -22,6 +22,11 @@ export class FirestoreService {
   async getPost(id: string): Promise<Post | null> {
     const snap = await getDoc(doc(this.db, 'posts', id));
     return snap.exists() ? ({ id: snap.id, ...snap.data() } as Post) : null;
+  }
+
+  /** Live post document — counters (likes/reactions/comments) update in real time */
+  getPost$(id: string): Observable<Post | undefined> {
+    return docData(doc(this.db, 'posts', id), { idField: 'id' }) as Observable<Post | undefined>;
   }
 
   async createPost(data: Partial<Post>): Promise<string> {
@@ -74,6 +79,11 @@ export class FirestoreService {
       [`reactionCounts.${reaction}`]: increment(1),
     });
     return reaction;
+  }
+
+  /** Persist a computed per-type reaction breakdown (backfill for pre-counter posts) */
+  async setReactionCounts(postId: string, counts: Partial<Record<ReactionType, number>>): Promise<void> {
+    await updateDoc(doc(this.db, 'posts', postId), { reactionCounts: counts });
   }
 
   async getUserReaction(postId: string, userId: string): Promise<ReactionType | null> {
@@ -252,6 +262,14 @@ export class FirestoreService {
       }
     });
     if (snap.docs.length) await batch.commit();
+  }
+
+  /** Admin moderation: block/unblock an account platform-wide */
+  async setUserSuspended(uid: string, suspended: boolean): Promise<void> {
+    await updateDoc(doc(this.db, 'users', uid), {
+      suspended,
+      suspendedAt: suspended ? serverTimestamp() : null,
+    });
   }
 
   async getAllUsers(): Promise<any[]> {

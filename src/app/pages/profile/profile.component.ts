@@ -42,6 +42,13 @@ export class ProfileComponent implements OnInit {
   isOwn = signal(false);
   profileAvatarError = signal(false);
 
+  /** Full-screen viewer for the profile photo */
+  avatarViewer = signal(false);
+  openAvatarViewer() {
+    if (this.profile()?.photoURL && !this.profileAvatarError()) this.avatarViewer.set(true);
+  }
+  closeAvatarViewer() { this.avatarViewer.set(false); }
+
   async ngOnInit() {
     const uid = this.route.snapshot.paramMap.get('uid') || '';
     if (!uid) { this.loading.set(false); return; }

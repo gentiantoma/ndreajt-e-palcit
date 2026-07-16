@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { ReactionPickerService } from '../../../core/services/reaction-picker.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { LazyImgDirective } from '../../directives/lazy-img.directive';
 import { fmtDateShort, fmtDateDay } from '../../../core/utils/date.util';
 
@@ -44,6 +45,16 @@ export class PostCardComponent implements OnInit, OnDestroy {
   private audio   = inject(AudioService);
   private translate = inject(TranslateService);
   private pickerSvc = inject(ReactionPickerService);
+  private notifSvc  = inject(NotificationService);
+
+  /** Public-facing name/photo of the acting user (admin acts as the brand) */
+  private get actorName(): string {
+    return this.auth.publicDisplayName;
+  }
+  private get actorPhoto(): string {
+    const p = this.auth.userProfile()?.photoURL || '';
+    return this.auth.isAdmin() ? p : (p.includes('ibb.co') ? p : '');
+  }
 
   myReaction   = signal<ReactionType | null>(null);
   bookmarked   = signal(false);
@@ -134,9 +145,22 @@ export class PostCardComponent implements OnInit, OnDestroy {
     return 'g4';
   }
 
+  private postSub?: Subscription;
+
   ngOnInit() {
     this.likeCount.set(this.post.likeCount || 0);
     this.reactionCounts.set({ ...(this.post.reactionCounts ?? {}) });
+    // Live counters: reactions/comments update instantly (own taps via latency
+    // compensation, other people's activity in real time — no refresh needed)
+    if (this.post.id) {
+      this.postSub = this.fs.getPost$(this.post.id).subscribe(p => {
+        if (!p) return;
+        this.likeCount.set(p.likeCount || 0);
+        this.reactionCounts.set({ ...(p.reactionCounts ?? {}) });
+        this.post = { ...this.post, likeCount: p.likeCount, commentCount: p.commentCount, reactionCounts: p.reactionCounts };
+        this.backfillReactionCounts(p);
+      });
+    }
     if (this.userState) {
       // Pre-loaded by feed — zero extra Firestore calls
       this.myReaction.set(this.userState.reaction);
@@ -198,10 +222,32 @@ export class PostCardComponent implements OnInit, OnDestroy {
       } else if (prev === null) {
         this.likeCount.update(c => c + 1);
         this.audio.like();
+        this.notifSvc.notifyReaction(this.post, user.uid, this.actorName, this.actorPhoto, result);
       }
     } catch (e: any) {
       this.toast.error(this.translate.instant('toast.error_generic'));
     }
+  }
+
+  /* Posts reacted on before per-type counters existed have likes but no breakdown —
+     rebuild it from the actual likes so the top-3 emoji stack is always complete,
+     and persist it (signed-in users only) so it's a one-time cost per post. */
+  private backfillDone = false;
+  private async backfillReactionCounts(p: Post) {
+    if (this.backfillDone || !p.id) return;
+    const total = Object.values(p.reactionCounts ?? {}).reduce((s, n) => s + Math.max(0, n ?? 0), 0);
+    if ((p.likeCount || 0) === 0 || total > 0) return;
+    this.backfillDone = true;
+    try {
+      const likes = await this.fs.getLikesForPost(p.id);
+      if (!likes.length) return;
+      const built: Partial<Record<ReactionType, number>> = {};
+      likes.forEach(l => built[l.reaction] = (built[l.reaction] ?? 0) + 1);
+      this.reactionCounts.set(built);
+      if (this.auth.currentUser()) {
+        this.fs.setReactionCounts(p.id, built).catch(() => {});
+      }
+    } catch { /* display keeps the fallback */ }
   }
 
   /** Mirror the Firestore reaction-counter change locally so the emoji stack updates instantly */
@@ -243,17 +289,30 @@ export class PostCardComponent implements OnInit, OnDestroy {
       const photo = this.auth.isAdmin() ? profilePhoto : (profilePhoto.includes('ibb.co') ? profilePhoto : '');
       await this.fs.addComment(this.post.id!, {
         authorId: user.uid,
-        authorName: this.auth.isAdmin() ? 'Ndreajt e Palçit' : (user.displayName || 'Anëtar'),
+        authorName: this.actorName,
         authorPhoto: photo,
         textSq: text,
       });
       this.commentText.set('');
       this.audio.commentSend();
+      this.notifSvc.notifyComment(this.post, user.uid, this.actorName, this.actorPhoto, text);
     } catch {
       this.toast.error(this.translate.instant('toast.error_generic'));
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  // Confirmed comment/reply deletion
+  pendingDelete = signal<{ commentId: string; replyId?: string } | null>(null);
+  askDeleteComment(commentId: string) { this.pendingDelete.set({ commentId }); }
+  askDeleteReply(commentId: string, replyId: string) { this.pendingDelete.set({ commentId, replyId }); }
+  async confirmDelete() {
+    const t = this.pendingDelete();
+    if (!t) return;
+    this.pendingDelete.set(null);
+    if (t.replyId) await this.deleteReply(t.commentId, t.replyId);
+    else await this.deleteComment(t.commentId);
   }
 
   async deleteComment(commentId: string) {
@@ -287,39 +346,9 @@ export class PostCardComponent implements OnInit, OnDestroy {
     }
   }
 
-  openReplyInput(comment: Comment) {
-    const s = this.getReplyState(comment.id!);
-    s.showReplyInput = !s.showReplyInput;
-    s.replyText = '';
-    // Also show replies when opening reply input
-    if (!s.showReplies) this.toggleReplies(comment);
-  }
-
-  async submitReply(comment: Comment) {
-    const user = this.auth.currentUser();
-    if (!user) { this.toast.info(this.translate.instant('toast.login_required')); return; }
-    const s = this.getReplyState(comment.id!);
-    const text = s.replyText.trim();
-    if (!text) return;
-    s.submittingReply = true;
-    try {
-      const profilePhoto = this.auth.userProfile()?.photoURL || '';
-      const photo = this.auth.isAdmin() ? profilePhoto : (profilePhoto.includes('ibb.co') ? profilePhoto : '');
-      await this.fs.addReply(this.post.id!, comment.id!, {
-        authorId: user.uid,
-        authorName: this.auth.isAdmin() ? 'Ndreajt e Palçit' : (user.displayName || 'Anëtar'),
-        authorPhoto: photo,
-        textSq: text,
-        mentionName: comment.authorName,
-      });
-      s.replyText = '';
-      s.showReplyInput = false;
-      this.audio.commentSend();
-    } catch {
-      this.toast.error(this.translate.instant('toast.error_generic'));
-    } finally {
-      s.submittingReply = false;
-    }
+  /** Replying is a details-page interaction — the feed card only previews the thread */
+  openReplyInput(_comment: Comment) {
+    if (this.post.id) this.router.navigate(['/post', this.post.id]);
   }
 
   async deleteReply(commentId: string, replyId: string) {
@@ -328,7 +357,16 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
   canDelete(item: Comment | Reply): boolean {
     const u = this.auth.currentUser();
-    return !!u && (u.uid === item.authorId || (this.auth.isAdmin() ?? false));
+    return !!u && (u.uid === item.authorId || this.auth.isAdminUser());
+  }
+
+  /** Brand (admin) comments have no personal profile to visit */
+  canVisit(item: Comment | Reply): boolean {
+    return item.authorName !== 'Ndreajt e Palçit' && !!item.authorId;
+  }
+
+  goToProfile(item: Comment | Reply) {
+    if (this.canVisit(item)) this.router.navigate(['/profile', item.authorId]);
   }
 
   // ── Share / Likers ──
@@ -394,6 +432,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
 
 
   ngOnDestroy() {
+    this.postSub?.unsubscribe();
     this.commentsSub?.unsubscribe();
     Object.values(this.replyStates).forEach(s => s.replySub?.unsubscribe());
   }

@@ -1,0 +1,46 @@
+<div class="notif-page">
+  <div class="container notif-container">
+
+    <div class="notif-sheet">
+      <div class="notif-page-head">
+        <h1 class="notif-page-title">{{ 'notif.all_title' | translate }}</h1>
+        <button *ngIf="unreadCount() > 0" class="notif-markall" (click)="markAllRead()">
+          {{ 'notif.mark_all_read' | translate }}
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading()" class="notif-loading">
+        <span class="spinner"></span>
+      </div>
+
+      <ng-container *ngIf="!loading()">
+        <div *ngIf="notifications().length === 0" class="empty-state">
+          <div class="empty-icon">🔔</div>
+          <p>{{ 'notif.empty' | translate }}</p>
+        </div>
+
+        <button *ngFor="let n of visible(); trackBy: trackById"
+                class="notif-row" [class.unread]="!n.read" (click)="open(n)">
+          <span class="notif-row-icon">{{ icon(n) }}</span>
+          <span class="notif-row-body">
+            <span class="notif-row-text"><b>{{ n.actorName }}</b> {{ ('notif.' + n.type + '_suffix') | translate }}</span>
+            <span class="notif-row-post">“{{ n.postTitle }}”</span>
+            <span *ngIf="n.text" class="notif-row-excerpt">{{ n.text }}</span>
+            <span class="notif-row-time">{{ time(n) }}</span>
+          </span>
+          <span class="notif-row-dot" *ngIf="!n.read"></span>
+        </button>
+
+        <!-- Click-pagination, same pattern as comments -->
+        <button *ngIf="hasMore()" class="load-more-notifs" (click)="loadMore()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          {{ 'feed.load_more' | translate }}
+        </button>
+      </ng-container>
+    </div>
+
+  </div>
+</div>

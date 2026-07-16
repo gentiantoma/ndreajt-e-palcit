@@ -254,7 +254,7 @@
               </td>
               <td style="font-size:12px;color:var(--color-text-dim);white-space:nowrap">{{ formatDate(comment.createdAt) }}</td>
               <td>
-                <button class="btn btn-danger btn-sm" (click)="deleteComment(comment.postId, comment.id!)">🗑</button>
+                <button class="btn btn-danger btn-sm" (click)="requestCommentDelete(comment.postId, comment.id!)">🗑</button>
               </td>
             </tr>
           </tbody>
@@ -295,10 +295,11 @@
                 <th style="text-align:center">📜 {{ 'dashboard.comments' | translate }}</th>
                 <th style="text-align:center">❤ {{ 'post.likes' | translate }}</th>
                 <th>{{ 'dashboard.member_since' | translate }}</th>
+                <th>{{ 'dashboard.actions' | translate }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let u of users(); trackBy: trackByUid">
+              <tr *ngFor="let u of users(); trackBy: trackByUid" [class.row-suspended]="u.suspended">
                 <td>
                   <div class="user-cell">
                     <div *ngIf="u.role === 'admin'" class="avatar-brand sm"></div>
@@ -309,6 +310,7 @@
                     </ng-container>
                     <div>
                       <span class="user-name">{{ u.role === 'admin' ? 'Ndreajt e Palçit' : (u.displayName || ('dashboard.member_fallback' | translate)) }}</span>
+                      <span *ngIf="u.suspended" class="suspended-tag">{{ 'dashboard.suspended' | translate }}</span>
                     </div>
                   </div>
                 </td>
@@ -320,6 +322,15 @@
                   <span class="user-stat-badge like">{{ u.likeCount }}</span>
                 </td>
                 <td style="font-size:12px;color:var(--color-text-dim);white-space:nowrap">{{ formatDate(u.createdAt) }}</td>
+                <td>
+                  <button *ngIf="u.role !== 'admin'"
+                          class="btn btn-sm"
+                          [class.btn-danger]="!u.suspended"
+                          [class.btn-secondary]="u.suspended"
+                          (click)="requestSuspend(u)">
+                    {{ (u.suspended ? 'dashboard.unsuspend' : 'dashboard.suspend') | translate }}
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -338,6 +349,7 @@
               <div class="user-card-info">
                 <span class="user-name">{{ u.role === 'admin' ? 'Ndreajt e Palçit' : (u.displayName || ('dashboard.member_fallback' | translate)) }}</span>
                 <span class="user-email">{{ u.role !== 'admin' ? u.email : '' }}</span>
+                <span *ngIf="u.suspended" class="suspended-tag">{{ 'dashboard.suspended' | translate }}</span>
               </div>
             </div>
             <div class="user-card-stats">
@@ -354,6 +366,13 @@
                 <span class="user-stat-lbl">{{ 'dashboard.member_since' | translate }}</span>
               </div>
             </div>
+            <button *ngIf="u.role !== 'admin'"
+                    class="btn btn-sm user-card-action"
+                    [class.btn-danger]="!u.suspended"
+                    [class.btn-secondary]="u.suspended"
+                    (click)="requestSuspend(u)">
+              {{ (u.suspended ? 'dashboard.unsuspend' : 'dashboard.suspend') | translate }}
+            </button>
           </div>
         </div>
       </ng-container>
@@ -362,7 +381,7 @@
   </div>
 </div>
 
-<!-- Delete confirmation modal -->
+<!-- Delete post confirmation modal -->
 <div class="modal-overlay" *ngIf="deleteTarget()">
   <div class="modal-box">
     <div class="modal-header">
@@ -375,6 +394,47 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="cancelDelete()">{{ 'general.cancel' | translate }}</button>
       <button class="btn btn-danger" (click)="doDelete()">{{ 'general.delete' | translate }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete comment confirmation modal -->
+<div class="modal-overlay" *ngIf="commentDeleteTarget()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>{{ 'general.confirm_delete' | translate }}</h3>
+      <button class="btn-icon" (click)="commentDeleteTarget.set(null)">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--color-text-muted);margin:0">{{ 'general.delete_comment_confirm' | translate }}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="commentDeleteTarget.set(null)">{{ 'general.cancel' | translate }}</button>
+      <button class="btn btn-danger" (click)="confirmCommentDelete()">{{ 'general.delete' | translate }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Suspend / unsuspend confirmation modal -->
+<div class="modal-overlay" *ngIf="suspendTarget() as st">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>{{ (st.suspended ? 'dashboard.unsuspend' : 'dashboard.suspend') | translate }}</h3>
+      <button class="btn-icon" (click)="suspendTarget.set(null)">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--color-text);margin:0 0 6px;font-weight:700;font-size:15px">
+        {{ st.displayName || st.email }}
+      </p>
+      <p style="color:var(--color-text-muted);margin:0">
+        {{ (st.suspended ? 'dashboard.unsuspend_confirm' : 'dashboard.suspend_confirm') | translate }}
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="suspendTarget.set(null)">{{ 'general.cancel' | translate }}</button>
+      <button class="btn" [class.btn-danger]="!st.suspended" [class.btn-primary]="st.suspended" (click)="confirmSuspend()">
+        {{ (st.suspended ? 'dashboard.unsuspend' : 'dashboard.suspend') | translate }}
+      </button>
     </div>
   </div>
 </div>

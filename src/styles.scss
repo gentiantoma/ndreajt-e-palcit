@@ -92,11 +92,16 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; font-size: 16px; }
+/* Dark root so the iOS status-bar / overscroll zone shows the rock tone,
+   never the parchment page bleeding through above the header */
+html { scroll-behavior: smooth; font-size: 16px; background-color: #241f15; }
 
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg);
+  /* Never scroll sideways; stop rubber-band overscroll revealing content above the header */
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
   /* Antique paper: top light, sepia age-stains scattered around, fine grain */
   background-image:
     radial-gradient(ellipse at 50% -10%, rgba(255,248,225,0.55), transparent 60%),
@@ -428,12 +433,20 @@ select.form-control {
   display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: 1.5rem;
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   button {
-    padding: 10px 18px; background: transparent; border: none;
+    padding: 9px 16px; background: transparent; border: none;
     color: var(--color-text-muted); font-size: 14px; font-weight: 600;
-    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    cursor: pointer; margin: 0 2px -2px; border: 1px solid transparent;
+    border-bottom: 2px solid transparent;
     white-space: nowrap; font-family: var(--font-sans);
-    transition: color var(--transition-fast);
-    &.active { color: var(--color-accent); border-bottom-color: var(--color-accent); }
+    border-radius: 8px 8px 0 0;
+    transition: color var(--transition-fast), background var(--transition-fast);
+    &.active {
+      color: var(--color-accent);
+      background: var(--color-bg-card);
+      border-color: var(--color-border);
+      border-bottom-color: var(--color-bg-card);
+      box-shadow: 0 -1px 3px rgba(94,74,38,0.08);
+    }
   }
 }
 
@@ -543,7 +556,8 @@ select.form-control {
 .comment-item {
   display: flex; gap: 8px; padding: 6px 0;
   .bubble {
-    background: var(--color-bg-elevated); border-radius: 18px; padding: 8px 14px;
+    background: #ebe1c6; border: 1px solid rgba(150,122,60,0.16);
+    border-radius: 18px; padding: 8px 14px;
     display: inline-block; max-width: 100%;
     .c-author { font-weight: 700; font-size: 13px; color: var(--color-text); display: block; }
     .c-text { font-size: 14px; margin-top: 2px; white-space: pre-wrap; word-break: break-word; color: var(--color-text); }
@@ -638,7 +652,11 @@ select.form-control {
   animation: spin 0.7s linear infinite; display: inline-block; }
 
 /* ─── PAGE WRAPPER ─── */
-.page-wrapper { padding-top: var(--header-height); min-height: 100vh; }
+.page-wrapper {
+  padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  min-height: 100vh;
+  overflow-x: clip;
+}
 
 /* ─── GLOBAL REACTION PICKER ─── */
 .reaction-picker-global {

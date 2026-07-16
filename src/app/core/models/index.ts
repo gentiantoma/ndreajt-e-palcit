@@ -67,6 +67,9 @@ export interface UserProfile {
   photoURL?: string;
   bio?: string;
   role: UserRole;
+  /** Suspended accounts are signed out on sight and blocked from writing (rules) */
+  suspended?: boolean;
+  suspendedAt?: Timestamp | Date | any;
   createdAt?: Timestamp | Date | any;
 }
 
@@ -80,4 +83,22 @@ export interface Toast {
   id: string;
   type: 'success' | 'error' | 'warning' | 'info';
   message: string;
+}
+
+export type NotificationType = 'comment' | 'reply' | 'reaction';
+
+export interface AppNotification {
+  id?: string;
+  recipientId: string;
+  type: NotificationType;
+  postId: string;
+  postTitle: string;
+  actorId: string;
+  actorName: string;
+  actorPhoto?: string;
+  /** Short excerpt of the comment/reply text */
+  text?: string;
+  reaction?: ReactionType;
+  read: boolean;
+  createdAt?: Timestamp | Date | any;
 }

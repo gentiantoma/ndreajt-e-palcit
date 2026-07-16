@@ -457,15 +457,17 @@
   padding: 0;
 }
 
+.clickable-avatar { cursor: pointer; }
+
 .c-delete-btn {
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--color-like);
   font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
   font-family: var(--font-sans);
   padding: 0;
-  margin-left: auto;
 }
 
 /* "View N replies" toggle */

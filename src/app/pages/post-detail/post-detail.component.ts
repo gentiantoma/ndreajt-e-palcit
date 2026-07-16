@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -12,6 +12,7 @@ import { SeoService } from '../../core/services/seo.service';
 import { LazyImgDirective } from '../../shared/directives/lazy-img.directive';
 import { Post, Comment, Reply, ReactionType, REACTIONS } from '../../core/models';
 import { ReactionPickerService } from '../../core/services/reaction-picker.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 interface CommentState {
   replies: Reply[];
@@ -37,6 +38,22 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private seo        = inject(SeoService);
   private translate  = inject(TranslateService);
   private pickerSvc  = inject(ReactionPickerService);
+  private notifSvc   = inject(NotificationService);
+  private router     = inject(Router);
+
+  /** Public-facing name/photo of the acting user (admin acts as the brand) */
+  private get actorName(): string {
+    return this.auth.publicDisplayName;
+  }
+  private get actorPhoto(): string {
+    const p = this.auth.userProfile()?.photoURL || '';
+    return this.auth.isAdmin() ? p : (p.includes('ibb.co') ? p : '');
+  }
+
+  /** The signed-in user's own avatar for the compose box — profile photo first, Google photo fallback */
+  get myPhoto(): string {
+    return this.auth.userProfile()?.photoURL || this.auth.currentUser()?.photoURL || '';
+  }
 
   post        = signal<Post | null>(null);
   authorAvatarError = signal(false);
@@ -86,6 +103,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   }
 
   private commentsSub?: Subscription;
+  private postDocSub?: Subscription;
   private postId = '';
 
   get lang()  { return this.translate.currentLang || 'sq'; }
@@ -120,6 +138,14 @@ export class PostDetailComponent implements OnInit, OnDestroy {
       this.loading.set(false);
       this.loadUserState();
       this.commentsSub = this.fs.getComments$(this.postId).subscribe(c => this.comments.set(c));
+      // Live counters — reactions update in real time, no refresh needed
+      this.postDocSub = this.fs.getPost$(this.postId).subscribe(p => {
+        if (!p) return;
+        this.likeCount.set(p.likeCount || 0);
+        this.reactionCounts.set({ ...(p.reactionCounts ?? {}) });
+        this.post.update(cur => cur ? { ...cur, likeCount: p.likeCount, commentCount: p.commentCount, reactionCounts: p.reactionCounts } : cur);
+        this.backfillReactionCounts(p);
+      });
     } else {
       this.loading.set(false);
     }
@@ -134,6 +160,25 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     ]);
     this.myReaction.set(reaction);
     this.bookmarked.set(bm);
+  }
+
+  /* Rebuild missing per-type counters from the actual likes (pre-counter posts) */
+  private backfillDone = false;
+  private async backfillReactionCounts(p: Post) {
+    if (this.backfillDone || !p.id) return;
+    const total = Object.values(p.reactionCounts ?? {}).reduce((s, n) => s + Math.max(0, n ?? 0), 0);
+    if ((p.likeCount || 0) === 0 || total > 0) return;
+    this.backfillDone = true;
+    try {
+      const likes = await this.fs.getLikesForPost(p.id);
+      if (!likes.length) return;
+      const built: Partial<Record<ReactionType, number>> = {};
+      likes.forEach(l => built[l.reaction] = (built[l.reaction] ?? 0) + 1);
+      this.reactionCounts.set(built);
+      if (this.auth.currentUser()) {
+        this.fs.setReactionCounts(p.id, built).catch(() => {});
+      }
+    } catch { /* display keeps the fallback */ }
   }
 
   openPicker(event: MouseEvent) {
@@ -166,7 +211,11 @@ export class PostDetailComponent implements OnInit, OnDestroy {
       return n;
     });
     if (result === null) this.likeCount.update(c => Math.max(0, c - 1));
-    else if (prev === null) this.likeCount.update(c => c + 1);
+    else if (prev === null) {
+      this.likeCount.update(c => c + 1);
+      const p = this.post();
+      if (p) this.notifSvc.notifyReaction(p, user.uid, this.actorName, this.actorPhoto, result);
+    }
     this.post.update(p => p ? { ...p, likeCount: this.likeCount() } : p);
   }
 
@@ -187,13 +236,27 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     try {
       await this.fs.addComment(this.postId, {
         authorId: user.uid,
-        authorName: this.auth.isAdmin() ? 'Ndreajt e Palçit' : (user.displayName || 'Anëtar'),
-        authorPhoto: (() => { const p = this.auth.userProfile()?.photoURL || ''; return this.auth.isAdmin() ? p : (p.includes('ibb.co') ? p : ''); })(),
+        authorName: this.actorName,
+        authorPhoto: this.actorPhoto,
         textSq: text,
       });
       this.commentText.set('');
+      const p = this.post();
+      if (p) this.notifSvc.notifyComment(p, user.uid, this.actorName, this.actorPhoto, text);
     } catch { this.toast.error(this.translate.instant('toast.error_generic')); }
     finally { this.submitting.set(false); }
+  }
+
+  // Confirmed comment/reply deletion
+  pendingDelete = signal<{ commentId: string; replyId?: string } | null>(null);
+  askDeleteComment(commentId: string) { this.pendingDelete.set({ commentId }); }
+  askDeleteReply(commentId: string, replyId: string) { this.pendingDelete.set({ commentId, replyId }); }
+  async confirmDelete() {
+    const t = this.pendingDelete();
+    if (!t) return;
+    this.pendingDelete.set(null);
+    if (t.replyId) await this.deleteReply(t.commentId, t.replyId);
+    else await this.deleteComment(t.commentId);
   }
 
   async deleteComment(id: string) {
@@ -243,13 +306,15 @@ export class PostDetailComponent implements OnInit, OnDestroy {
       const photo = this.auth.isAdmin() ? profilePhoto : (profilePhoto.includes('ibb.co') ? profilePhoto : '');
       await this.fs.addReply(this.postId, comment.id!, {
         authorId: user.uid,
-        authorName: this.auth.isAdmin() ? 'Ndreajt e Palçit' : (user.displayName || 'Anëtar'),
+        authorName: this.actorName,
         authorPhoto: photo,
         textSq: text,
         mentionName: comment.authorName,
       });
       s.replyText = '';
       s.showReplyInput = false;
+      const p = this.post();
+      if (p) this.notifSvc.notifyReply(p, comment, user.uid, this.actorName, this.actorPhoto, text);
     } catch {
       this.toast.error(this.translate.instant('toast.error_generic'));
     } finally {
@@ -290,11 +355,21 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
   canDelete(item: Comment | Reply): boolean {
     const u = this.auth.currentUser();
-    return !!u && (u.uid === item.authorId || (this.auth.isAdmin() ?? false));
+    return !!u && (u.uid === item.authorId || this.auth.isAdminUser());
+  }
+
+  /** Brand (admin) comments have no personal profile to visit */
+  canVisit(item: Comment | Reply): boolean {
+    return item.authorName !== 'Ndreajt e Palçit' && !!item.authorId;
+  }
+
+  goToProfile(item: Comment | Reply) {
+    if (this.canVisit(item)) this.router.navigate(['/profile', item.authorId]);
   }
 
   ngOnDestroy() {
     this.commentsSub?.unsubscribe();
+    this.postDocSub?.unsubscribe();
     Object.values(this.replyStates).forEach(s => s.replySub?.unsubscribe());
   }
 }

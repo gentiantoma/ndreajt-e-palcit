@@ -31,7 +31,9 @@ export class LoginComponent {
       }
     } catch (err: any) {
       this.loading.set(false);
-      if (err?.code !== 'auth/popup-closed-by-user') {
+      if (err?.code === 'auth/suspended') {
+        this.toast.error(this.translate.instant('toast.account_suspended'));
+      } else if (err?.code !== 'auth/popup-closed-by-user') {
         this.toast.error(this.translate.instant('toast.login_error'));
       }
     }

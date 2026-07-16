@@ -4,6 +4,46 @@
   padding: 1.5rem 0 3rem;
 }
 
+.clickable-avatar { cursor: zoom-in; }
+
+/* Full-screen profile photo viewer */
+.avatar-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(10, 8, 4, 0.86);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 180ms ease;
+}
+
+.avatar-lightbox-img {
+  max-width: min(440px, 90vw);
+  max-height: 85vh;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.6);
+}
+
+.avatar-lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .profile-container {
   max-width: 720px;
   margin: 0 auto;

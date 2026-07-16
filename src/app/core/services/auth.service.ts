@@ -4,8 +4,10 @@ import { Firestore, doc, getDoc, setDoc, serverTimestamp } from '@angular/fire/f
 import { Router } from '@angular/router';
 import { map, firstValueFrom } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslateService } from '@ngx-translate/core';
 import { UserProfile } from '../models';
 import { FirestoreService } from './firestore.service';
+import { ToastService } from './toast.service';
 
 export const ADMIN_EMAILS = ['gentiantoma403@gmail.com'];
 
@@ -15,6 +17,8 @@ export class AuthService {
   private firestore = inject(Firestore);
   private router = inject(Router);
   private fs = inject(FirestoreService);
+  private toast = inject(ToastService);
+  private translate = inject(TranslateService);
 
   readonly user$ = user(this.auth);
   readonly currentUser = toSignal(this.user$);
@@ -25,6 +29,12 @@ export class AuthService {
   readonly isLoggedIn = toSignal(
     this.user$.pipe(map(u => !!u))
   );
+
+  /** Synchronous admin check off the resolved current user — avoids the
+   *  separate `isAdmin` signal lagging behind `currentUser` on first render. */
+  isAdminUser(): boolean {
+    return ADMIN_EMAILS.includes(this.currentUser()?.email ?? '');
+  }
 
   readonly authReady = signal(false);
   readonly userProfile = signal<UserProfile | null>(null);
@@ -48,6 +58,14 @@ export class AuthService {
         const snap = await getDoc(doc(this.firestore, 'users', u.uid));
         if (snap.exists()) {
           const profile = snap.data() as UserProfile;
+          // Suspended accounts are ejected immediately — no session survives suspension
+          if (profile.suspended && !ADMIN_EMAILS.includes(u.email ?? '')) {
+            this.userProfile.set(null);
+            await signOut(this.auth);
+            this.toast.error(this.translate.instant('toast.account_suspended'));
+            this.router.navigate(['/']);
+            return;
+          }
           this.userProfile.set(profile);
           if (!this.migrationDone && ADMIN_EMAILS.includes(u.email ?? '') && profile.photoURL) {
             this.migrationDone = true;
@@ -69,6 +87,13 @@ export class AuthService {
     }
     const cred = await signInWithPopup(this.auth, provider);
     await this.ensureUserDoc(cred.user);
+    // Refuse the session outright if the account is suspended
+    const snap = await getDoc(doc(this.firestore, 'users', cred.user.uid));
+    const profile = snap.exists() ? (snap.data() as UserProfile) : null;
+    if (profile?.suspended && !ADMIN_EMAILS.includes(cred.user.email ?? '')) {
+      await signOut(this.auth);
+      throw { code: 'auth/suspended' };
+    }
     return cred.user;
   }
 
@@ -81,9 +106,26 @@ export class AuthService {
     return firstValueFrom(this.user$);
   }
 
-  /** Returns "Ndreajt e Palçit" for admin users — use everywhere a name is displayed publicly */
+  /** Returns "Ndreajt e Palçit" for admin users — use everywhere a name is displayed publicly.
+   *  For members: Firestore profile name → Google name → email prefix → "Anëtar". */
   get publicDisplayName(): string {
-    return this.isAdmin() ? 'Ndreajt e Palçit' : (this.currentUser()?.displayName || 'Anëtar');
+    if (this.isAdmin()) return 'Ndreajt e Palçit';
+    const u = this.currentUser();
+    return this.userProfile()?.displayName?.trim()
+      || u?.displayName?.trim()
+      || this.nameFromEmail(u?.email)
+      || 'Anëtar';
+  }
+
+  /** "gjovalin.beka" → "Gjovalin Beka" — a friendly fallback when no name is set */
+  private nameFromEmail(email?: string | null): string {
+    if (!email) return '';
+    const local = email.split('@')[0];
+    return local
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(' ');
   }
 
   async refreshProfile(): Promise<void> {
@@ -100,7 +142,7 @@ export class AuthService {
       const profile: UserProfile = {
         uid: fireUser.uid,
         email: fireUser.email ?? '',
-        displayName: fireUser.displayName ?? 'Anëtar',
+        displayName: fireUser.displayName?.trim() || this.nameFromEmail(fireUser.email) || 'Anëtar',
         photoURL: fireUser.photoURL ?? '',
         bio: '',
         role: ADMIN_EMAILS.includes(fireUser.email ?? '') ? 'admin' : 'member',

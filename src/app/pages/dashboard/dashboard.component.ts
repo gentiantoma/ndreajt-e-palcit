@@ -19,6 +19,7 @@ interface UserWithStats {
   email?: string;
   photoURL?: string;
   role?: string;
+  suspended?: boolean;
   commentCount: number;
   likeCount: number;
   createdAt?: any;
@@ -72,6 +73,8 @@ export class DashboardComponent implements OnInit {
     }
     await this.loadPosts();
     this.loading.set(false);
+    // Warm the members list in the background so the "Anëtarët N" badge is instant
+    this.loadUsers();
   }
 
   async loadPosts() {
@@ -91,10 +94,49 @@ export class DashboardComponent implements OnInit {
     if (tab === 'create') this.resetForm();
   }
 
+  /* ── Account suspension (with confirmation) ── */
+  suspendTarget = signal<UserWithStats | null>(null);
+
+  requestSuspend(u: UserWithStats) { this.suspendTarget.set(u); }
+
+  async confirmSuspend() {
+    const u = this.suspendTarget();
+    if (!u) return;
+    this.suspendTarget.set(null);
+    const next = !u.suspended;
+    try {
+      await this.fs.setUserSuspended(u.uid, next);
+      this.users.update(list => list.map(x => x.uid === u.uid ? { ...x, suspended: next } : x));
+      this.toast.success(this.translate.instant(next ? 'toast.user_suspended' : 'toast.user_unsuspended'));
+    } catch {
+      this.toast.error(this.translate.instant('toast.error_generic'));
+    }
+  }
+
+  /* ── Comment deletion (with confirmation) ── */
+  commentDeleteTarget = signal<{ postId: string; id: string } | null>(null);
+
+  requestCommentDelete(postId: string, id: string) { this.commentDeleteTarget.set({ postId, id }); }
+
+  async confirmCommentDelete() {
+    const t = this.commentDeleteTarget();
+    if (!t) return;
+    this.commentDeleteTarget.set(null);
+    await this.deleteComment(t.postId, t.id);
+  }
+
+  private usersLoaded = false;
   async loadUsers() {
+    if (this.usersLoaded) return;
+    this.usersLoaded = true;
     this.loadingUsers.set(true);
     try {
+      // 1) Show the list + count immediately (one fast query)
       const raw = await this.fs.getAllUsers();
+      this.users.set(raw.map(u => ({ ...u, commentCount: 0, likeCount: 0 }) as UserWithStats));
+      this.loadingUsers.set(false);
+
+      // 2) Enrich each row's stats in the background, then re-sort
       const withStats = await Promise.all(raw.map(async u => {
         const [commentCount, likeCount] = await Promise.all([
           this.fs.getCommentsCountByUser(u.uid),
@@ -106,6 +148,7 @@ export class DashboardComponent implements OnInit {
       this.users.set(withStats);
     } catch (e) {
       console.error('loadUsers error', e);
+      this.usersLoaded = false;
     } finally {
       this.loadingUsers.set(false);
     }

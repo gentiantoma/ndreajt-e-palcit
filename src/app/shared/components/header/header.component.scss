@@ -5,26 +5,26 @@
   left: 0;
   right: 0;
   z-index: 100;
-  height: var(--header-height);
+  /* Extend the bar up into the notch / status-bar safe area on phones */
+  height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* The rock face lives on a pseudo-layer: clipping the header itself would cut off
-   the dropdown and mobile menus that open below the bar. */
+   the dropdown and mobile menus that open below the bar. The -200px top keeps rock
+   behind any rubber-band overscroll so page content never shows above the header. */
 .site-header::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: -200px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: -1;
   background-color: #55504a;
   background-image:
     /* daylight on the rock face, deep shadow at the base */
     linear-gradient(180deg, rgba(255,250,235,0.10) 0%, transparent 32%, transparent 62%, rgba(8,7,5,0.42) 100%),
-    /* angular fissures cracking through the rock */
-    linear-gradient(76deg,  transparent 30.7%, rgba(15,12,8,0.38) 30.85%, transparent 31.05%),
-    linear-gradient(118deg, transparent 63.2%, rgba(15,12,8,0.34) 63.35%, transparent 63.55%),
-    linear-gradient(87deg,  transparent 82.4%, rgba(15,12,8,0.30) 82.55%, transparent 82.7%),
-    linear-gradient(152deg, transparent 44.6%, rgba(15,12,8,0.28) 44.75%, transparent 44.95%),
-    linear-gradient(64deg,  transparent 12.3%, rgba(15,12,8,0.26) 12.45%, transparent 12.65%),
     /* horizontal strata — stretched turbulence reads as layered mountain rock */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.06' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)' opacity='0.35'/%3E%3C/svg%3E"),
     /* coarse rocky roughness */
@@ -60,6 +60,13 @@
   flex-shrink: 0;
 
   .logo-icon { font-size: 1.25rem; }
+
+  /* Full wordmark on desktop, short "Palç" on phones where space is tight */
+  .logo-short { display: none; }
+  @media (max-width: 600px) {
+    .logo-full  { display: none; }
+    .logo-short { display: inline; }
+  }
 
   .logo-text {
     font-family: var(--font-serif);
@@ -157,6 +164,191 @@
   &:active { background: #000000; }
 }
 
+/* ── Notifications bell ── */
+.notif-menu {
+  position: relative;
+}
+
+.notif-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(236,223,184,0.10);
+  border: 1px solid rgba(201,165,92,0.40);
+  color: rgba(236,223,184,0.85);
+  cursor: pointer;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #b3282d;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* Parchment dropdown */
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: -88px;
+  width: 330px;
+  background-color: var(--color-bg-card);
+  background-image: var(--paper-aged);
+  border-radius: var(--paper-radius);
+  box-shadow: var(--shadow-elevated);
+  z-index: 200;
+  animation: fadeIn 150ms ease;
+  overflow: hidden;
+
+  @media (max-width: 480px) {
+    position: fixed;
+    top: calc(var(--header-height) + 8px);
+    left: 8px;
+    right: 8px;
+    width: auto;
+  }
+}
+
+.notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.notif-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: var(--color-text-muted);
+}
+
+.notif-markall {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  padding: 0;
+  white-space: nowrap;
+}
+
+.notif-list {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  font-family: var(--font-sans);
+
+  &.unread { background: rgba(179,40,45,0.05); }
+}
+
+.notif-icon { font-size: 20px; line-height: 1.2; flex-shrink: 0; }
+
+.notif-body { flex: 1; min-width: 0; }
+
+.notif-text {
+  display: block;
+  font-size: 13px;
+  color: var(--color-text);
+  line-height: 1.35;
+
+  b { font-weight: 700; }
+}
+
+.notif-post {
+  display: block;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-time {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-dim);
+  margin-top: 2px;
+}
+
+.notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b3282d;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.notif-empty {
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-dim);
+  padding: 22px 12px;
+  margin: 0;
+}
+
+.notif-loadmore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px;
+  background: transparent;
+  border: none;
+  color: var(--color-accent);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.notif-viewall {
+  display: block;
+  text-align: center;
+  padding: 11px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-decoration: none;
+  border-top: 1px solid var(--color-border);
+}
+
 /* Language button */
 .lang-btn {
   background: rgba(236,223,184,0.10);
@@ -231,6 +423,8 @@
 
 .drop-divider { height: 1px; background: var(--color-border); border: none; margin: 6px 0; }
 
+.drop-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+
 .drop-item {
   display: flex;
   align-items: center;
@@ -282,7 +476,7 @@
   border-top: 1px solid var(--color-border);
   padding: 12px 0;
   position: absolute;
-  top: var(--header-height);
+  top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   z-index: 99;
@@ -290,12 +484,16 @@
 }
 
 .mobile-nav-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 12px 1.5rem;
   color: var(--color-text-muted);
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
+
+  .mnav-icon { font-size: 17px; width: 22px; text-align: center; }
 
   &.active { color: var(--color-accent); }
 }

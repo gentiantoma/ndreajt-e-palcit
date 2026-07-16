@@ -131,10 +131,10 @@
 
             <ng-container *ngIf="auth.isLoggedIn(); else loginPrompt">
               <div class="add-comment">
-                <img *ngIf="auth.currentUser()?.photoURL && !myAvatarError(); else myInit"
-                     [src]="auth.currentUser()!.photoURL!"
+                <img *ngIf="myPhoto && !myAvatarError(); else myInit"
+                     [src]="myPhoto"
                      class="avatar md"
-                     [alt]="auth.currentUser()!.displayName!"
+                     [alt]="auth.publicDisplayName"
                      (error)="myAvatarError.set(true)">
                 <ng-template #myInit>
                   <div class="avatar-initial md">{{ getInitial(auth.publicDisplayName) }}</div>
@@ -168,13 +168,15 @@
             <ng-container *ngFor="let comment of visibleComments(); trackBy: trackById">
               <div class="comment-item">
                 <ng-container *ngIf="comment.authorPhoto; else cInit">
-                  <img [src]="comment.authorPhoto" class="avatar md" [alt]="comment.authorName" loading="lazy"
+                  <img [src]="comment.authorPhoto" class="avatar md" [class.clickable-avatar]="canVisit(comment)"
+                       [alt]="comment.authorName" loading="lazy"
+                       (click)="goToProfile(comment)"
                        (error)="$any($event.target).style.display='none'; dcFallback.style.display='flex'"
                        #dcImg>
-                  <div class="avatar-initial md" style="display:none" #dcFallback>{{ getInitial(comment.authorName) }}</div>
+                  <div class="avatar-initial md" style="display:none" [class.clickable-avatar]="canVisit(comment)" (click)="goToProfile(comment)" #dcFallback>{{ getInitial(comment.authorName) }}</div>
                 </ng-container>
                 <ng-template #cInit>
-                  <div class="avatar-initial md">{{ getInitial(comment.authorName) }}</div>
+                  <div class="avatar-initial md" [class.clickable-avatar]="canVisit(comment)" (click)="goToProfile(comment)">{{ getInitial(comment.authorName) }}</div>
                 </ng-template>
 
                 <div class="comment-right">
@@ -184,20 +186,18 @@
                          [routerLink]="['/profile', comment.authorId]"
                          class="c-author c-author-link">{{ comment.authorName }}</a>
                       <span *ngIf="comment.authorName === 'Ndreajt e Palçit'" class="c-author">{{ comment.authorName }}</span>
-                      <button *ngIf="canDelete(comment)" class="c-delete" (click)="deleteComment(comment.id!)">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
-                        </svg>
-                      </button>
                     </div>
                     <p class="c-text">{{ comment.textSq }}</p>
                   </div>
 
-                  <!-- Meta row: time + reply -->
+                  <!-- Meta row: time + reply + delete -->
                   <div class="c-meta-row">
                     <span class="c-meta">{{ formatCommentTime(comment.createdAt) }}</span>
                     <button class="c-reply-btn" (click)="openReplyInput(comment)">
                       {{ 'post.reply' | translate }}
+                    </button>
+                    <button *ngIf="canDelete(comment)" class="c-delete-btn" (click)="askDeleteComment(comment.id!)">
+                      {{ 'general.delete' | translate }}
                     </button>
                   </div>
 
@@ -215,16 +215,19 @@
                   <div class="replies-wrap" *ngIf="getReplyState(comment.id!).showReplies">
                     <div class="reply-item" *ngFor="let reply of getReplyState(comment.id!).replies; trackBy: trackById">
                       <ng-container *ngIf="reply.authorPhoto; else rInit">
-                        <img [src]="reply.authorPhoto" class="avatar sm" [alt]="reply.authorName" loading="lazy"
+                        <img [src]="reply.authorPhoto" class="avatar sm" [class.clickable-avatar]="canVisit(reply)"
+                             [alt]="reply.authorName" loading="lazy"
+                             (click)="goToProfile(reply)"
                              (error)="$any($event.target).style.display='none'; drFallback.style.display='flex'">
-                        <div class="avatar-initial sm" style="display:none" #drFallback>{{ getInitial(reply.authorName) }}</div>
+                        <div class="avatar-initial sm" style="display:none" [class.clickable-avatar]="canVisit(reply)" (click)="goToProfile(reply)" #drFallback>{{ getInitial(reply.authorName) }}</div>
                       </ng-container>
                       <ng-template #rInit>
-                        <div class="avatar-initial sm">{{ getInitial(reply.authorName) }}</div>
+                        <div class="avatar-initial sm" [class.clickable-avatar]="canVisit(reply)" (click)="goToProfile(reply)">{{ getInitial(reply.authorName) }}</div>
                       </ng-template>
                       <div class="comment-right">
                         <div class="bubble">
-                          <span class="c-author">{{ reply.authorName }}</span>
+                          <a *ngIf="canVisit(reply)" [routerLink]="['/profile', reply.authorId]" class="c-author c-author-link">{{ reply.authorName }}</a>
+                          <span *ngIf="!canVisit(reply)" class="c-author">{{ reply.authorName }}</span>
                           <p class="c-text">
                             <span class="reply-mention" *ngIf="reply.mentionName">@{{ reply.mentionName }}</span>
                             {{ reply.textSq }}
@@ -232,7 +235,7 @@
                         </div>
                         <div class="c-meta-row">
                           <span class="c-meta">{{ formatCommentTime(reply.createdAt) }}</span>
-                          <button *ngIf="canDelete(reply)" class="c-delete-btn" (click)="deleteReply(comment.id!, reply.id!)">{{ 'general.delete' | translate }}</button>
+                          <button *ngIf="canDelete(reply)" class="c-delete-btn" (click)="askDeleteReply(comment.id!, reply.id!)">{{ 'general.delete' | translate }}</button>
                         </div>
                       </div>
                     </div>
@@ -289,4 +292,21 @@
 <div class="modal-overlay" *ngIf="lightboxImg()" (click)="closeLightbox()">
   <img [src]="lightboxImg()!" class="lightbox-img" [alt]="'post.gallery_image' | translate" (click)="$event.stopPropagation()">
   <button class="lightbox-close" (click)="closeLightbox()">✕</button>
+</div>
+
+<!-- Delete comment/reply confirmation -->
+<div class="modal-overlay" *ngIf="pendingDelete()" (click)="pendingDelete.set(null)">
+  <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:380px">
+    <div class="modal-header">
+      <h3>{{ 'general.confirm_delete' | translate }}</h3>
+      <button class="btn-icon" (click)="pendingDelete.set(null)">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--color-text-muted);margin:0">{{ 'general.delete_comment_confirm' | translate }}</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="pendingDelete.set(null)">{{ 'general.cancel' | translate }}</button>
+      <button class="btn btn-danger" (click)="confirmDelete()">{{ 'general.delete' | translate }}</button>
+    </div>
+  </div>
 </div>
