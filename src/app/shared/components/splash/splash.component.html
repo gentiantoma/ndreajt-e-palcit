@@ -1,0 +1,37 @@
+<div class="splash">
+  <div class="splash-grain"></div>
+  <div class="splash-vignette"></div>
+
+  <!-- Drifting embers -->
+  <div class="embers">
+    <span *ngFor="let e of embers; let i = index" [style.--i]="i"></span>
+  </div>
+
+  <div class="splash-inner">
+    <!-- Emblem: a circle + mountains inked in with a drawing stroke -->
+    <svg class="emblem" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+      <circle class="ring" cx="60" cy="60" r="52" stroke="url(#gold)" stroke-width="2.5"/>
+      <path class="peak peak-back" d="M18 86 L46 44 L74 86" stroke="url(#gold)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <path class="peak peak-front" d="M46 86 L80 34 L110 86" stroke="url(#gold)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path class="peak snow" d="M80 34 L72 46 L88 46 Z" stroke="url(#gold)" stroke-width="2" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="gold" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#e6c884"/>
+          <stop offset="0.5" stop-color="#c9a55c"/>
+          <stop offset="1" stop-color="#9c7d3f"/>
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="rule rule-top"><span class="diamond">◆</span></div>
+
+    <h1 class="title">NDREAJT&nbsp;E&nbsp;PALÇIT</h1>
+
+    <div class="rule rule-bottom"><span class="diamond">◆</span></div>
+
+    <p class="tagline">Kronika e fshatit · Palç, Tropojë</p>
+
+    <!-- Quill — temporarily disabled -->
+    <!-- <span class="quill">🪶</span> -->
+  </div>
+</div>

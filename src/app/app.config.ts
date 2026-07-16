@@ -3,8 +3,11 @@ import { provideRouter, withPreloading, PreloadAllModules, withInMemoryScrolling
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient } from '@angular/common/http';
 import { provideServiceWorker } from '@angular/service-worker';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getFirestore, provideFirestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
+import { initializeApp, provideFirebaseApp, getApp } from '@angular/fire/app';
+import {
+  initializeFirestore, provideFirestore,
+  persistentLocalCache, persistentMultipleTabManager,
+} from '@angular/fire/firestore';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -22,14 +25,12 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     importProvidersFrom(
       provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
-      provideFirestore(() => {
-        const fs = getFirestore();
-        enableIndexedDbPersistence(fs).catch(() => {});
-        return fs;
-      }),
+      provideFirestore(() => initializeFirestore(getApp(), {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      })),
       provideAuth(() => getAuth()),
     ),
-    provideTranslateService({ defaultLanguage: 'sq' }),
+    provideTranslateService({ fallbackLang: 'sq' }),
     provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

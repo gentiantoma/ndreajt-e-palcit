@@ -1,0 +1,210 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  pointer-events: none;
+}
+
+/* ── Backdrop: deep ink / stone, fades out at the end to reveal the app ── */
+.splash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 42%, #241d12 0%, #150f09 55%, #0a0705 100%);
+  animation: splashOut 620ms ease 2500ms forwards;
+}
+
+/* Paper grain + warm top light */
+.splash-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  background-image:
+    radial-gradient(ellipse at 50% 20%, rgba(201,165,92,0.14), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+.splash-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.55) 100%);
+}
+
+/* ── Drifting embers ── */
+.embers {
+  position: absolute;
+  inset: 0;
+  span {
+    --i: 0;
+    position: absolute;
+    bottom: -10px;
+    left: calc(8% + (var(--i) * 7.4%));
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #e6c884;
+    box-shadow: 0 0 6px 1px rgba(230,200,132,0.7);
+    opacity: 0;
+    animation: emberRise 3.2s ease-in calc(var(--i) * 240ms) infinite;
+  }
+}
+
+@keyframes emberRise {
+  0%   { transform: translateY(0) scale(0.6);  opacity: 0; }
+  15%  { opacity: 0.9; }
+  70%  { opacity: 0.8; }
+  100% { transform: translateY(-70vh) translateX(14px) scale(1); opacity: 0; }
+}
+
+/* ── Center content ── */
+.splash-inner {
+  position: relative;
+  text-align: center;
+  padding: 1.5rem;
+  animation: contentIn 700ms ease both;
+}
+
+@keyframes contentIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Emblem: strokes draw themselves like ink ── */
+.emblem {
+  width: clamp(150px, 40vw, 210px);
+  height: clamp(150px, 40vw, 210px);
+  margin: 0 auto 10px;
+  display: block;
+  filter: drop-shadow(0 2px 14px rgba(201,165,92,0.4));
+
+  .ring, .peak {
+    stroke-dasharray: var(--len, 400);
+    stroke-dashoffset: var(--len, 400);
+    animation: draw 1200ms ease forwards;
+  }
+  .ring       { --len: 340; animation-delay: 250ms; }
+  .peak-back  { --len: 150; animation-delay: 780ms; }
+  .peak-front { --len: 175; animation-delay: 950ms; }
+  .snow       { --len: 60;  animation-delay: 1250ms; opacity: 0; animation: draw 700ms ease 1250ms forwards, snowFill 400ms ease 1500ms forwards; }
+}
+
+@keyframes draw     { to { stroke-dashoffset: 0; } }
+@keyframes snowFill { to { opacity: 1; fill: rgba(230,200,132,0.85); } }
+
+/* ── Title: rise + gold shimmer sweep ── */
+.title {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 800;
+  font-size: clamp(1.5rem, 6vw, 2.6rem);
+  letter-spacing: 0.16em;
+  margin: 4px 0;
+  background: linear-gradient(100deg,
+    #9c7d3f 0%, #c9a55c 30%, #f4e4bc 48%, #c9a55c 66%, #9c7d3f 100%);
+  background-size: 250% 100%;
+  background-position: 120% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0;
+  animation:
+    titleRise 800ms ease 1100ms both,
+    shimmer 1400ms ease 1300ms both;
+}
+
+@keyframes titleRise {
+  from { opacity: 0; transform: translateY(12px); letter-spacing: 0.05em; }
+  to   { opacity: 1; transform: translateY(0);    letter-spacing: 0.16em; }
+}
+@keyframes shimmer {
+  from { background-position: 120% 0; }
+  to   { background-position: -20% 0; }
+}
+
+/* ── Rules that expand from center with a diamond ── */
+.rule {
+  position: relative;
+  height: 1px;
+  width: 0;
+  margin: 10px auto;
+  background: linear-gradient(to right, transparent, #c9a55c, transparent);
+  animation: ruleGrow 700ms ease 1250ms forwards;
+
+  .diamond {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #c9a55c;
+    font-size: 8px;
+    opacity: 0;
+    animation: fadeIn 500ms ease 1700ms forwards;
+  }
+}
+.rule-top    { margin-bottom: 4px; }
+.rule-bottom { margin-top: 4px; }
+
+@keyframes ruleGrow { to { width: min(320px, 78vw); } }
+@keyframes fadeIn   { to { opacity: 1; } }
+
+/* ── Tagline ── */
+.tagline {
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  font-size: clamp(0.72rem, 3vw, 0.9rem);
+  letter-spacing: 0.04em;
+  color: #b9a06e;
+  margin: 6px 0 0;
+  opacity: 0;
+  animation: fadeUp 700ms ease 1650ms both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 0.9; transform: translateY(0); }
+}
+
+/* ── Floating quill ── */
+.quill {
+  position: absolute;
+  top: -30px;
+  right: -18px;
+  font-size: 68px;
+  transform: rotate(20deg);
+  opacity: 0;
+  filter: drop-shadow(1px 3px 4px rgba(0,0,0,0.55));
+  animation:
+    quillIn 600ms ease 900ms both,
+    quillFloat 2.4s ease-in-out 1500ms infinite;
+
+  @media (max-width: 600px) { font-size: 50px; right: -6px; top: -22px; }
+}
+
+@keyframes quillIn {
+  from { opacity: 0; transform: rotate(40deg) translate(-14px, -10px); }
+  to   { opacity: 1; transform: rotate(20deg) translate(0, 0); }
+}
+@keyframes quillFloat {
+  0%, 100% { transform: rotate(20deg) translateY(0); }
+  50%      { transform: rotate(13deg) translateY(-8px); }
+}
+
+/* ── Whole splash fades away ── */
+@keyframes splashOut {
+  from { opacity: 1; }
+  to   { opacity: 0; visibility: hidden; }
+}
+
+/* Respect reduced-motion: show a calm static frame, then fade */
+@media (prefers-reduced-motion: reduce) {
+  .emblem .ring, .emblem .peak { stroke-dashoffset: 0; animation: none; }
+  .emblem .snow { opacity: 1; fill: rgba(230,200,132,0.85); animation: none; }
+  .title { opacity: 1; animation: none; background-position: 50% 0; }
+  .rule { width: min(320px, 78vw); animation: none; }
+  .rule .diamond, .tagline, .quill { opacity: 1; animation: none; }
+  .embers { display: none; }
+  .splash { animation: splashOut 500ms ease 1600ms forwards; }
+}

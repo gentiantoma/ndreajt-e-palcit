@@ -8,30 +8,20 @@
   /* Extend the bar up into the notch / status-bar safe area on phones */
   height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   padding-top: env(safe-area-inset-top, 0px);
-}
-
-/* The rock face lives on a pseudo-layer: clipping the header itself would cut off
-   the dropdown and mobile menus that open below the bar. The -200px top keeps rock
-   behind any rubber-band overscroll so page content never shows above the header. */
-.site-header::before {
-  content: '';
-  position: absolute;
-  top: -200px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  background-color: #55504a;
+  /* Rock face painted directly on the bar (reliable across iOS Safari) */
+  background-color: #4d4639;
   background-image:
-    /* daylight on the rock face, deep shadow at the base */
     linear-gradient(180deg, rgba(255,250,235,0.10) 0%, transparent 32%, transparent 62%, rgba(8,7,5,0.42) 100%),
-    /* horizontal strata — stretched turbulence reads as layered mountain rock */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.06' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)' opacity='0.35'/%3E%3C/svg%3E"),
-    /* coarse rocky roughness */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.09' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.82 0 0 0 0 0.74 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)' opacity='0.10'/%3E%3C/svg%3E"),
     var(--paper-noise);
   border-bottom: 2px solid #2e2a21;
-  box-shadow: 0 3px 10px rgba(20, 16, 8, 0.45);
+  /* The 2nd shadow is a solid dark slab extending ~1000px ABOVE the bar, so the
+     iOS Safari toolbar / notch / overscroll zone is always the header colour —
+     page content can never show through above the header. */
+  box-shadow:
+    0 3px 10px rgba(20, 16, 8, 0.45),
+    0 -1000px 0 1000px #241f15;
 }
 
 /* Chiseled-into-stone text for everything sitting on the wall */

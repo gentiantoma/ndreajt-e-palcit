@@ -173,12 +173,14 @@ export class PostCardComponent implements OnInit, OnDestroy {
   private async loadUserState() {
     const user = this.auth.currentUser();
     if (!user || !this.post.id) return;
-    const [reaction, bm] = await Promise.all([
-      this.fs.getUserReaction(this.post.id, user.uid),
-      this.fs.hasFavorited(this.post.id, user.uid),
-    ]);
-    this.myReaction.set(reaction);
-    this.bookmarked.set(bm);
+    try {
+      const [reaction, bm] = await Promise.all([
+        this.fs.getUserReaction(this.post.id, user.uid),
+        this.fs.hasFavorited(this.post.id, user.uid),
+      ]);
+      this.myReaction.set(reaction);
+      this.bookmarked.set(bm);
+    } catch { /* offline / rules — ignore */ }
   }
 
   private async getResolvedUser() {

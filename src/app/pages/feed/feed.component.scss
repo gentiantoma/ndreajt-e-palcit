@@ -272,7 +272,7 @@
   @media (max-width: 600px) {
     margin: 14px 10px 14px;
 
-    &::after { font-size: 54px; right: -10px; top: -24px; }
+    &::after { font-size: 54px; right: -7px !important; top: -24px; }
   }
 }
 
@@ -607,7 +607,5 @@
 .tr-meta  { font-size: 11px; color: var(--color-text-dim); margin-top: 3px; display: block; }
 
 /* Stats widget */
-.stats-widget {}
 .stat-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; color: var(--color-text-muted); }
 .stat-icon { font-size: 1rem; flex-shrink: 0; }
-.stat-text {}

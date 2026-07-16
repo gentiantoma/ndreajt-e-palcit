@@ -88,7 +88,8 @@ export class FeedComponent implements OnInit, AfterViewInit {
       const user = this.auth.currentUser();
       if (user && data.length) {
         this.fs.getUserFeedState(data.map(p => p.id!), user.uid)
-          .then(state => this.userFeedState.set(state));
+          .then(state => this.userFeedState.set(state))
+          .catch(() => {});
       }
       this.hasMore.set(data.length === 30);
     } finally {
@@ -120,7 +121,7 @@ export class FeedComponent implements OnInit, AfterViewInit {
       if (user && more.length) {
         this.fs.getUserFeedState(more.map(p => p.id!), user.uid).then(extra => {
           this.userFeedState.update(m => { extra.forEach((v, k) => m.set(k, v)); return new Map(m); });
-        });
+        }).catch(() => {});
       }
     } finally {
       this.loadingMore.set(false);

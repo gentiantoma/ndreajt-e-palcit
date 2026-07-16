@@ -154,12 +154,14 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private async loadUserState() {
     const user = this.auth.currentUser();
     if (!user) return;
-    const [reaction, bm] = await Promise.all([
-      this.fs.getUserReaction(this.postId, user.uid),
-      this.fs.hasFavorited(this.postId, user.uid),
-    ]);
-    this.myReaction.set(reaction);
-    this.bookmarked.set(bm);
+    try {
+      const [reaction, bm] = await Promise.all([
+        this.fs.getUserReaction(this.postId, user.uid),
+        this.fs.hasFavorited(this.postId, user.uid),
+      ]);
+      this.myReaction.set(reaction);
+      this.bookmarked.set(bm);
+    } catch { /* offline / rules — ignore */ }
   }
 
   /* Rebuild missing per-type counters from the actual likes (pre-counter posts) */
