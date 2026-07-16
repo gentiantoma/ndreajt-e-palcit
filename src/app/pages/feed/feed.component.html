@@ -139,7 +139,8 @@
 
         <!-- Loading skeletons -->
         <ng-container *ngIf="loading()">
-          <div *ngFor="let item of skeletonItems" class="skeleton-card card">
+          <div *ngFor="let item of skeletonItems" class="skeleton-wrap">
+          <div class="skeleton-card card">
             <div class="sk-author">
               <span class="skeleton-circle" style="width:40px;height:40px"></span>
               <div class="sk-meta">
@@ -159,6 +160,7 @@
               <span class="skeleton-btn" style="width:80px"></span>
             </div>
           </div>
+          </div>
         </ng-container>
 
         <!-- Posts -->
@@ -168,9 +170,10 @@
             <p>{{ 'feed.empty' | translate }}</p>
           </div>
 
-          <app-post-card *ngFor="let post of posts(); trackBy: trackById"
+          <app-post-card *ngFor="let post of posts(); let i = index; trackBy: trackById"
               [post]="post"
               [userState]="userFeedState().get(post.id!)"
+              [class.lead-post]="i === 0"
               class="fade-in"></app-post-card>
 
           <!-- Bottom feed indicator -->
@@ -219,7 +222,7 @@
                 </div>
                 <div class="tr-info">
                   <span class="tr-title">{{ post.titleSq }}</span>
-                  <span class="tr-meta">♥ {{ post.likeCount }} · 💬 {{ post.commentCount }}</span>
+                  <span class="tr-meta">🪶 {{ post.likeCount }} · 📜 {{ post.commentCount }}</span>
                 </div>
               </a>
               </div>

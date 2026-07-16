@@ -35,14 +35,22 @@
   overflow: hidden;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--color-border);
-  background: #fff;
+  background-color: var(--color-bg-card);
 }
 
 /* Gradient cover banner */
 .vc-cover {
   position: relative;
   height: 110px;
-  background: linear-gradient(135deg, #1877f2 0%, #1565d8 40%, #0e4fc2 100%);
+  /* Same mountain-rock face as the site header */
+  background-color: #55504a;
+  background-image:
+    linear-gradient(180deg, rgba(255,250,235,0.10) 0%, transparent 32%, transparent 62%, rgba(8,7,5,0.42) 100%),
+    linear-gradient(76deg,  transparent 30.7%, rgba(15,12,8,0.30) 30.85%, transparent 31.05%),
+    linear-gradient(118deg, transparent 63.2%, rgba(15,12,8,0.26) 63.35%, transparent 63.55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.06' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)' opacity='0.35'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.09' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.82 0 0 0 0 0.74 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)' opacity='0.10'/%3E%3C/svg%3E"),
+    var(--paper-noise);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -50,12 +58,11 @@
   overflow: hidden;
 }
 
-/* Subtle dot-pattern overlay */
+/* Dot pattern retired — the rock texture provides the surface detail now */
 .vc-cover-pattern {
+  display: none;
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px);
-  background-size: 18px 18px;
   pointer-events: none;
 }
 
@@ -236,27 +243,52 @@
   margin-bottom: 16px;
 }
 
-/* ─── NEWSPAPER MASTHEAD ─── */
+/* ─── MASTHEAD — a torn parchment sheet, same family as the post cards ─── */
 .masthead {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  padding: 14px 16px 0;
-  margin-bottom: 12px;
+  position: relative;
+  /* shadow lives here so it follows the torn silhouette of the inner sheet */
+  filter: drop-shadow(0 1px 2px rgba(70,50,20,0.22)) drop-shadow(0 7px 14px rgba(70,50,20,0.10));
+  margin: 10px 6px 16px;
   text-align: center;
 
+  /* Big quill hovering over the top-right corner — gently floating as if mid-writing */
+  &::after {
+    content: '🪶';
+    position: absolute;
+    top: -34px;
+    right: -18px;
+    font-size: 78px;
+    transform: rotate(22deg);
+    filter: drop-shadow(1px 3px 3px rgba(60,40,10,0.35));
+    animation: quillFloat 3.4s ease-in-out infinite;
+    will-change: transform;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
   @media (max-width: 600px) {
-    border-left: none;
-    border-right: none;
-    border-radius: 0;
-    box-shadow: none;
-    margin-bottom: 8px;
+    margin: 14px 10px 14px;
+
+    &::after { font-size: 54px; right: -10px; top: -24px; }
   }
 }
 
+/* The quill breathes: floats up with a slight tilt, then settles back to write */
+@keyframes quillFloat {
+  0%, 100% { transform: rotate(22deg) translateY(0); }
+  50%      { transform: rotate(14deg) translateY(-10px); }
+}
+
+/* The sheet itself: aged parchment with the shared torn edges */
 .masthead-inner {
-  padding: 8px 0 14px;
+  background-color: var(--color-bg-card);
+  background-image: var(--paper-aged);
+  clip-path: var(--paper-tear);
+  border: none;
+  padding: 24px 14px 18px;
+  margin-bottom: 0;
 }
 
 /* Spaced uppercase wordmark, like classic print mastheads */
@@ -272,12 +304,14 @@
   margin: 0 0 8px;
 }
 
-/* Small centered date between short rules: ——— 11 Qer 2026 ——— */
+/* Small centered date between short rules: ——— ◆ 11 Qer 2026 ◆ ——— */
 .masthead-sub {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
+  margin: 0;
+  padding-bottom: 12px;
   font-family: var(--font-serif);
   font-style: italic;
   font-size: 11.5px;
@@ -288,8 +322,13 @@
     content: '';
     width: 44px;
     height: 1px;
-    background: var(--color-border);
+    background: linear-gradient(to right, transparent, rgba(96,66,24,0.4), transparent);
   }
+}
+
+.masthead-date {
+  &::before { content: '◆'; font-size: 7px; opacity: 0.55; margin-right: 8px; vertical-align: 2px; }
+  &::after  { content: '◆'; font-size: 7px; opacity: 0.55; margin-left: 8px; vertical-align: 2px; }
 }
 
 /* Mobile chip bar wrapper — sticky, full-width, with arrow buttons */
@@ -300,7 +339,7 @@
   position: sticky;
   top: var(--header-height);
   z-index: 10;
-  background: #ffffff;
+  background: var(--color-bg-card);
   padding: 6px 0;
   margin-bottom: 8px;
 
@@ -321,7 +360,7 @@
   max-width: 32px;
   max-height: 32px;
   border-radius: 50% !important;
-  background: #ffffff !important;
+  background: var(--color-bg-card) !important;
   border: 1.5px solid var(--color-border);
   color: var(--color-text-muted);
   cursor: pointer;
@@ -390,50 +429,72 @@
   }
 }
 
+/* Hand-cut parchment tags — like old ticket stubs */
 .cat-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 18px;
+  padding: 0 16px;
   height: 34px;
   line-height: 1;
-  border-radius: 20px;
-  background: var(--color-bg-card);
-  border: 1.5px solid var(--color-border);
+  /* uneven corners, as if cut by hand */
+  border-radius: 9px 13px 7px 12px / 12px 7px 13px 9px;
+  background-color: var(--color-bg-card);
+  background-image:
+    radial-gradient(ellipse at 30% 0%, rgba(255,250,228,0.5), transparent 60%),
+    var(--paper-noise);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px rgba(94,74,38,0.16);
   color: var(--color-text-muted);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   cursor: pointer;
   font-family: var(--font-sans);
   white-space: nowrap;
-  letter-spacing: 0.1px;
-  transition: background var(--transition-fast), color var(--transition-fast),
+  transition: background-color var(--transition-fast), color var(--transition-fast),
               border-color var(--transition-fast), box-shadow var(--transition-fast);
 
   &:hover:not(.active) {
-    background: var(--color-bg-elevated);
+    background-color: var(--color-bg-elevated);
     color: var(--color-text);
   }
 
   &.active {
-    background: var(--color-accent);
-    color: #ffffff;
-    border-color: var(--color-accent);
+    /* Same mountain-rock face as the site header */
+    background-color: #55504a;
+    background-image:
+      linear-gradient(180deg, rgba(255,250,235,0.10) 0%, transparent 40%, rgba(8,7,5,0.35) 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.06' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)' opacity='0.35'/%3E%3C/svg%3E"),
+      var(--paper-noise);
+    color: #f2e9d3;
+    border-color: #3a352c;
     font-weight: 700;
   }
 }
 
-/* Skeleton card */
+/* Skeleton card — identical silhouette, shadow and spacing as the real post sheets */
+.skeleton-wrap {
+  margin-bottom: 16px;
+  filter: drop-shadow(0 1px 2px rgba(70,50,20,0.22)) drop-shadow(0 7px 14px rgba(70,50,20,0.10));
+
+  @media (max-width: 600px) {
+    margin-bottom: 13px;
+  }
+}
+
 .skeleton-card {
-  margin-bottom: 12px;
-  padding-bottom: 8px;
+  margin-bottom: 0;
+  padding-bottom: 22px;
+  clip-path: var(--paper-tear);
 }
 
 .sk-author {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px 10px;
+  padding: 26px 16px 10px;
 }
 
 .sk-meta { display: flex; flex-direction: column; gap: 0; }

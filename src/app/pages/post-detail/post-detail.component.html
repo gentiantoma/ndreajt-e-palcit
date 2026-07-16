@@ -2,7 +2,8 @@
   <div class="container post-container">
 
     <!-- Loading skeleton -->
-    <div *ngIf="loading()" class="skeleton-detail">
+    <div *ngIf="loading()" class="detail-sheet-wrap">
+    <div class="skeleton-detail">
       <span class="skeleton-image" style="height:360px;display:block;border-radius:var(--radius-card)"></span>
       <div style="padding:1.5rem 0">
         <span class="skeleton-circle" style="width:44px;height:44px;display:inline-block"></span>
@@ -12,6 +13,7 @@
         <span class="skeleton-text" style="width:80%;display:block"></span>
       </div>
     </div>
+    </div>
 
     <ng-container *ngIf="!loading() && post()">
       <a routerLink="/" class="back-link">
@@ -19,6 +21,7 @@
         {{ 'post.back' | translate }}
       </a>
 
+      <div class="detail-sheet-wrap">
       <article class="post-article">
 
         <!-- ─── Image Carousel ─── -->
@@ -88,7 +91,7 @@
             </div>
           </div>
 
-          <div class="article-text" [class.with-dropcap]="body.length > 180">{{ body }}</div>
+          <div class="article-text">{{ body }}</div>
 
           <!-- Action Bar -->
           <div class="action-bar">
@@ -114,10 +117,7 @@
             </button>
 
             <button class="action-btn-lg" (click)="share()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
+              <span class="action-emoji action-emoji--lg">📯</span>
               <span class="btn-label">{{ 'post.share' | translate }}</span>
             </button>
           </div>
@@ -273,6 +273,7 @@
           </section>
         </div>
       </article>
+      </div>
     </ng-container>
 
     <div *ngIf="!loading() && !post()" class="empty-state">

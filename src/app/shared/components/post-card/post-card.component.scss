@@ -1,20 +1,46 @@
 :host { display: block; }
 
-.post-card {
-  margin-bottom: 12px;
+/* ─── LEAD STORY — the newest post gets front-page treatment ─── */
+:host(.lead-post) {
+  .post-content { padding: 2px 20px 14px; }
 
-  @media (max-width: 600px) {
-    margin-bottom: 8px;
-    border-bottom: 1px solid var(--color-border) !important;
+  .post-title {
+    font-size: clamp(1.55rem, 4.5vw, 2.05rem);
+    line-height: 1.15;
+    padding-top: 4px;
+  }
+
+  .post-body {
+    font-size: 16px;
   }
 }
 
-/* Author Row */
+/* Soft shadow lives on the wrapper: drop-shadow follows the torn silhouette exactly */
+.sheet-wrap {
+  margin-bottom: 16px;
+  filter: drop-shadow(0 1px 2px rgba(70, 50, 20, 0.22)) drop-shadow(0 7px 14px rgba(70, 50, 20, 0.10));
+
+  @media (max-width: 600px) {
+    margin-bottom: 13px;
+  }
+}
+
+/* Hand-torn parchment silhouette — bitten corners + deep notches (shared via CSS var) */
+.post-card {
+  clip-path: var(--paper-tear);
+}
+
+/* Histori sheets are the oldest — rougher tear with notches in different places */
+.post-card.paper--histori {
+  clip-path: var(--paper-tear-rough);
+}
+
+/* Author Row — extra top padding keeps it clear of the torn top edge */
 .post-author {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px 10px;
+  padding: 26px 16px 10px;
 }
 
 .author-link { flex-shrink: 0; }
@@ -233,11 +259,16 @@
   font-size: 12px; color: var(--color-text-muted); flex-shrink: 0;
 }
 
-/* Actions */
+/* Actions — extra bottom padding keeps icons clear of the torn bottom edge */
 .post-actions {
   display: flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 2px 8px 18px;
+}
+
+/* When the comments section follows, the actions row doesn't need the clearance */
+.post-actions:has(+ .comments-section) {
+  padding-bottom: 6px;
 }
 
 .action-btn {
@@ -278,7 +309,7 @@
   align-items: center;
   gap: 2px;
   width: 360px;
-  background: #fff;
+  background: #f8f3e3;
   border-radius: 100px;
   padding: 6px 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 8px 32px rgba(0,0,0,0.15);
@@ -355,7 +386,7 @@
 
 /* Comments */
 .comments-section {
-  padding: 0 12px 14px;
+  padding: 0 12px 22px;
 }
 
 .view-all-comments {
@@ -496,20 +527,20 @@
     font-size: 13px;
     font-family: var(--font-sans);
     outline: none;
-    &:focus { border-color: var(--color-border-focus); background: #fff; }
+    &:focus { border-color: var(--color-border-focus); background: #faf5e6; }
     &::placeholder { color: var(--color-text-dim); }
   }
 
   button {
     width: 34px; height: 34px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #1877f2 0%, #1565d8 100%);
+    background: var(--gradient-ink);
     border: none;
     color: #fff;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    box-shadow: 0 2px 7px rgba(24,119,242,0.35);
+    box-shadow: 0 2px 7px rgba(20,16,8,0.32);
     transition: transform 150ms ease;
     &:active:not(:disabled) { transform: scale(0.93); }
     &:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }

@@ -20,7 +20,7 @@
         {{ editingPost() ? ('✏️ ' + ('dashboard.edit_post' | translate)) : ('➕ ' + ('dashboard.new_post' | translate)) }}
       </button>
       <button [class.active]="activeTab() === 'comments'" (click)="switchTab('comments')">
-        💬 {{ 'dashboard.comments' | translate }}
+        📜 {{ 'dashboard.comments' | translate }}
       </button>
       <button [class.active]="activeTab() === 'users'" (click)="switchTab('users')">
         👥 {{ 'dashboard.members' | translate }} <span class="tab-count">{{ users().length }}</span>
@@ -292,7 +292,7 @@
               <tr>
                 <th>{{ 'dashboard.user' | translate }}</th>
                 <th>Email</th>
-                <th style="text-align:center">💬 {{ 'dashboard.comments' | translate }}</th>
+                <th style="text-align:center">📜 {{ 'dashboard.comments' | translate }}</th>
                 <th style="text-align:center">❤ {{ 'post.likes' | translate }}</th>
                 <th>{{ 'dashboard.member_since' | translate }}</th>
               </tr>
@@ -343,7 +343,7 @@
             <div class="user-card-stats">
               <div class="user-stat">
                 <span class="user-stat-badge comment lg">{{ u.commentCount }}</span>
-                <span class="user-stat-lbl">💬 {{ 'dashboard.comments' | translate }}</span>
+                <span class="user-stat-lbl">📜 {{ 'dashboard.comments' | translate }}</span>
               </div>
               <div class="user-stat">
                 <span class="user-stat-badge like lg">{{ u.likeCount }}</span>

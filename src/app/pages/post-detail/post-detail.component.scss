@@ -28,17 +28,36 @@
   }
 }
 
+.detail-sheet-wrap {
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(70, 50, 20, 0.22)) drop-shadow(0 7px 14px rgba(70, 50, 20, 0.10));
+}
+
+/* The article is a large aged sheet — parchment recipe + pixel-based sharp cuts
+   (px depths, not %, so the cuts stay shallow no matter how long the article is) */
 .post-article {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
+  background-color: var(--color-bg-card);
+  background-image: var(--paper-aged);
+  border: none;
+  border-radius: var(--paper-radius);
   overflow: hidden;
-  box-shadow: var(--shadow-card);
+  /* A small parchment strip above the photo hosts the torn top edge,
+     so the image itself is never cut — same card anatomy as the feed. */
+  padding-top: 22px;
+  clip-path: polygon(
+    0 14px, 1.5% 9px, 3% 12px, 5% 3px, 10% 2px, 17% 8px, 25% 3px, 33% 7px, 37% 2px,
+    39% 13px, 41.5% 3px, 50% 8px, 58% 2px, 66% 9px, 71.5% 12px, 74% 4px, 82% 7px,
+    90% 2px, 95% 8px, 97.5% 4px, 99% 10px, 100% 14px,
+    100% calc(100% - 14px), 98.5% calc(100% - 9px), 97% calc(100% - 12px), 94% calc(100% - 3px),
+    88% calc(100% - 8px), 82% calc(100% - 2px), 74% calc(100% - 9px), 66% calc(100% - 3px),
+    62% calc(100% - 8px), 60% calc(100% - 14px), 57.5% calc(100% - 4px), 50% calc(100% - 9px),
+    42% calc(100% - 2px), 34% calc(100% - 8px), 27% calc(100% - 3px), 25% calc(100% - 13px),
+    22.5% calc(100% - 4px), 15% calc(100% - 9px), 8% calc(100% - 2px), 4% calc(100% - 8px),
+    1.5% calc(100% - 5px), 0 calc(100% - 12px)
+  );
 
   @media (max-width: 600px) {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
+    margin: 0 8px;
   }
 }
 
@@ -227,17 +246,6 @@
   word-break: break-word;
 
   &::first-letter { text-transform: uppercase; }
-
-  /* Drop cap only on long article text (class set from the template) */
-  &.with-dropcap::first-letter {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 3em;
-    float: left;
-    line-height: 0.82;
-    padding: 6px 8px 0 0;
-    color: var(--color-accent);
-  }
 }
 
 
@@ -327,7 +335,7 @@
   align-items: center;
   gap: 2px;
   width: 380px;
-  background: #fff;
+  background: #f8f3e3;
   border-radius: 100px;
   padding: 6px 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 8px 32px rgba(0,0,0,0.15);
@@ -608,7 +616,7 @@
     font-size: 13px;
     font-family: var(--font-sans);
     outline: none;
-    &:focus { border-color: var(--color-border-focus); background: #fff; }
+    &:focus { border-color: var(--color-border-focus); background: #faf5e6; }
     &::placeholder { color: var(--color-text-dim); }
   }
 
@@ -627,8 +635,14 @@
   }
 }
 
-/* Skeleton */
-.skeleton-detail { padding: 0; }
+/* Skeleton — same aged sheet as the real article (parchment, strip above image, torn edges) */
+.skeleton-detail {
+  background-color: var(--color-bg-card);
+  background-image: var(--paper-aged);
+  border-radius: var(--paper-radius);
+  clip-path: var(--paper-tear);
+  padding: 22px 16px 24px;
+}
 
 /* Lightbox */
 .lightbox-img { max-width: 95vw; max-height: 90vh; object-fit: contain; border-radius: 8px; }

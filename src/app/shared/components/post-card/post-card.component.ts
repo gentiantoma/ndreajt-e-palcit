@@ -64,7 +64,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
   get liked() { return this.myReaction() !== null; }
 
   reactionEmoji(r: ReactionType | null) {
-    return REACTIONS.find(x => x.type === r)?.emoji ?? '🤝';
+    return REACTIONS.find(x => x.type === r)?.emoji ?? '🪶';
   }
   reactionLabel(r: ReactionType | null) {
     const key = REACTIONS.find(x => x.type === r)?.label ?? 'reactions.respect';

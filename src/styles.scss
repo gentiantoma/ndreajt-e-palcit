@@ -1,26 +1,87 @@
 /* Bootstrap grid is loaded via angular.json styles array */
 
 :root {
-  /* ── Facebook white-mode palette ── */
-  --color-bg:           #f0f2f5;
-  --color-bg-card:      #ffffff;
-  --color-bg-elevated:  #f0f2f5;
-  --color-bg-input:     #f0f2f5;
-  --color-border:       #e4e6ea;
-  --color-border-focus: #1877f2;
-  --color-accent:       #1877f2;
-  --color-accent-dark:  #166fe5;
-  --color-accent-light: rgba(24,119,242,0.08);
-  --color-text:         #050505;
-  --color-text-muted:   #65676b;
-  --color-text-dim:     #8a8d91;
-  --color-like:         #e41e3f;
-  --color-like-bg:      rgba(228,30,63,0.08);
+  /* ── Antique newsprint palette: aged sepia paper + shiny ink-black accent ── */
+  --color-bg:           #e0d5b3;
+  --color-bg-card:      #efe6c9;
+  --color-bg-elevated:  #e4d9b9;
+  --color-bg-input:     #e4d9b9;
+  --color-border:       #cdbf98;
+  --color-border-focus: #211d16;
+  --color-accent:       #211d16;
+  --color-accent-dark:  #0a0908;
+  --color-accent-light: rgba(33,29,22,0.08);
+  /* "Shiny" ink — glossy black gradient for filled elements */
+  --gradient-ink:       linear-gradient(150deg, #4a4436 0%, #211d16 45%, #0a0908 100%);
+  /* ── Aged-sheet recipe: burnt/worn edges + corner scorch + top light + grain ── */
+  --paper-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  /* Organic sepia clouds — real turbulence noise, so no two spots look geometric */
+  --paper-blotch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.25 0 0 0 0 0.08 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)' opacity='0.14'/%3E%3C/svg%3E");
+  /* Old-letter character: stray hairline scratches at odd angles
+     (no horizontal lines — those read as strikethrough when they cross text) */
+  --paper-scratches:
+    linear-gradient(104deg, transparent 46.7%, rgba(70,45,12,0.14) 46.85%, rgba(70,45,12,0.06) 47.0%, transparent 47.15%),
+    linear-gradient(67deg,  transparent 71.2%, rgba(70,45,12,0.12) 71.35%, transparent 71.5%),
+    linear-gradient(172deg, transparent 23.4%, rgba(70,45,12,0.10) 23.55%, transparent 23.7%),
+    linear-gradient(29deg,  transparent 55.6%, rgba(70,45,12,0.09) 55.75%, transparent 55.9%);
+  --paper-aged:
+    /* Scorch touches: off-corner, elliptical, each one different — nothing centered or symmetric */
+    radial-gradient(ellipse 90px 50px at -1.5% -2%,  rgba(80,52,16,0.26), transparent 65%),
+    radial-gradient(ellipse 60px 95px at 101.5% 6%,  rgba(80,52,16,0.16), transparent 60%),
+    radial-gradient(ellipse 115px 55px at 4% 102%,   rgba(74,48,14,0.24), transparent 62%),
+    radial-gradient(ellipse 70px 100px at 99.5% 95%, rgba(74,48,14,0.19), transparent 58%),
+    /* Age marks drifting through the middle of the sheet */
+    radial-gradient(ellipse 150px 75px at 63% 38%,   rgba(120,82,30,0.055), transparent 70%),
+    radial-gradient(ellipse 95px 130px at 28% 64%,   rgba(120,82,30,0.05),  transparent 70%),
+    /* Worn edges — slightly tilted so they don't read as perfect frames */
+    linear-gradient(91deg,  rgba(92,64,22,0.10), transparent 3.5%, transparent 96.2%, rgba(92,64,22,0.12)),
+    linear-gradient(179deg, rgba(92,64,22,0.09), transparent 3.8%, transparent 95.4%, rgba(92,64,22,0.13)),
+    /* Light falling across + pale worn centre */
+    radial-gradient(ellipse at 24% 0%, rgba(255,250,228,0.45), transparent 55%),
+    radial-gradient(ellipse 70% 55% at 47% 44%, rgba(255,250,228,0.32), transparent 70%),
+    var(--paper-scratches),
+    var(--paper-blotch),
+    var(--paper-noise);
+  /* Uneven hand-torn corners */
+  --paper-radius: 10px 16px 9px 15px / 15px 9px 16px 10px;
+  /* Torn parchment silhouette: torn top and bottom, dead-straight sides
+     (straight sides keep photos inside the cards perfectly rectangular) */
+  --paper-tear: polygon(
+    0% 5%, 2.6% 3.4%, 1.0% 1.6%, 3.6% 0.9%,
+    10% 0.3%, 17% 1.2%, 25% 0.4%, 33% 1.0%, 37% 0.3%, 39% 2.6%, 41.5% 0.5%,
+    50% 1.1%, 58% 0.3%, 66% 1.3%, 69.5% 0.4%, 71.5% 2.2%, 74% 0.6%, 82% 1.0%, 90% 0.3%, 95% 1.2%,
+    97.2% 0.8%, 99.0% 1.8%, 97.6% 3.6%, 100% 5.2%,
+    100% 95.5%, 97.7% 96.8%, 99.0% 98.4%, 96.6% 99.2%,
+    90% 99.6%, 82% 98.8%, 74% 99.5%, 66% 98.9%, 62% 99.6%, 60% 97.6%, 57.5% 99.5%,
+    50% 98.9%, 42% 99.6%, 34% 98.8%, 27% 99.5%, 25% 97.9%, 22.5% 99.4%, 15% 98.9%, 8% 99.6%,
+    3.4% 99.1%, 1.0% 98.3%, 2.4% 96.6%, 0% 95.2%
+  );
+  /* Rougher variant for the oldest sheets — notches land in different places */
+  --paper-tear-rough: polygon(
+    0% 6%, 3.2% 4.2%, 1.2% 2.0%, 4.4% 1.0%,
+    11% 0.4%, 19% 1.5%, 24% 0.3%, 26.5% 2.9%, 29% 0.6%, 38% 1.3%, 47% 0.3%,
+    55% 1.4%, 62% 0.4%, 64.5% 2.5%, 67% 0.5%, 76% 1.2%, 85% 0.3%, 93% 1.3%,
+    96.8% 1.0%, 98.8% 2.2%, 97.2% 4.4%, 100% 6.0%,
+    100% 94.8%, 97.4% 96.2%, 98.8% 98.0%, 96.2% 99.0%,
+    88% 99.5%, 79% 98.7%, 71% 99.6%, 67% 98.0%, 64% 99.5%, 55% 98.8%,
+    46% 99.6%, 38% 98.8%, 34% 99.5%, 31.5% 97.7%, 29% 99.4%, 20% 98.8%, 11% 99.6%,
+    4.0% 99.0%, 1.2% 98.1%, 2.8% 96.2%, 0% 94.6%
+  );
+  --paper-shadow:
+    0 1px 2px rgba(70,50,20,0.14),
+    0 7px 16px rgba(70,50,20,0.09),
+    inset 0 0 16px rgba(100,70,30,0.16),
+    inset 0 0 60px rgba(120,92,45,0.10);
+  --color-text:         #241f14;
+  --color-text-muted:   #6a604a;
+  --color-text-dim:     #91876c;
+  --color-like:         #b3282d;
+  --color-like-bg:      rgba(179,40,45,0.08);
   --radius-card:        12px;
   --radius-btn:         8px;
   --radius-sm:          6px;
-  --shadow-card:        0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-elevated:    0 4px 16px rgba(0,0,0,0.14);
+  --shadow-card:        0 1px 2px rgba(94,74,38,0.10), 0 6px 20px rgba(94,74,38,0.07);
+  --shadow-elevated:    0 6px 26px rgba(70,54,26,0.20);
   --font-serif:         'Georgia', 'Times New Roman', serif;
   --font-display:       'Playfair Display', 'Georgia', 'Times New Roman', serif;
   --font-sans:          'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -36,10 +97,27 @@ html { scroll-behavior: smooth; font-size: 16px; }
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg);
+  /* Antique paper: top light, sepia age-stains scattered around, fine grain */
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(255,248,225,0.55), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 12% 22%, rgba(133,100,45,0.07), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 88% 60%, rgba(133,100,45,0.08), transparent 70%),
+    radial-gradient(ellipse 45% 30% at 30% 88%, rgba(110,80,35,0.06), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
   color: var(--color-text);
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Cinematic vignette — darkened corners over the whole page, like an old photograph */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2000;
+  background: radial-gradient(ellipse at center, transparent 58%, rgba(80,58,22,0.13) 100%);
 }
 
 /* iOS/Android zoom prevention */
@@ -57,7 +135,7 @@ input, textarea, select {
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #e8eaed 25%, #f5f5f5 50%, #e8eaed 75%);
+  background: linear-gradient(90deg, #ddd1ab 25%, #ece2c2 50%, #ddd1ab 75%);
   background-size: 1200px 100%;
   animation: shimmer 1.6s infinite linear;
   border-radius: 6px;
@@ -69,19 +147,98 @@ input, textarea, select {
 .skeleton-image   { @extend .skeleton; border-radius: var(--radius-sm); }
 .skeleton-btn     { @extend .skeleton; height: 36px; border-radius: var(--radius-btn); }
 
-/* ─── CARD ─── */
+/* ─── CARD — each one is a sheet of old paper with worn, darkened edges ─── */
 .card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
+  background-color: var(--color-bg-card);
+  background-image: var(--paper-aged);
+  border: none;
+  border-radius: var(--paper-radius);
+  box-shadow: var(--paper-shadow);
   overflow: hidden;
 
+  /* On mobile the sheets float on the newsprint background instead of going edge-to-edge */
   @media (max-width: 600px) {
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
+    margin-left: 8px;
+    margin-right: 8px;
   }
+}
+
+/* Sidebar widgets are aged sheets too (masthead has its own scroll treatment) */
+.widget,
+.village-widget {
+  background-image: var(--paper-aged);
+  border: none !important;
+  border-radius: var(--paper-radius) !important;
+  box-shadow: var(--paper-shadow) !important;
+}
+
+/* ═══ PAPER PERSONALITIES — scorched "lava burst" corners, one style per category ═══
+   Each burst is layered radial gradients: a dark charred core, an ember ring, a fading halo. */
+
+/* LAJME — fresh edition: one extra scorch grazing the top-left, sharper cut */
+.paper--lajme {
+  background-image:
+    radial-gradient(ellipse 85px 45px at -3% 3%, rgba(58,34,8,0.22), transparent 62%),
+    var(--paper-aged);
+  border-radius: 6px 15px 8px 13px / 13px 8px 15px 6px;
+}
+
+/* HISTORI — ancient archive: darkest paper, heavier clouding, extra mid-sheet stain */
+.paper--histori {
+  background-color: #eadfba;
+  background-image:
+    radial-gradient(ellipse 100px 60px at 104% 101%, rgba(52,30,6,0.28), transparent 60%),
+    radial-gradient(ellipse 75px 45px at -3% 99%,   rgba(52,30,6,0.24), transparent 58%),
+    radial-gradient(ellipse 160px 90px at 56% 52%,  rgba(110,74,26,0.08), transparent 70%),
+    var(--paper-blotch),
+    var(--paper-aged);
+  border-radius: 19px 8px 21px 7px / 9px 20px 8px 22px;
+}
+
+/* NJOFTIM — official notice: lightest paper, hairline frame, faint seal-burn near top-right */
+.paper--njoftim {
+  background-color: #f3ebd2;
+  background-image:
+    radial-gradient(ellipse 60px 80px at 102% -3%, rgba(58,34,8,0.20), transparent 58%),
+    var(--paper-aged);
+  border-radius: 7px 10px 7px 10px / 10px 7px 10px 7px;
+  box-shadow: var(--paper-shadow), inset 0 0 0 1px rgba(96,66,24,0.22), inset 0 0 0 7px rgba(96,66,24,0.06);
+}
+
+/* NGJARJE (events) — ember warmth drifting up from below, off-centre */
+.paper--events {
+  background-image:
+    radial-gradient(ellipse 130px 60px at 12% 103%, rgba(126,52,10,0.20), transparent 60%),
+    radial-gradient(ellipse 90px 70px at 88% 105%,  rgba(168,94,22,0.16), transparent 58%),
+    radial-gradient(ellipse 60% 25% at 42% 108%,    rgba(196,124,32,0.12), transparent 60%),
+    var(--paper-aged);
+  border-radius: 15px 15px 22px 22px / 10px 10px 19px 19px;
+}
+
+/* PAJTIMET — sealed letter: crimson wax stain bleeding in from the top-left */
+.paper--pajtimet {
+  background-image:
+    radial-gradient(ellipse 70px 55px at -2% -3%, rgba(140,31,18,0.30), rgba(140,31,18,0.12) 55%, transparent 75%),
+    radial-gradient(ellipse 30px 22px at 7% 6%,   rgba(140,31,18,0.10), transparent 70%),
+    var(--paper-aged);
+  border-radius: 4px 19px 10px 17px / 17px 10px 19px 4px;
+}
+
+/* TAKIMET — folded invitation: opposite edges worn along the diagonal */
+.paper--takimet {
+  background-image:
+    radial-gradient(ellipse 65px 90px at 103% 2%, rgba(58,34,8,0.22), transparent 60%),
+    radial-gradient(ellipse 90px 60px at -3% 97%, rgba(58,34,8,0.22), transparent 60%),
+    var(--paper-aged);
+  border-radius: 21px 6px 21px 6px / 6px 21px 6px 21px;
+}
+
+/* Antique photo treatment — a light sepia wash ties every photo into the old edition */
+.img-cover,
+.img-grid img,
+.carousel-img,
+.tr-img img {
+  filter: sepia(0.18) saturate(0.9) contrast(1.03);
 }
 
 /* ─── BUTTONS ─── */
@@ -113,12 +270,12 @@ input, textarea, select {
   display: inline-flex; align-items: center; padding: 3px 10px;
   border-radius: 3px; font-size: 10.5px; font-weight: 700;
   letter-spacing: 1px; text-transform: uppercase;
-  &.lajme    { background: rgba(24,119,242,0.1);   color: #1877f2; }
+  &.lajme    { background: rgba(33,29,22,0.09);    color: #211d16; }
   &.histori  { background: rgba(230,128,0,0.12);   color: #c27303; }
   &.njoftim  { background: rgba(21,170,80,0.12);   color: #158a45; }
   &.events   { background: rgba(100,65,165,0.1);   color: #6441a5; }
   &.pajtimet { background: rgba(190,18,60,0.1);    color: #be123c; }
-  &.takimet  { background: rgba(8,145,178,0.1);    color: #0891b2; }
+  &.takimet  { background: rgba(122,92,40,0.12);   color: #7a5c28; }
   &.other    { background: rgba(0,0,0,0.06);       color: var(--color-text-muted); }
   /* keep legacy kulture colour for any old posts still in Firestore */
   &.kulture  { background: rgba(100,65,165,0.1);   color: #6441a5; }
@@ -173,7 +330,7 @@ app-post-card {
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: #c8ccd0; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #cfc9b9; border-radius: 3px; }
 
 /* ─── DIVIDER ─── */
 hr.divider { height: 1px; background: var(--color-border); border: none; margin: 0; }
@@ -212,16 +369,16 @@ hr.divider { height: 1px; background: var(--color-border); border: none; margin:
   border-radius: var(--radius-sm); color: var(--color-text); font-size: 16px;
   font-family: var(--font-sans); outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  &:focus { border-color: var(--color-border-focus); box-shadow: 0 0 0 3px rgba(24,119,242,0.12); }
+  &:focus { border-color: var(--color-border-focus); box-shadow: 0 0 0 3px rgba(33,29,22,0.12); }
   &::placeholder { color: var(--color-text-dim); }
 }
 textarea.form-control { resize: vertical; min-height: 120px; line-height: 1.5; }
 select.form-control {
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231877f2' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23211d16' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 12px center;
   padding-right: 36px;
-  option { background: #fff; color: var(--color-text); }
+  option { background: var(--color-bg-card); color: var(--color-text); }
 }
 .char-counter { font-size: 12px; color: var(--color-text-dim); text-align: right; margin-top: 4px;
   &.warn { color: #e67700; } &.over { color: var(--color-like); }
@@ -247,7 +404,7 @@ select.form-control {
 /* Admin brand avatar — shows platform identity instead of personal photo */
 .avatar-brand {
   border-radius: 50%; flex-shrink: 0;
-  background: linear-gradient(135deg, #1877f2 0%, #0d5ed9 100%);
+  background: var(--gradient-ink);
   display: flex; align-items: center; justify-content: center;
   &::after {
     content: 'NP';
@@ -362,6 +519,14 @@ select.form-control {
   }
 }
 
+/* Ancient action icons (📜 comment, 📯 share) — sized to match the old SVG icons */
+.action-emoji {
+  font-size: 17px;
+  line-height: 1;
+
+  &.action-emoji--lg { font-size: 19px; }
+}
+
 /* ─── ACTION BUTTONS ─── */
 .action-btn {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -391,19 +556,19 @@ select.form-control {
     flex: 1; padding: 9px 16px; border-radius: 20px;
     background: var(--color-bg-elevated); border: 1.5px solid transparent;
     color: var(--color-text); font-size: 14px; font-family: var(--font-sans); outline: none;
-    &:focus { border-color: var(--color-border-focus); background: #fff; }
+    &:focus { border-color: var(--color-border-focus); background: #faf5e6; }
     &::placeholder { color: var(--color-text-dim); }
   }
 
   /* Send button */
   button {
     width: 38px; height: 38px; border-radius: 50%;
-    background: linear-gradient(135deg, #1877f2 0%, #1565d8 100%);
+    background: var(--gradient-ink);
     color: #fff; border: none;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; flex-shrink: 0; padding: 0;
     transition: transform 150ms ease, opacity 150ms ease;
-    box-shadow: 0 2px 8px rgba(24, 119, 242, 0.38);
+    box-shadow: 0 2px 8px rgba(20, 16, 8, 0.35);
     &:active:not(:disabled) { transform: scale(0.94); }
     &:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
   }
@@ -416,11 +581,33 @@ select.form-control {
 }
 
 /* ─── WIDGET (sidebar) ─── */
-.widget { background: var(--color-bg-card); border: 1px solid var(--color-border);
-  border-radius: var(--radius-card); padding: 1.25rem; margin-bottom: 1rem;
-  box-shadow: var(--shadow-card); }
-.widget-title { font-size: 13px; font-weight: 700; color: var(--color-text-muted);
-  margin-bottom: 1rem; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
+.widget {
+  background-color: var(--color-bg-card);
+  background-image: var(--paper-aged);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+
+}
+
+/* Editorial section header: small caps, letter-spaced, hairline rule running to the edge */
+.widget-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+}
 
 /* ─── FILE UPLOAD ─── */
 .upload-area {
@@ -459,7 +646,7 @@ select.form-control {
   display: flex;
   align-items: center;
   gap: 2px;
-  background: #fff;
+  background: #f8f3e3;
   border-radius: 100px;
   padding: 6px 10px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.14), 0 8px 32px rgba(0,0,0,0.12);

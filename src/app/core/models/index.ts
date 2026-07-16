@@ -4,15 +4,18 @@ export type PostCategory = 'lajme' | 'histori' | 'njoftim' | 'events' | 'pajtime
 export type UserRole = 'member' | 'admin';
 export type ReactionType = 'like' | 'respect' | 'strong' | 'bravo' | 'honor' | 'fire' | 'sad';
 
-/* `label` is an ngx-translate key — resolved per active language (sq/en) */
+/* `label` is an ngx-translate key — resolved per active language (sq/en).
+   Ancient-themed emoji set to match the old-newspaper design:
+   quill = like, temple = respect, swords = strength, laurel trophy = bravo,
+   shield = honor (besa), eternal fire, wilted rose = sorrow. */
 export const REACTIONS: { type: ReactionType; emoji: string; label: string }[] = [
-  { type: 'like',    emoji: '❤️', label: 'reactions.like'    },
-  { type: 'respect', emoji: '🤝', label: 'reactions.respect' },
-  { type: 'strong',  emoji: '💪', label: 'reactions.strong'  },
-  { type: 'bravo',   emoji: '🙌', label: 'reactions.bravo'   },
-  { type: 'honor',   emoji: '🫡', label: 'reactions.honor'   },
+  { type: 'like',    emoji: '🪶', label: 'reactions.like'    },
+  { type: 'respect', emoji: '🏛️', label: 'reactions.respect' },
+  { type: 'strong',  emoji: '⚔️', label: 'reactions.strong'  },
+  { type: 'bravo',   emoji: '🏆', label: 'reactions.bravo'   },
+  { type: 'honor',   emoji: '🛡️', label: 'reactions.honor'   },
   { type: 'fire',    emoji: '🔥', label: 'reactions.fire'    },
-  { type: 'sad',     emoji: '💔', label: 'reactions.sad'     },
+  { type: 'sad',     emoji: '🥀', label: 'reactions.sad'     },
 ];
 
 export interface Post {
