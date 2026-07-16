@@ -93,16 +93,20 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* Dark root so the iOS status-bar / overscroll zone shows the rock tone,
-   never the parchment page bleeding through above the header */
-html { scroll-behavior: smooth; font-size: 16px; background-color: #241f15; }
+   never the parchment page bleeding through above the header (mirrors lala-resort) */
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  background-color: #241f15;
+  overflow-x: hidden !important;
+  max-width: 100%;
+}
 
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg);
-  /* `clip` (not `hidden`) prevents sideways scroll WITHOUT turning body into a
-     scroll container — `hidden` forces overflow-y to `auto`, which breaks the
-     fixed header on iOS Safari and lets content show above it. */
-  overflow-x: clip;
+  overflow-x: hidden;
+  max-width: 100%;
   overscroll-behavior-y: none;
   /* Antique paper: top light, sepia age-stains scattered around, fine grain */
   background-image:
@@ -117,13 +121,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Cinematic vignette — darkened corners over the whole page, like an old photograph */
+/* Cinematic vignette — darkened corners over the page content, like an old
+   photograph. Sits BELOW the header (z-index 1) so it never overlays the bar. */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 2000;
+  z-index: 1;
   background: radial-gradient(ellipse at center, transparent 58%, rgba(80,58,22,0.13) 100%);
 }
 
