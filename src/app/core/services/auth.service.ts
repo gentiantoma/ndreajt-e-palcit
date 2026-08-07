@@ -67,9 +67,16 @@ export class AuthService {
             return;
           }
           this.userProfile.set(profile);
+          // Run the admin-post brand migration at most once per photo, per device,
+          // instead of reading every admin post on every load.
           if (!this.migrationDone && ADMIN_EMAILS.includes(u.email ?? '') && profile.photoURL) {
             this.migrationDone = true;
-            this.fs.migrateAdminPosts(u.uid, profile.photoURL).catch(() => {});
+            const key = `np_admin_migrated:${u.uid}`;
+            if (localStorage.getItem(key) !== profile.photoURL) {
+              this.fs.migrateAdminPosts(u.uid, profile.photoURL)
+                .then(() => localStorage.setItem(key, profile.photoURL!))
+                .catch(() => {});
+            }
           }
         }
       } else {

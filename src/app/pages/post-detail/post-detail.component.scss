@@ -573,6 +573,52 @@
   padding: 0;
 }
 .c-delete-btn { color: var(--color-like); font-weight: 700; }
+.c-edit-btn   { color: var(--color-text-muted); font-weight: 700; background: none; border: none; cursor: pointer; font-size: 12px; font-family: var(--font-sans); padding: 0; }
+.c-report-btn { color: var(--color-text-dim); font-weight: 600; background: none; border: none; cursor: pointer; font-size: 12px; font-family: var(--font-sans); padding: 0; margin-left: auto; }
+
+.c-edited { color: var(--color-text-dim); font-size: 11px; font-style: italic; }
+
+/* Inline comment edit */
+.c-edit {
+  input {
+    width: 100%;
+    padding: 7px 12px;
+    border-radius: 10px;
+    background: #faf5e6;
+    border: 1.5px solid var(--color-border-focus);
+    color: var(--color-text);
+    font-size: 14px;
+    font-family: var(--font-sans);
+    outline: none;
+  }
+}
+.c-edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.c-save-btn   { color: var(--color-accent); font-weight: 700; background: none; border: none; cursor: pointer; font-size: 12px; font-family: var(--font-sans); padding: 0; }
+.c-cancel-btn { color: var(--color-text-dim); font-weight: 600; background: none; border: none; cursor: pointer; font-size: 12px; font-family: var(--font-sans); padding: 0; }
+
+/* Report modal */
+.report-lead { font-size: 13.5px; color: var(--color-text-muted); margin: 0 0 12px; }
+.report-reasons { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.report-reason {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-text);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+
+  &.selected { border-color: var(--color-accent); background: var(--color-accent-light); }
+  input { accent-color: var(--color-accent); }
+}
+.report-note { width: 100%; resize: vertical; min-height: 60px; }
 
 .c-view-replies-btn {
   display: inline-flex;

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import {
-  Firestore, collection, doc, addDoc, updateDoc, query, where, limit,
+  Firestore, collection, doc, addDoc, updateDoc, getDocs, query, where, limit,
   collectionData, serverTimestamp, writeBatch,
 } from '@angular/fire/firestore';
 import { Observable, map, catchError, of } from 'rxjs';
@@ -55,6 +55,23 @@ export class NotificationService {
     await batch.commit();
   }
 
+  /**
+   * Keep each recipient's notifications bounded — delete everything past the
+   * newest `keep`. Self-maintaining (owner deletes their own; allowed by rules),
+   * so the collection never grows without limit and no Cloud Function is needed.
+   */
+  async trimNotifications(uid: string, keep = 60): Promise<void> {
+    const snap = await getDocs(query(collection(this.db, 'notifications'), where('recipientId', '==', uid)));
+    if (snap.docs.length <= keep) return;
+    const sorted = snap.docs.sort((a, b) => (b.data()['createdAt']?.toMillis?.() ?? 0) - (a.data()['createdAt']?.toMillis?.() ?? 0));
+    const stale = sorted.slice(keep);
+    for (let i = 0; i < stale.length; i += 450) {
+      const batch = writeBatch(this.db);
+      stale.slice(i, i + 450).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+  }
+
   /* ── creation helpers — silent failures must never break the user's action ── */
 
   private async create(n: Omit<AppNotification, 'id' | 'read' | 'createdAt'>): Promise<void> {
@@ -98,6 +115,19 @@ export class NotificationService {
       recipientId: post.authorId, type: 'reaction',
       postId: post.id!, postTitle: post.titleSq,
       actorId, actorName, actorPhoto, reaction,
+    });
+  }
+
+  /**
+   * A report also pings the admin's bell for instant awareness — the full report
+   * (reason + details + resolve/dismiss) still lives in the dashboard Reports tab.
+   * The admin authors every post, so the post author IS the admin.
+   */
+  async notifyReport(post: Post, targetType: 'post' | 'comment', actorId: string, actorName: string, actorPhoto: string, excerpt = '') {
+    await this.create({
+      recipientId: post.authorId, type: 'report',
+      postId: post.id!, postTitle: targetType === 'comment' ? excerpt.slice(0, EXCERPT_LEN) : post.titleSq,
+      actorId, actorName, actorPhoto,
     });
   }
 }

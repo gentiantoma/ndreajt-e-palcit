@@ -25,6 +25,10 @@
       <button [class.active]="activeTab() === 'users'" (click)="switchTab('users')">
         👥 {{ 'dashboard.members' | translate }} <span class="tab-count">{{ users().length }}</span>
       </button>
+      <button [class.active]="activeTab() === 'reports'" (click)="switchTab('reports')">
+        🚩 {{ 'report.tab' | translate }}
+        <span class="tab-count" [class.tab-count-alert]="openReports() > 0">{{ openReports() }}</span>
+      </button>
     </div>
 
     <!-- ─── POSTS TAB ─── -->
@@ -376,6 +380,31 @@
           </div>
         </div>
       </ng-container>
+    </ng-container>
+
+    <!-- ─── REPORTS TAB ─── -->
+    <ng-container *ngIf="activeTab() === 'reports'">
+      <div *ngIf="reports().length === 0" class="empty-state">
+        <div class="empty-icon">🚩</div>
+        <p>{{ 'report.empty' | translate }}</p>
+      </div>
+
+      <div *ngFor="let r of reports()" class="report-card card" [class.report-resolved]="r.resolved">
+        <div class="report-head">
+          <span class="report-badge" [ngClass]="r.reason">{{ 'report.reason.' + r.reason | translate }}</span>
+          <span class="report-type">{{ (r.targetType === 'comment' ? 'report.on_comment' : 'report.on_post') | translate }}</span>
+          <span *ngIf="r.resolved" class="report-done">{{ 'report.resolved' | translate }}</span>
+          <span class="report-time">{{ reportTime(r) }}</span>
+        </div>
+        <p *ngIf="r.excerpt" class="report-excerpt">“{{ r.excerpt }}”</p>
+        <p *ngIf="r.note" class="report-note-txt">{{ r.note }}</p>
+        <div class="report-foot">
+          <span class="report-by">{{ 'report.by' | translate }} <b>{{ r.reporterName }}</b></span>
+          <a [routerLink]="['/post', r.postId]" class="report-link">{{ 'report.view' | translate }}</a>
+          <button *ngIf="!r.resolved" class="report-act resolve" (click)="resolveReport(r.id!)">{{ 'report.mark_resolved' | translate }}</button>
+          <button class="report-act dismiss" (click)="dismissReport(r.id!)">{{ 'general.delete' | translate }}</button>
+        </div>
+      </div>
     </ng-container>
 
   </div>

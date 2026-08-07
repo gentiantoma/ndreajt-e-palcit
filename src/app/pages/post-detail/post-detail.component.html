@@ -187,17 +187,39 @@
                          class="c-author c-author-link">{{ comment.authorName }}</a>
                       <span *ngIf="comment.authorName === 'Ndreajt e Palçit'" class="c-author">{{ comment.authorName }}</span>
                     </div>
-                    <p class="c-text">{{ comment.textSq }}</p>
+
+                    <!-- Inline edit -->
+                    <div *ngIf="editingId() === comment.id" class="c-edit">
+                      <input type="text" [value]="editText()"
+                             (input)="editText.set($any($event.target).value)"
+                             (keydown.enter)="saveEditComment(comment)"
+                             [attr.aria-label]="'post.edit_comment' | translate">
+                      <div class="c-edit-actions">
+                        <button class="c-save-btn" (click)="saveEditComment(comment)">{{ 'general.save' | translate }}</button>
+                        <button class="c-cancel-btn" (click)="cancelEditComment()">{{ 'general.cancel' | translate }}</button>
+                      </div>
+                    </div>
+                    <p *ngIf="editingId() !== comment.id" class="c-text">
+                      {{ comment.textSq }}
+                      <span *ngIf="comment.editedAt" class="c-edited">({{ 'post.edited' | translate }})</span>
+                    </p>
                   </div>
 
-                  <!-- Meta row: time + reply + delete -->
-                  <div class="c-meta-row">
+                  <!-- Meta row: time + reply + edit + delete + report -->
+                  <div class="c-meta-row" *ngIf="editingId() !== comment.id">
                     <span class="c-meta">{{ formatCommentTime(comment.createdAt) }}</span>
                     <button class="c-reply-btn" (click)="openReplyInput(comment)">
                       {{ 'post.reply' | translate }}
                     </button>
+                    <button *ngIf="canEdit(comment)" class="c-edit-btn" (click)="startEditComment(comment)">
+                      {{ 'general.edit' | translate }}
+                    </button>
                     <button *ngIf="canDelete(comment)" class="c-delete-btn" (click)="askDeleteComment(comment.id!)">
                       {{ 'general.delete' | translate }}
+                    </button>
+                    <button *ngIf="auth.isLoggedIn() && !canEdit(comment)" class="c-report-btn"
+                            (click)="openReport('comment', comment.id!, comment.textSq)">
+                      {{ 'post.report' | translate }}
                     </button>
                   </div>
 
@@ -307,6 +329,37 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" (click)="pendingDelete.set(null)">{{ 'general.cancel' | translate }}</button>
       <button class="btn btn-danger" (click)="confirmDelete()">{{ 'general.delete' | translate }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report modal -->
+<div class="modal-overlay" *ngIf="reportTarget()" (click)="closeReport()">
+  <div class="modal-box" (click)="$event.stopPropagation()" style="max-width:420px">
+    <div class="modal-header">
+      <h3>{{ 'report.title' | translate }}</h3>
+      <button class="btn-icon" (click)="closeReport()" [attr.aria-label]="'post.close' | translate">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="report-lead">{{ 'report.lead' | translate }}</p>
+      <div class="report-reasons">
+        <label *ngFor="let r of reportReasons" class="report-reason"
+               [class.selected]="reportReason() === r">
+          <input type="radio" name="reportReason" [value]="r"
+                 [checked]="reportReason() === r" (change)="reportReason.set(r)">
+          <span>{{ 'report.reason.' + r | translate }}</span>
+        </label>
+      </div>
+      <textarea class="form-control report-note" rows="2"
+                [value]="reportNote()" (input)="reportNote.set($any($event.target).value)"
+                [placeholder]="'report.note_placeholder' | translate" maxlength="300"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeReport()">{{ 'general.cancel' | translate }}</button>
+      <button class="btn btn-danger" (click)="submitReport()" [disabled]="reportSubmitting()">
+        <span *ngIf="reportSubmitting()" class="spinner spinner-sm"></span>
+        {{ 'report.submit' | translate }}
+      </button>
     </div>
   </div>
 </div>

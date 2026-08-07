@@ -8,9 +8,13 @@ import { FirestoreService } from '../../core/services/firestore.service';
 import { AuthService } from '../../core/services/auth.service';
 import { SeoService } from '../../core/services/seo.service';
 import { PostCardComponent } from '../../shared/components/post-card/post-card.component';
+import { ToastService } from '../../core/services/toast.service';
 import { Post, ReactionType } from '../../core/models';
 
 interface CategoryFilter { key: string; label: string; }
+
+/** Feed pages 10 posts at a time via the "Load More" button */
+const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-feed',
@@ -24,6 +28,7 @@ export class FeedComponent implements OnInit, AfterViewInit {
   auth          = inject(AuthService);
   private seo   = inject(SeoService);
   private translate = inject(TranslateService);
+  private toast = inject(ToastService);
 
   /** Newspaper-style dateline shown under the masthead, in the active language */
   get todayLine(): string {
@@ -36,6 +41,7 @@ export class FeedComponent implements OnInit, AfterViewInit {
   activeCategory = signal<string>('all');
   loadingMore    = signal(false);
   hasMore        = signal(false);
+  loadError      = signal(false);
   userFeedState  = signal(new Map<string, { reaction: ReactionType | null; bookmarked: boolean }>());
 
   readonly categories: CategoryFilter[] = [
@@ -61,14 +67,15 @@ export class FeedComponent implements OnInit, AfterViewInit {
 
   private async loadPosts() {
     this.loading.set(true);
+    this.loadError.set(false);
     try {
       const cat = this.activeCategory();
       let data: Post[] = [];
       try {
-        // Simple query without compound index requirement
+        // Load the newest 10; more are fetched 10-at-a-time via "Load More"
         const filters = cat === 'all'
-          ? [where('published', '==', true), orderBy('createdAt', 'desc'), limit(30)]
-          : [where('published', '==', true), where('category', '==', cat), limit(30)];
+          ? [where('published', '==', true), orderBy('createdAt', 'desc'), limit(PAGE_SIZE)]
+          : [where('published', '==', true), where('category', '==', cat), limit(PAGE_SIZE)];
         data = await this.fs.getPosts(filters);
         // Client-side sort only needed for category queries (no composite index yet)
         if (cat !== 'all') {
@@ -79,7 +86,8 @@ export class FeedComponent implements OnInit, AfterViewInit {
           });
         }
       } catch (e) {
-        console.warn('Firestore query failed, using demo posts', e);
+        console.warn('Firestore query failed', e);
+        this.loadError.set(true);
       }
 
       this.posts.set(data);
@@ -91,7 +99,7 @@ export class FeedComponent implements OnInit, AfterViewInit {
           .then(state => this.userFeedState.set(state))
           .catch(() => {});
       }
-      this.hasMore.set(data.length === 30);
+      this.hasMore.set(data.length === PAGE_SIZE);
     } finally {
       this.loading.set(false);
     }
@@ -112,17 +120,19 @@ export class FeedComponent implements OnInit, AfterViewInit {
       if (!last?.createdAt) return;
       const { startAfter } = await import('@angular/fire/firestore');
       const filters = cat === 'all'
-        ? [where('published', '==', true), orderBy('createdAt', 'desc'), startAfter(last.createdAt), limit(15)]
-        : [where('published', '==', true), where('category', '==', cat), orderBy('createdAt', 'desc'), startAfter(last.createdAt), limit(15)];
+        ? [where('published', '==', true), orderBy('createdAt', 'desc'), startAfter(last.createdAt), limit(PAGE_SIZE)]
+        : [where('published', '==', true), where('category', '==', cat), orderBy('createdAt', 'desc'), startAfter(last.createdAt), limit(PAGE_SIZE)];
       const more = await this.fs.getPosts(filters);
       this.posts.update(p => [...p, ...more]);
-      this.hasMore.set(more.length === 15);
+      this.hasMore.set(more.length === PAGE_SIZE);
       const user = this.auth.currentUser();
       if (user && more.length) {
         this.fs.getUserFeedState(more.map(p => p.id!), user.uid).then(extra => {
           this.userFeedState.update(m => { extra.forEach((v, k) => m.set(k, v)); return new Map(m); });
         }).catch(() => {});
       }
+    } catch {
+      this.toast.error(this.translate.instant('toast.error_loading'));
     } finally {
       this.loadingMore.set(false);
     }

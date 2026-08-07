@@ -1,10 +1,38 @@
 <!doctype html>
-<html lang="sq">
+<!-- The inline background must stay on the element itself. <app-splash> is an
+     Angular component, so it cannot paint until styles.css, polyfills.js and
+     main.js have all downloaded and Angular has bootstrapped — on a cold mobile
+     load that is a second or more of white canvas, and it is what shows through
+     at the bottom of the screen when the URL bar hides. An attribute style is in
+     effect for the very first painted frame. Same #241f15 that styles.scss
+     already sets on html, so nothing about the design changes. -->
+<html lang="sq" style="background-color:#241f15">
 <head>
   <meta charset="utf-8">
   <title>Ndreajt e Palçit</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- Critical boot paint — deliberately the first stylesheet in <head>, ahead of
+       the render-blocking font stylesheet below. -->
+  <style>
+    html { background-color: #241f15; }
+    /*
+     * Force the dark scheme while the splash is on screen.
+     *
+     * The meta above declares "dark light", so the UA paints its own surfaces to
+     * match the *system* preference. On a phone in light mode that includes the
+     * gesture-navigation bar of an installed PWA — drawn outside the web
+     * contents, where no page CSS can reach it — which is the pale band under
+     * the splash. `:has()` ties this to the splash's real lifetime, so the app
+     * follows the user's preference again the moment it unmounts.
+     */
+    html:has(app-splash) { color-scheme: dark; }
+    /* Rubber-band scrolling past the splash would otherwise expose the white
+       canvas beneath it at the top and bottom edges. */
+    html, body { overscroll-behavior: none; }
+  </style>
   <meta name="theme-color" content="#241f15">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="Platforma sociale e fshatit Palç, Tropojë — lajme, kulturë dhe histori nga komuniteti ynë.">

@@ -39,12 +39,18 @@ export class HeaderComponent {
   private notifSub?: Subscription;
 
   /** Re-subscribe to the notification stream whenever the signed-in user changes */
+  private trimmedFor = '';
   private readonly notifWatch = effect(() => {
     const user = this.auth.currentUser();
     this.notifSub?.unsubscribe();
     if (user?.uid) {
       this.notifSub = this.notifSvc.notifications$(user.uid)
         .subscribe(list => this.notifications.set(list));
+      // Self-maintaining cleanup: trim old notifications once per session per user
+      if (this.trimmedFor !== user.uid) {
+        this.trimmedFor = user.uid;
+        this.notifSvc.trimNotifications(user.uid).catch(() => {});
+      }
     } else {
       this.notifications.set([]);
     }
@@ -66,6 +72,7 @@ export class HeaderComponent {
   markAllRead() { this.notifSvc.markAllRead(this.notifications()); }
 
   notifIcon(n: AppNotification): string {
+    if (n.type === 'report') return '🚩';
     if (n.type === 'reaction') return REACTIONS.find(r => r.type === n.reaction)?.emoji ?? '🪶';
     return '📜';
   }

@@ -20,6 +20,7 @@
     "posts": "postime",
     "village": "Palç, Shqipëri",
     "load_more": "Ngarko më shumë",
+    "load_error": "Postimet nuk u ngarkuan. Kontrolloni lidhjen.",
     "community": "Komuniteti",
     "village_location": "Tropojë, Shqipëri",
     "village_desc": "Platforma sociale e fshatit Palç, Tropojë — lajme, kulturë dhe histori nga komuniteti ynë.",
@@ -58,7 +59,31 @@
     "no_reactions": "Ende s'ka reagime.",
     "prev_image": "Fotoja e mëparshme",
     "next_image": "Fotoja tjetër",
-    "close": "Mbyll"
+    "close": "Mbyll",
+    "report": "Raporto",
+    "edit_comment": "Redakto komentin",
+    "edited": "redaktuar"
+  },
+  "report": {
+    "title": "Raporto përmbajtjen",
+    "lead": "Zgjidhni arsyen. Raportimi shkon te administratori i platformës.",
+    "tab": "Raportime",
+    "empty": "Nuk ka raportime.",
+    "on_comment": "Koment i raportuar",
+    "on_post": "Postim i raportuar",
+    "resolved": "Zgjidhur",
+    "by": "Raportuar nga",
+    "view": "Shiko",
+    "mark_resolved": "Shëno si të zgjidhur",
+    "submit": "Dërgo raportimin",
+    "note_placeholder": "Detaje shtesë (opsionale)...",
+    "reason": {
+      "spam": "Spam ose reklamë",
+      "offensive": "Gjuhë ofenduese",
+      "harassment": "Ngacmim ose kërcënim",
+      "misinformation": "Informacion i rremë",
+      "other": "Tjetër"
+    }
   },
   "reactions": {
     "like": "Pëlqej",
@@ -90,7 +115,11 @@
     "account_suspended": "Llogaria juaj është pezulluar nga administratori.",
     "required_title_body": "Titulli dhe teksti janë të detyrueshëm.",
     "name_too_short": "Emri duhet të ketë të paktën 2 shkronja.",
-    "bio_too_long": "Bio nuk mund të kalojë 300 karaktere."
+    "bio_too_long": "Bio nuk mund të kalojë 300 karaktere.",
+    "too_fast": "Po veproni shumë shpejt. Prisni {{seconds}} sekonda.",
+    "report_sent": "Raportimi u dërgua te administratori. Faleminderit!",
+    "comment_edited": "Komenti u përditësua.",
+    "error_loading": "Nuk u ngarkuan të dhënat. Provoni përsëri."
   },
   "auth": {
     "brand_sub": "Platforma informative e fshatit Palç, Shqipëri",
@@ -177,7 +206,8 @@
     "mark_all_read": "Shënoji të gjitha si të lexuara",
     "comment_suffix": "komentoi postimin tuaj",
     "reply_suffix": "iu përgjigj komentit tuaj",
-    "reaction_suffix": "reagoi në postimin tuaj"
+    "reaction_suffix": "reagoi në postimin tuaj",
+    "report_suffix": "raportoi një përmbajtje 🚩"
   },
   "general": {
     "loading": "Duke ngarkuar...",
@@ -186,6 +216,8 @@
     "delete": "Fshi",
     "remove": "Hiq",
     "actions": "Veprime",
+    "edit": "Redakto",
+    "retry": "Provo përsëri",
     "confirm_delete": "Konfirmo fshirjen",
     "delete_comment_confirm": "Jeni i sigurt që dëshironi ta fshini këtë koment? Ky veprim nuk mund të zhbëhet."
   }

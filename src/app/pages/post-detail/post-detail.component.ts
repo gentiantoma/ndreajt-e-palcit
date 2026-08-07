@@ -13,6 +13,8 @@ import { LazyImgDirective } from '../../shared/directives/lazy-img.directive';
 import { Post, Comment, Reply, ReactionType, REACTIONS } from '../../core/models';
 import { ReactionPickerService } from '../../core/services/reaction-picker.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { RateLimitService } from '../../core/services/rate-limit.service';
+import { Report, ReportReason, ReportTargetType } from '../../core/models';
 
 interface CommentState {
   replies: Reply[];
@@ -40,6 +42,16 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private pickerSvc  = inject(ReactionPickerService);
   private notifSvc   = inject(NotificationService);
   private router     = inject(Router);
+  private rateLimit  = inject(RateLimitService);
+
+  private throttled(action: string): boolean {
+    const wait = this.rateLimit.check(action);
+    if (wait > 0) {
+      this.toast.error(this.translate.instant('toast.too_fast', { seconds: wait }));
+      return true;
+    }
+    return false;
+  }
 
   /** Public-facing name/photo of the acting user (admin acts as the brand) */
   private get actorName(): string {
@@ -203,6 +215,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     const user = this.auth.currentUser();
     if (!user) { this.toast.info(this.translate.instant('toast.login_to_react')); return; }
     this.pickerSvc.dismiss();
+    if (this.throttled('reaction')) return;
     const prev = this.myReaction();
     const result = await this.fs.setReaction(this.postId, user.uid, reaction);
     this.myReaction.set(result);
@@ -234,6 +247,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     if (!user) return;
     const text = this.commentText().trim();
     if (!text) return;
+    if (this.throttled('comment')) return;
     this.submitting.set(true);
     try {
       await this.fs.addComment(this.postId, {
@@ -302,6 +316,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     const s = this.getReplyState(comment.id!);
     const text = s.replyText.trim();
     if (!text) return;
+    if (this.throttled('comment')) return;
     s.submittingReply = true;
     try {
       const profilePhoto = this.auth.userProfile()?.photoURL || '';
@@ -326,6 +341,77 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
   async deleteReply(commentId: string, replyId: string) {
     await this.fs.deleteReply(this.postId, commentId, replyId);
+  }
+
+  /* ── Edit own comment ── */
+  editingId = signal<string | null>(null);
+  editText  = signal('');
+
+  startEditComment(c: Comment) {
+    this.editingId.set(c.id!);
+    this.editText.set(c.textSq);
+  }
+  cancelEditComment() { this.editingId.set(null); this.editText.set(''); }
+
+  async saveEditComment(c: Comment) {
+    const text = this.editText().trim();
+    if (!text || text === c.textSq) { this.cancelEditComment(); return; }
+    try {
+      await this.fs.editComment(this.postId, c.id!, text);
+      this.toast.success(this.translate.instant('toast.comment_edited'));
+    } catch {
+      this.toast.error(this.translate.instant('toast.error_generic'));
+    }
+    this.cancelEditComment();
+  }
+
+  canEdit(item: Comment): boolean {
+    const u = this.auth.currentUser();
+    return !!u && u.uid === item.authorId;
+  }
+
+  /* ── Report a comment (goes to the platform admin) ── */
+  readonly reportReasons: ReportReason[] = ['spam', 'offensive', 'harassment', 'misinformation', 'other'];
+  reportTarget = signal<{ type: ReportTargetType; id: string; excerpt: string } | null>(null);
+  reportReason = signal<ReportReason>('offensive');
+  reportNote   = signal('');
+  reportSubmitting = signal(false);
+
+  openReport(type: ReportTargetType, id: string, excerpt: string) {
+    this.reportTarget.set({ type, id, excerpt });
+    this.reportReason.set('offensive');
+    this.reportNote.set('');
+  }
+  closeReport() { this.reportTarget.set(null); }
+
+  async submitReport() {
+    const user = this.auth.currentUser();
+    const t = this.reportTarget();
+    if (!user) { this.toast.info(this.translate.instant('toast.login_required')); return; }
+    if (!t) return;
+    if (this.throttled('report')) return;
+    this.reportSubmitting.set(true);
+    try {
+      await this.fs.addReport({
+        targetType: t.type,
+        targetId: t.id,
+        postId: this.postId,
+        reason: this.reportReason(),
+        note: this.reportNote().trim() || undefined,
+        excerpt: t.excerpt?.slice(0, 140),
+        reporterId: user.uid,
+        reporterName: this.actorName,
+      } as Report);
+      // Also ping the admin's bell so abuse reports are never missed
+      const p = this.post();
+      if (p) this.notifSvc.notifyReport(p, t.type, user.uid, this.actorName, this.actorPhoto, t.excerpt);
+      this.toast.success(this.translate.instant('toast.report_sent'));
+      this.closeReport();
+    } catch {
+      this.toast.error(this.translate.instant('toast.error_generic'));
+    } finally {
+      this.reportSubmitting.set(false);
+    }
   }
 
   async share() {

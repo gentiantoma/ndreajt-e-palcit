@@ -1,6 +1,8 @@
 :host {
   position: fixed;
-  inset: 0;
+  /* Overscan by a pixel: fractional device-pixel ratios can round a fixed box a
+     hair short, leaving a hairline of white canvas at the bottom edge and corners. */
+  inset: -1px;
   z-index: 100000;
   pointer-events: none;
 }
@@ -9,11 +11,31 @@
 .splash {
   position: absolute;
   inset: 0;
+  /*
+   * Extend the ink past every viewport edge.
+   *
+   * A fixed/absolute box only covers the viewport *as it currently is*. On a
+   * phone that leaves two strips uncovered — the home-indicator area, and the
+   * band revealed when the browser toolbar retracts — and the parchment body
+   * (#ece5d2) shows through them as a pale bar under the splash.
+   *
+   * A spread shadow rather than extra height on purpose: height would grow the
+   * flex box and drag the centred emblem down by half the toolbar, whereas a
+   * shadow paints outside the border box and leaves layout untouched. It is not
+   * clipped by the `overflow: hidden` below (that clips descendants, not the
+   * element's own shadow) and it fades with the same splashOut animation, so
+   * there is no second element and no duplicated timing to drift.
+   */
+  box-shadow: 0 0 0 200px #0a0705;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background:
+  /* Solid base beneath the gradient — identical to its outermost stop, so the
+     look is unchanged, but any frame where the gradient is not yet rasterised
+     falls back to ink instead of to white. */
+  background-color: #0a0705;
+  background-image:
     radial-gradient(ellipse 70% 60% at 50% 42%, #241d12 0%, #150f09 55%, #0a0705 100%);
   animation: splashOut 620ms ease 2500ms forwards;
 }

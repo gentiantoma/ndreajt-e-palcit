@@ -554,6 +554,25 @@
   }
 }
 
+/* "Load more" pill — click-pagination, 10 posts at a time */
+.feed-load-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  &:active { background: var(--color-bg-elevated); }
+}
+
 /* End-of-feed: three static dots */
 .feed-end-dots {
   display: flex;

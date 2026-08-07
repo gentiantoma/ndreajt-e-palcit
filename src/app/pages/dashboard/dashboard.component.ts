@@ -1,17 +1,18 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 import { where, orderBy } from '@angular/fire/firestore';
-import { fmtDateShort } from '../../core/utils/date.util';
+import { Subscription } from 'rxjs';
+import { fmtDateShort, fmtDateWithTime } from '../../core/utils/date.util';
 import { FirestoreService } from '../../core/services/firestore.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ImageUploadService } from '../../core/services/image-upload.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Post, Comment, PostCategory } from '../../core/models';
+import { Post, Comment, PostCategory, Report } from '../../core/models';
 
-type Tab = 'posts' | 'create' | 'comments' | 'users';
+type Tab = 'posts' | 'create' | 'comments' | 'users' | 'reports';
 
 interface UserWithStats {
   uid: string;
@@ -32,12 +33,26 @@ interface UserWithStats {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private fs    = inject(FirestoreService);
   auth          = inject(AuthService);
   private imgUp = inject(ImageUploadService);
   private toast = inject(ToastService);
   private translate = inject(TranslateService);
+
+  /* ── Reports (live) ── */
+  reports        = signal<Report[]>([]);
+  openReports    = computed(() => this.reports().filter(r => !r.resolved).length);
+  private reportsSub?: Subscription;
+
+  watchReports() {
+    this.reportsSub = this.fs.getReports$().subscribe(r => this.reports.set(r));
+  }
+  async resolveReport(id: string) { try { await this.fs.resolveReport(id); } catch { this.toast.error(this.translate.instant('toast.error_generic')); } }
+  async dismissReport(id: string) { try { await this.fs.deleteReport(id); } catch { this.toast.error(this.translate.instant('toast.error_generic')); } }
+  reportTime(r: Report) { return fmtDateWithTime(r.createdAt, this.translate.currentLang || 'sq'); }
+
+  ngOnDestroy() { this.reportsSub?.unsubscribe(); }
 
   activeTab    = signal<Tab>('posts');
   posts        = signal<Post[]>([]);
@@ -65,16 +80,12 @@ export class DashboardComponent implements OnInit {
   readonly categories: PostCategory[] = ['lajme', 'histori', 'njoftim', 'events', 'pajtimet', 'takimet', 'other'];
 
   async ngOnInit() {
-    const user = this.auth.currentUser();
-    if (user) {
-      this.fs.getUser(user.uid).then(profile => {
-        this.fs.migrateAdminPosts(user.uid, profile?.photoURL || '').catch(() => {});
-      });
-    }
+    // (admin-post brand migration now runs once from AuthService, not here)
     await this.loadPosts();
     this.loading.set(false);
     // Warm the members list in the background so the "Anëtarët N" badge is instant
     this.loadUsers();
+    this.watchReports();
   }
 
   async loadPosts() {
@@ -131,24 +142,20 @@ export class DashboardComponent implements OnInit {
     this.usersLoaded = true;
     this.loadingUsers.set(true);
     try {
-      // 1) Show the list + count immediately (one fast query)
+      // Stats are denormalised onto the user docs, so this is ONE query total —
+      // no more O(users × 2) collection-group aggregates.
       const raw = await this.fs.getAllUsers();
-      this.users.set(raw.map(u => ({ ...u, commentCount: 0, likeCount: 0 }) as UserWithStats));
-      this.loadingUsers.set(false);
-
-      // 2) Enrich each row's stats in the background, then re-sort
-      const withStats = await Promise.all(raw.map(async u => {
-        const [commentCount, likeCount] = await Promise.all([
-          this.fs.getCommentsCountByUser(u.uid),
-          this.fs.getLikesCountByUser(u.uid),
-        ]);
-        return { ...u, commentCount, likeCount } as UserWithStats;
-      }));
-      withStats.sort((a, b) => b.commentCount - a.commentCount);
+      const withStats = raw.map(u => ({
+        ...u,
+        commentCount: u.commentCount ?? 0,
+        likeCount: u.reactionCount ?? 0,
+      }) as UserWithStats);
+      withStats.sort((a, b) => (b.commentCount + b.likeCount) - (a.commentCount + a.likeCount));
       this.users.set(withStats);
     } catch (e) {
       console.error('loadUsers error', e);
       this.usersLoaded = false;
+      this.toast.error(this.translate.instant('toast.error_loading'));
     } finally {
       this.loadingUsers.set(false);
     }

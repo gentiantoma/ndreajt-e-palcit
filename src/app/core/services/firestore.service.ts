@@ -6,7 +6,7 @@ import {
   DocumentData
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { Post, Comment, Reply, UserProfile, Favorite, ReactionType } from '../models';
+import { Post, Comment, Reply, UserProfile, Favorite, ReactionType, Report, AppNotification } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -41,13 +41,45 @@ export class FirestoreService {
     await updateDoc(doc(this.db, 'posts', id), { ...data, updatedAt: serverTimestamp() });
   }
 
+  /**
+   * Fully delete a post AND everything attached to it — comments, their replies,
+   * likes, favorites and notifications. Firestore does NOT cascade into
+   * subcollections on its own, so we walk the tree and batch-delete every doc.
+   * Deletes are chunked to respect the 500-writes-per-batch limit.
+   */
   async deletePost(id: string): Promise<void> {
-    await deleteDoc(doc(this.db, 'posts', id));
-    // also delete likes for this post
-    const likeSnap = await getDocs(query(collection(this.db, 'likes'), where('postId', '==', id)));
-    const batch = writeBatch(this.db);
-    likeSnap.docs.forEach(d => batch.delete(d.ref));
-    if (likeSnap.docs.length) await batch.commit();
+    const refs: any[] = [];
+
+    // 1) Comments + their reply subcollections
+    const commentsSnap = await getDocs(collection(this.db, 'posts', id, 'comments'));
+    for (const c of commentsSnap.docs) {
+      const repliesSnap = await getDocs(collection(this.db, 'posts', id, 'comments', c.id, 'replies'));
+      repliesSnap.docs.forEach(r => refs.push(r.ref));
+      refs.push(c.ref);
+    }
+
+    // 2) Likes/reactions, favorites and notifications that point at this post
+    const [likeSnap, favSnap, notifSnap] = await Promise.all([
+      getDocs(query(collection(this.db, 'likes'),         where('postId', '==', id))),
+      getDocs(query(collection(this.db, 'favorites'),      where('postId', '==', id))),
+      getDocs(query(collection(this.db, 'notifications'),  where('postId', '==', id))),
+    ]);
+    likeSnap.docs.forEach(d => refs.push(d.ref));
+    favSnap.docs.forEach(d => refs.push(d.ref));
+    notifSnap.docs.forEach(d => refs.push(d.ref));
+
+    // 3) The post itself, then commit everything in ≤500-doc batches
+    refs.push(doc(this.db, 'posts', id));
+    await this.batchDelete(refs);
+  }
+
+  /** Delete a list of document refs in Firestore-safe 500-doc batches. */
+  private async batchDelete(refs: any[]): Promise<void> {
+    for (let i = 0; i < refs.length; i += 450) {
+      const batch = writeBatch(this.db);
+      refs.slice(i, i + 450).forEach(r => batch.delete(r));
+      await batch.commit();
+    }
   }
 
   /* ── reactions ── */
@@ -64,6 +96,7 @@ export class FirestoreService {
           likeCount: increment(-1),
           [`reactionCounts.${current}`]: increment(-1),
         });
+        this.bumpUserStat(userId, 'reactionCount', -1);
         return null;
       }
       await updateDoc(likeRef, { reaction });
@@ -78,6 +111,7 @@ export class FirestoreService {
       likeCount: increment(1),
       [`reactionCounts.${reaction}`]: increment(1),
     });
+    this.bumpUserStat(userId, 'reactionCount', 1);
     return reaction;
   }
 
@@ -181,10 +215,22 @@ export class FirestoreService {
       ...comment, createdAt: serverTimestamp(),
     });
     await updateDoc(doc(this.db, 'posts', postId), { commentCount: increment(1) });
+    if (comment.authorId) this.bumpUserStat(comment.authorId, 'commentCount', 1);
   }
 
+  /** Edit the text of an existing comment (author only, enforced by rules). */
+  async editComment(postId: string, commentId: string, textSq: string): Promise<void> {
+    await updateDoc(doc(this.db, 'posts', postId, 'comments', commentId), {
+      textSq, editedAt: serverTimestamp(),
+    });
+  }
+
+  /** Delete a comment AND its replies subcollection, and fix the counters. */
   async deleteComment(postId: string, commentId: string): Promise<void> {
-    await deleteDoc(doc(this.db, 'posts', postId, 'comments', commentId));
+    const repliesSnap = await getDocs(collection(this.db, 'posts', postId, 'comments', commentId, 'replies'));
+    const refs = repliesSnap.docs.map(r => r.ref);
+    refs.push(doc(this.db, 'posts', postId, 'comments', commentId));
+    await this.batchDelete(refs);
     await updateDoc(doc(this.db, 'posts', postId), { commentCount: increment(-1) });
   }
 
@@ -208,6 +254,16 @@ export class FirestoreService {
       doc(this.db, 'posts', postId, 'comments', commentId),
       { replyCount: increment(1) }
     );
+    if (reply.authorId) this.bumpUserStat(reply.authorId, 'commentCount', 1);
+  }
+
+  /**
+   * Denormalised per-user activity counters kept on the user doc, so the admin
+   * members list reads them directly instead of running O(users) aggregate
+   * queries. Fire-and-forget; a lost increment is cosmetic, never fatal.
+   */
+  private bumpUserStat(uid: string, field: 'commentCount' | 'reactionCount', by: number): void {
+    updateDoc(doc(this.db, 'users', uid), { [field]: increment(by) }).catch(() => {});
   }
 
   async deleteReply(postId: string, commentId: string, replyId: string): Promise<void> {
@@ -262,6 +318,44 @@ export class FirestoreService {
       }
     });
     if (snap.docs.length) await batch.commit();
+  }
+
+  /* ── reports (community flagging) ── */
+  async addReport(report: Omit<Report, 'id' | 'createdAt' | 'resolved'>): Promise<void> {
+    await addDoc(collection(this.db, 'reports'), {
+      ...report, resolved: false, createdAt: serverTimestamp(),
+    });
+  }
+
+  /** Live stream of open + recent reports for the admin dashboard (newest first). */
+  getReports$(): Observable<Report[]> {
+    const q = query(collection(this.db, 'reports'), orderBy('createdAt', 'desc'), limit(100));
+    return collectionData(q, { idField: 'id' }) as Observable<Report[]>;
+  }
+
+  async resolveReport(id: string): Promise<void> {
+    await updateDoc(doc(this.db, 'reports', id), { resolved: true });
+  }
+
+  async deleteReport(id: string): Promise<void> {
+    await deleteDoc(doc(this.db, 'reports', id));
+  }
+
+  /* ── notifications maintenance ── */
+  /**
+   * Keep each recipient's notifications bounded: whenever they load their list,
+   * trim anything past the newest `keep`. Self-maintaining, no Cloud Function
+   * needed — the owner can delete their own notifications (allowed by rules).
+   */
+  async trimNotifications(uid: string, keep = 60): Promise<void> {
+    const snap = await getDocs(query(collection(this.db, 'notifications'), where('recipientId', '==', uid)));
+    if (snap.docs.length <= keep) return;
+    const sorted = snap.docs.sort((a, b) => {
+      const ta = a.data()['createdAt']?.toMillis?.() ?? 0;
+      const tb = b.data()['createdAt']?.toMillis?.() ?? 0;
+      return tb - ta; // newest first
+    });
+    await this.batchDelete(sorted.slice(keep).map(d => d.ref));
   }
 
   /** Admin moderation: block/unblock an account platform-wide */

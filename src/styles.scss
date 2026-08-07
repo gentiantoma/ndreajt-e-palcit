@@ -92,22 +92,55 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ─── ACCESSIBILITY ─── */
+/* Clear keyboard focus ring on every interactive element (mouse users unaffected) */
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+a:focus-visible, button:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Respect users who ask for less motion — kill non-essential animation everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Screen-reader-only helper */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Dark root so the iOS status-bar / overscroll zone shows the rock tone,
    never the parchment page bleeding through above the header (mirrors lala-resort) */
 html {
   scroll-behavior: smooth;
   font-size: 16px;
   background-color: #241f15;
-  overflow-x: hidden !important;
-  max-width: 100%;
+  /* `clip` blocks sideways scroll but — unlike `hidden` — does NOT turn html/body
+     into scroll containers, so the main vertical scrollbar keeps working and the
+     fixed header stays anchored to the viewport. */
+  overflow-x: clip;
 }
 
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg);
-  overflow-x: hidden;
-  max-width: 100%;
-  overscroll-behavior-y: none;
+  overflow-x: clip;
   /* Antique paper: top light, sepia age-stains scattered around, fine grain */
   background-image:
     radial-gradient(ellipse at 50% -10%, rgba(255,248,225,0.55), transparent 60%),

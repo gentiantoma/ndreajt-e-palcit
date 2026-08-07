@@ -54,6 +54,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   loadMore() { this.visibleCount.update(c => c + PAGE_SIZE); }
 
   icon(n: AppNotification): string {
+    if (n.type === 'report') return '🚩';
     if (n.type === 'reaction') return REACTIONS.find(r => r.type === n.reaction)?.emoji ?? '🪶';
     return '📜';
   }

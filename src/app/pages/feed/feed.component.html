@@ -170,7 +170,16 @@
 
         <!-- Posts -->
         <ng-container *ngIf="!loading()">
-          <div *ngIf="posts().length === 0" class="empty-state card" style="border-radius:var(--radius-card)">
+          <!-- Error state -->
+          <div *ngIf="loadError() && posts().length === 0" class="empty-state card" style="border-radius:var(--radius-card)">
+            <div class="empty-icon">⚠️</div>
+            <p>{{ 'feed.load_error' | translate }}</p>
+            <button class="btn btn-secondary btn-sm" style="margin-top:1rem" (click)="filterBy(activeCategory())">
+              {{ 'general.retry' | translate }}
+            </button>
+          </div>
+
+          <div *ngIf="!loadError() && posts().length === 0" class="empty-state card" style="border-radius:var(--radius-card)">
             <div class="empty-icon">📰</div>
             <p>{{ 'feed.empty' | translate }}</p>
           </div>
@@ -188,14 +197,13 @@
               <span class="spinner feed-spinner"></span>
             </ng-container>
 
-            <!-- Load more trigger (admin only, hidden button) -->
-            <ng-container *ngIf="auth.isAdmin() && hasMore() && !loadingMore()">
-              <button class="feed-more-btn" (click)="loadMore()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"/>
-                </svg>
-              </button>
-            </ng-container>
+            <!-- Load more — available to everyone, 10 at a time -->
+            <button *ngIf="hasMore() && !loadingMore()" class="feed-load-more" (click)="loadMore()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+              {{ 'feed.load_more' | translate }}
+            </button>
 
             <!-- No more posts — static end marker -->
             <ng-container *ngIf="!hasMore() && !loading() && !loadingMore() && posts().length > 0">

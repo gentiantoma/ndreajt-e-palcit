@@ -13,6 +13,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AudioService } from '../../../core/services/audio.service';
 import { ReactionPickerService } from '../../../core/services/reaction-picker.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { RateLimitService } from '../../../core/services/rate-limit.service';
 import { LazyImgDirective } from '../../directives/lazy-img.directive';
 import { fmtDateShort, fmtDateDay } from '../../../core/utils/date.util';
 
@@ -46,6 +47,17 @@ export class PostCardComponent implements OnInit, OnDestroy {
   private translate = inject(TranslateService);
   private pickerSvc = inject(ReactionPickerService);
   private notifSvc  = inject(NotificationService);
+  private rateLimit = inject(RateLimitService);
+
+  /** Returns true and toasts if the action is rate-limited; false when allowed. */
+  private throttled(action: string): boolean {
+    const wait = this.rateLimit.check(action);
+    if (wait > 0) {
+      this.toast.error(this.translate.instant('toast.too_fast', { seconds: wait }));
+      return true;
+    }
+    return false;
+  }
 
   /** Public-facing name/photo of the acting user (admin acts as the brand) */
   private get actorName(): string {
@@ -212,6 +224,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
     const user = await this.getResolvedUser();
     if (!user) { this.toast.info(this.translate.instant('toast.login_to_react')); return; }
     if (!this.post.id) return;
+    if (this.throttled('reaction')) { this.pickerSvc.dismiss(); return; }
     this.pickerSvc.dismiss();
     try {
       const prev = this.myReaction();
@@ -285,6 +298,7 @@ export class PostCardComponent implements OnInit, OnDestroy {
     if (!user) { this.toast.info(this.translate.instant('toast.login_to_comment')); return; }
     const text = this.commentText().trim();
     if (!text) return;
+    if (this.throttled('comment')) return;
     this.submitting.set(true);
     try {
       const profilePhoto = this.auth.userProfile()?.photoURL || '';

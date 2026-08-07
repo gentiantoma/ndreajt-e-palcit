@@ -48,6 +48,7 @@ export interface Comment {
   textSq: string;
   replyCount?: number;
   createdAt?: Timestamp | Date | any;
+  editedAt?: Timestamp | Date | any;
 }
 
 export interface Reply {
@@ -70,6 +71,26 @@ export interface UserProfile {
   /** Suspended accounts are signed out on sight and blocked from writing (rules) */
   suspended?: boolean;
   suspendedAt?: Timestamp | Date | any;
+  /** Denormalised activity counters — read directly by the admin members list */
+  commentCount?: number;
+  reactionCount?: number;
+  createdAt?: Timestamp | Date | any;
+}
+
+export type ReportReason = 'spam' | 'offensive' | 'harassment' | 'misinformation' | 'other';
+export type ReportTargetType = 'post' | 'comment';
+
+export interface Report {
+  id?: string;
+  targetType: ReportTargetType;
+  targetId: string;      // comment id or post id
+  postId: string;        // the post it lives under (for the admin link)
+  reason: ReportReason;
+  note?: string;         // optional free-text detail
+  excerpt?: string;      // snapshot of the reported content
+  reporterId: string;
+  reporterName: string;
+  resolved?: boolean;
   createdAt?: Timestamp | Date | any;
 }
 
@@ -85,7 +106,7 @@ export interface Toast {
   message: string;
 }
 
-export type NotificationType = 'comment' | 'reply' | 'reaction';
+export type NotificationType = 'comment' | 'reply' | 'reaction' | 'report';
 
 export interface AppNotification {
   id?: string;
