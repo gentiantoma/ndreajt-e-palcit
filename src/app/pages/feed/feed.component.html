@@ -247,17 +247,15 @@
 
           <div class="widget">
             <div class="widget-title">{{ 'feed.village_stats' | translate }}</div>
-            <div class="stat-row">
-              <span class="stat-icon">📜</span>
-              <span class="stat-text">{{ villageStats().posts }} {{ 'feed.posts' | translate }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-icon">🏔️</span>
-              <span class="stat-text">{{ 'feed.village' | translate }}</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-icon">🦅</span>
-              <span class="stat-text">{{ 'feed.country' | translate }}</span>
+            <div class="stats-inline">
+              <div class="stat-row">
+                <span class="stat-icon">📜</span>
+                <span class="stat-text">{{ villageStats().posts }} {{ 'feed.posts' | translate }}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-icon">🏔️</span>
+                <span class="stat-text">{{ 'feed.village' | translate }}</span>
+              </div>
             </div>
           </div>
 

@@ -29,6 +29,10 @@
   padding: 16px 12px;
   overflow-y: auto;
   max-height: calc(100vh - var(--header-height) - 16px);
+  /* Keep the scroll, hide the scrollbar */
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* old Edge/IE */
+  &::-webkit-scrollbar { width: 0; height: 0; display: none; }  /* Chrome/Safari */
 }
 
 /* ─── Village community card ─── */
@@ -229,12 +233,12 @@
 /* ─── MAIN FEED ─── */
 .feed-main {
   /* Mobile: zero top padding so chips sit flush under the header */
-  padding: 0 0 16px;
+  padding: 0 0 24px;
   max-width: 700px;
   margin: 0 auto;
 
   @media (min-width: 992px) {
-    padding: 16px 16px;
+    padding: 20px 28px 28px;
     max-width: 100%;
   }
 }
@@ -626,5 +630,15 @@
 .tr-meta  { font-size: 11px; color: var(--color-text-dim); margin-top: 3px; display: block; }
 
 /* Stats widget */
-.stat-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; color: var(--color-text-muted); }
+.stat-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; color: var(--color-text-muted); }
 .stat-icon { font-size: 1rem; flex-shrink: 0; }
+
+/* Statistics shown side by side in a single row */
+.stats-inline {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  .stat-row { padding: 0; }
+}

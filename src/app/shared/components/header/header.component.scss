@@ -194,7 +194,7 @@
 .notif-dropdown {
   position: absolute;
   top: calc(100% + 12px);
-  right: -88px;
+  right: -120px !important;
   width: 330px;
   background-color: var(--color-bg-card);
   background-image: var(--paper-aged);

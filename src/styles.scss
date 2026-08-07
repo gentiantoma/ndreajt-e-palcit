@@ -278,12 +278,13 @@ input, textarea, select {
   border-radius: 21px 6px 21px 6px / 6px 21px 6px 21px;
 }
 
-/* Antique photo treatment — a light sepia wash ties every photo into the old edition */
+/* Barely-there warm tone — keeps photos in the palette while faces stay true
+   and crisp (the old sepia(0.18) washed people out on a news feed). */
 .img-cover,
 .img-grid img,
 .carousel-img,
 .tr-img img {
-  filter: sepia(0.18) saturate(0.9) contrast(1.03);
+  filter: sepia(0.06) saturate(0.99) contrast(1.02);
 }
 
 /* ─── BUTTONS ─── */
@@ -638,9 +639,8 @@ select.form-control {
 .widget {
   background-color: var(--color-bg-card);
   background-image: var(--paper-aged);
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-
+  padding: 1.5rem 1.4rem;
+  margin-bottom: 1.25rem;
 }
 
 /* Editorial section header: small caps, letter-spaced, hairline rule running to the edge */
