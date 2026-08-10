@@ -558,6 +558,127 @@
   }
 }
 
+/* ═══ MOBILE FLOATING CATEGORY PICKER ═══ */
+.cat-fab-wrap {
+  position: fixed;
+  right: 23px !important;
+  bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* Bare shining icon — no background, just the scroll that catches the sun */
+.cat-fab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 200ms ease;
+
+  &:active { transform: scale(0.9); }
+  &.open   { transform: scale(1.12) rotate(-4deg); }
+
+  .cat-fab-scroll {
+    font-size: 42px;
+    line-height: 1;
+    display: inline-block;
+    /* age both the rolled scroll and the unrolled page to the same parchment tan */
+    filter: sepia(0.55) saturate(1.5) brightness(0.95) drop-shadow(0 2px 3px rgba(60,40,10,0.45));
+    transition: transform 240ms ease;
+  }
+  &.open .cat-fab-scroll { transform: scale(1.05); }
+}
+
+/* One big torn old-letter parchment sheet holding every category */
+.cat-panel {
+  width: 236px;
+  max-width: 76vw;
+  transform-origin: bottom right;
+  padding: 16px 14px 20px;
+  color: #33291a;
+  /* aged parchment with the exact torn top/bottom edges of the feed post cards */
+  background-color: var(--color-bg-card);
+  background-image: var(--paper-aged);
+  clip-path: var(--paper-tear);
+  filter: drop-shadow(0 6px 18px rgba(70, 50, 20, 0.4));
+
+  /* closed → springs open from the button corner */
+  opacity: 0;
+  transform: scale(0.82) translateY(16px);
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 300ms cubic-bezier(0.34, 1.35, 0.6, 1);
+
+  &.open {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
+  }
+}
+
+/* Small "KATEGORITË" header at the top of the sheet */
+.cat-panel-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: 0 4px 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(120, 92, 44, 0.3);
+}
+
+/* Category rows inside the sheet */
+.cat-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 10px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed rgba(120, 92, 44, 0.22);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-serif);
+  color: #33291a;
+
+  &:last-child { border-bottom: none; }
+
+  .cat-item-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
+  .cat-item-label {
+    flex: 1;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-size: 12.5px;
+  }
+  .cat-check { color: var(--color-accent); flex-shrink: 0; }
+
+  &.active {
+    color: var(--color-accent);
+    .cat-item-label { font-weight: 800; }
+  }
+}
+
+/* Dim tap-away backdrop */
+.cat-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 499;
+  background: rgba(20, 14, 6, 0.28);
+  animation: fadeIn 200ms ease;
+}
+
 /* "Load more" pill — click-pagination, 10 posts at a time */
 .feed-load-more {
   display: inline-flex;

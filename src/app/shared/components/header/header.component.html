@@ -170,17 +170,47 @@
 
   <!-- Mobile menu -->
   <div class="mobile-menu fade-in" *ngIf="menuOpen()">
+
+    <!-- Top user card: profile when signed in, sign-in prompt otherwise -->
+    <a *ngIf="auth.isLoggedIn(); else mmSignedOut"
+       class="mm-usercard" [routerLink]="['/profile', auth.currentUser()!.uid]" (click)="closeMenu()">
+      <ng-container *ngIf="auth.isAdmin(); else mmMemberAvatar">
+        <img *ngIf="auth.userProfile()?.photoURL; else mmBrand" [src]="auth.userProfile()!.photoURL!" class="mm-avatar-img" alt="Ndreajt e Palçit">
+        <ng-template #mmBrand><div class="avatar-brand md mm-av"></div></ng-template>
+      </ng-container>
+      <ng-template #mmMemberAvatar>
+        <img *ngIf="avatarPhotoUrl(); else mmInit" [src]="avatarPhotoUrl()!" class="mm-avatar-img" [alt]="auth.publicDisplayName">
+        <ng-template #mmInit><div class="avatar-initial md mm-av">{{ getInitial(auth.publicDisplayName) }}</div></ng-template>
+      </ng-template>
+      <span class="mm-usertext">
+        <span class="mm-username">{{ auth.publicDisplayName }}</span>
+        <span class="mm-usermail" *ngIf="!auth.isAdmin()">{{ auth.currentUser()?.email }}</span>
+      </span>
+      <svg class="mm-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </a>
+    <ng-template #mmSignedOut>
+      <a class="mm-usercard" routerLink="/login" (click)="closeMenu()">
+        <div class="mm-av mm-av-anon">?</div>
+        <span class="mm-usertext">
+          <span class="mm-username">{{ 'nav.login' | translate }}</span>
+          <span class="mm-usermail">{{ 'auth.sign_in_to_continue' | translate }}</span>
+        </span>
+        <svg class="mm-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+    </ng-template>
+
+    <div class="mm-section-label">{{ 'nav.explore' | translate }}</div>
+
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="mobile-nav-link" (click)="closeMenu()">
       <span class="mnav-icon">🏔️</span> {{ 'nav.feed' | translate }}
     </a>
-    <ng-container *ngIf="auth.isLoggedIn()">
-      <a routerLink="/favorites" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
-        <span class="mnav-icon">🗝️</span> {{ 'nav.favorites' | translate }}
-      </a>
-      <a [routerLink]="['/profile', auth.currentUser()!.uid]" class="mobile-nav-link" (click)="closeMenu()">
-        <span class="mnav-icon">🧭</span> {{ 'nav.profile' | translate }}
-      </a>
-    </ng-container>
+    <a *ngIf="auth.isLoggedIn()" routerLink="/favorites" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+      <span class="mnav-icon">🗝️</span> {{ 'nav.favorites' | translate }}
+    </a>
     <a *ngIf="auth.isAdmin()" routerLink="/dashboard" class="mobile-nav-link" (click)="closeMenu()">
       <span class="mnav-icon">🏛️</span> {{ 'nav.dashboard' | translate }}
     </a>
@@ -188,12 +218,7 @@
       <button class="lang-btn" (click)="switchLang()" type="button">
         {{ currentLang() === 'sq' ? '🇦🇱 Shqip' : '🇬🇧 English' }}
       </button>
-      <ng-container *ngIf="auth.isLoggedIn(); else mobileLogin">
-        <button class="btn btn-ghost btn-sm" (click)="logout()">{{ 'nav.logout' | translate }}</button>
-      </ng-container>
-      <ng-template #mobileLogin>
-        <a routerLink="/login" class="btn btn-primary btn-sm" (click)="closeMenu()">{{ 'nav.login' | translate }}</a>
-      </ng-template>
+      <button *ngIf="auth.isLoggedIn()" class="btn btn-ghost btn-sm" (click)="logout()">{{ 'nav.logout' | translate }}</button>
     </div>
   </div>
 </header>

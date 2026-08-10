@@ -83,32 +83,6 @@
           </div>
         </header>
 
-        <!-- Mobile category scroll with prev/next arrows -->
-        <div class="cat-scroll-wrap d-lg-none">
-          <button class="cat-nav-btn" (click)="scrollChips('left')" type="button" aria-label="Scroll left"
-                  [disabled]="!canScrollLeftMobile()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-          <div class="cat-scroll-bar" #chipScroll>
-            <div class="cat-scroll-inner">
-              <button *ngFor="let cat of categories; trackBy: trackByCatKey"
-                class="cat-pill"
-                [class.active]="activeCategory() === cat.key"
-                (click)="filterBy(cat.key)">
-                {{ cat.label | translate }}
-              </button>
-            </div>
-          </div>
-          <button class="cat-nav-btn" (click)="scrollChips('right')" type="button" aria-label="Scroll right"
-                  [disabled]="!canScrollRightMobile()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
-        </div>
-
         <!-- Desktop feed header -->
         <div class="feed-header d-none d-lg-block">
           <div class="cat-scroll-wrap cat-scroll-wrap--desktop">
@@ -264,4 +238,31 @@
 
     </div>
   </div>
+
+  <!-- ═══ MOBILE CATEGORY PICKER — floating wax-seal toggle + parchment scroll ═══ -->
+  <div class="cat-fab-wrap d-lg-none">
+    <!-- One torn parchment sheet holding every category -->
+    <div class="cat-panel" [class.open]="catPanelOpen()">
+      <div class="cat-panel-title">{{ 'feed.categories' | translate }}</div>
+      <button *ngFor="let cat of categories; trackBy: trackByCatKey"
+              class="cat-panel-item"
+              [class.active]="activeCategory() === cat.key"
+              (click)="pickCategory(cat.key)">
+        <span class="cat-item-icon" aria-hidden="true">{{ cat.icon }}</span>
+        <span class="cat-item-label">{{ cat.label | translate }}</span>
+        <svg *ngIf="activeCategory() === cat.key" class="cat-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Rolled scroll when closed, unrolled parchment when open (aged to match) -->
+    <button class="cat-fab" [class.open]="catPanelOpen()" (click)="toggleCatPanel()"
+            [attr.aria-label]="'feed.categories' | translate" [attr.aria-expanded]="catPanelOpen()">
+      <span class="cat-fab-scroll" aria-hidden="true">{{ catPanelOpen() ? '📃' : '📜' }}</span>
+    </button>
+  </div>
+
+  <!-- Tap-away backdrop -->
+  <div class="cat-backdrop d-lg-none" *ngIf="catPanelOpen()" (click)="catPanelOpen.set(false)"></div>
 </div>

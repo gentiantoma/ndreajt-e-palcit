@@ -5,7 +5,8 @@
     "favorites": "Të ruajtura",
     "login": "Hyr",
     "logout": "Dil",
-    "dashboard": "Paneli"
+    "dashboard": "Paneli",
+    "explore": "Eksploro"
   },
   "feed": {
     "title": "Ndreajt e Palçit",
@@ -75,6 +76,9 @@
     "by": "Raportuar nga",
     "view": "Shiko",
     "mark_resolved": "Shëno si të zgjidhur",
+    "dismiss_title": "Fshi raportimin",
+    "resolve_confirm": "Shëno këtë raportim si të zgjidhur?",
+    "dismiss_confirm": "Jeni i sigurt që dëshironi ta fshini këtë raportim? Ky veprim nuk mund të zhbëhet.",
     "submit": "Dërgo raportimin",
     "note_placeholder": "Detaje shtesë (opsionale)...",
     "reason": {
@@ -218,6 +222,7 @@
     "actions": "Veprime",
     "edit": "Redakto",
     "retry": "Provo përsëri",
+    "page": "Faqja",
     "confirm_delete": "Konfirmo fshirjen",
     "delete_comment_confirm": "Jeni i sigurt që dëshironi ta fshini këtë koment? Ky veprim nuk mund të zhbëhet."
   }

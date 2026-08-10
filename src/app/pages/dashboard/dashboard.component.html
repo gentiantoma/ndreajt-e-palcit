@@ -67,7 +67,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let post of posts()">
+                <tr *ngFor="let post of pagedPosts(); trackBy: trackByPostId">
                   <td>
                     <img *ngIf="post.coverImage; else noThumb" [src]="post.coverImage" class="table-thumb" [alt]="post.titleSq">
                     <ng-template #noThumb><div class="table-thumb-placeholder">📰</div></ng-template>
@@ -100,7 +100,7 @@
 
           <!-- Mobile cards -->
           <div class="d-md-none">
-            <div *ngFor="let post of posts()" class="mobile-post-row card">
+            <div *ngFor="let post of pagedPosts(); trackBy: trackByPostId" class="mobile-post-row card">
               <div class="mpr-top">
                 <img *ngIf="post.coverImage" [src]="post.coverImage" class="mpr-img" [alt]="post.titleSq">
                 <div class="mpr-info">
@@ -120,6 +120,17 @@
                 <button class="btn btn-danger btn-sm" (click)="confirmDelete(post.id!)">🗑</button>
               </div>
             </div>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pager" *ngIf="posts().length > 0">
+            <button class="pager-btn" [disabled]="postsPage() <= 1" (click)="setPage('posts', postsPage() - 1)" aria-label="Prev">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="pager-info">{{ 'general.page' | translate }} {{ postsPage() }} / {{ postsPageCount() }}</span>
+            <button class="pager-btn" [disabled]="postsPage() >= postsPageCount()" (click)="setPage('posts', postsPage() + 1)" aria-label="Next">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
         </ng-container>
       </ng-template>
@@ -243,7 +254,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let comment of comments()">
+            <tr *ngFor="let comment of pagedComments(); trackBy: trackByCommentId">
               <td>
                 <div style="display:flex;align-items:center;gap:8px">
                   <div class="avatar-initial sm" style="font-size:11px">{{ comment.authorName[0].toUpperCase() }}</div>
@@ -263,6 +274,17 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pager" *ngIf="comments().length > 0">
+        <button class="pager-btn" [disabled]="commentsPage() <= 1" (click)="setPage('comments', commentsPage() - 1)" aria-label="Prev">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="pager-info">{{ 'general.page' | translate }} {{ commentsPage() }} / {{ commentsPageCount() }}</span>
+        <button class="pager-btn" [disabled]="commentsPage() >= commentsPageCount()" (click)="setPage('comments', commentsPage() + 1)" aria-label="Next">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     </ng-container>
 
@@ -303,7 +325,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let u of users(); trackBy: trackByUid" [class.row-suspended]="u.suspended">
+              <tr *ngFor="let u of pagedUsers(); trackBy: trackByUid" [class.row-suspended]="u.suspended">
                 <td>
                   <div class="user-cell">
                     <div *ngIf="u.role === 'admin'" class="avatar-brand sm"></div>
@@ -342,7 +364,7 @@
 
         <!-- Mobile cards -->
         <div *ngIf="users().length > 0" class="d-md-none">
-          <div *ngFor="let u of users(); trackBy: trackByUid" class="user-card card">
+          <div *ngFor="let u of pagedUsers(); trackBy: trackByUid" class="user-card card">
             <div class="user-card-main">
               <div *ngIf="u.role === 'admin'" class="avatar-brand md"></div>
               <ng-container *ngIf="u.role !== 'admin'">
@@ -379,6 +401,17 @@
             </button>
           </div>
         </div>
+
+        <!-- Pagination -->
+        <div class="pager" *ngIf="users().length > 0">
+          <button class="pager-btn" [disabled]="usersPage() <= 1" (click)="setPage('users', usersPage() - 1)" aria-label="Prev">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="pager-info">{{ 'general.page' | translate }} {{ usersPage() }} / {{ usersPageCount() }}</span>
+          <button class="pager-btn" [disabled]="usersPage() >= usersPageCount()" (click)="setPage('users', usersPage() + 1)" aria-label="Next">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
       </ng-container>
     </ng-container>
 
@@ -389,7 +422,7 @@
         <p>{{ 'report.empty' | translate }}</p>
       </div>
 
-      <div *ngFor="let r of reports()" class="report-card card" [class.report-resolved]="r.resolved">
+      <div *ngFor="let r of pagedReports(); trackBy: trackByReportId" class="report-card card" [class.report-resolved]="r.resolved">
         <div class="report-head">
           <span class="report-badge" [ngClass]="r.reason">{{ 'report.reason.' + r.reason | translate }}</span>
           <span class="report-type">{{ (r.targetType === 'comment' ? 'report.on_comment' : 'report.on_post') | translate }}</span>
@@ -401,9 +434,20 @@
         <div class="report-foot">
           <span class="report-by">{{ 'report.by' | translate }} <b>{{ r.reporterName }}</b></span>
           <a [routerLink]="['/post', r.postId]" class="report-link">{{ 'report.view' | translate }}</a>
-          <button *ngIf="!r.resolved" class="report-act resolve" (click)="resolveReport(r.id!)">{{ 'report.mark_resolved' | translate }}</button>
-          <button class="report-act dismiss" (click)="dismissReport(r.id!)">{{ 'general.delete' | translate }}</button>
+          <button *ngIf="!r.resolved" class="report-act resolve" (click)="askResolveReport(r.id!)">{{ 'report.mark_resolved' | translate }}</button>
+          <button class="report-act dismiss" (click)="askDismissReport(r.id!)">{{ 'general.delete' | translate }}</button>
         </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pager" *ngIf="reports().length > 0">
+        <button class="pager-btn" [disabled]="reportsPage() <= 1" (click)="setPage('reports', reportsPage() - 1)" aria-label="Prev">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <span class="pager-info">{{ 'general.page' | translate }} {{ reportsPage() }} / {{ reportsPageCount() }}</span>
+        <button class="pager-btn" [disabled]="reportsPage() >= reportsPageCount()" (click)="setPage('reports', reportsPage() + 1)" aria-label="Next">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     </ng-container>
 
@@ -463,6 +507,27 @@
       <button class="btn btn-ghost" (click)="suspendTarget.set(null)">{{ 'general.cancel' | translate }}</button>
       <button class="btn" [class.btn-danger]="!st.suspended" [class.btn-primary]="st.suspended" (click)="confirmSuspend()">
         {{ (st.suspended ? 'dashboard.unsuspend' : 'dashboard.suspend') | translate }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Report action confirmation modal -->
+<div class="modal-overlay" *ngIf="reportActionTarget() as ra">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-header">
+      <h3>{{ (ra.action === 'resolve' ? 'report.mark_resolved' : 'report.dismiss_title') | translate }}</h3>
+      <button class="btn-icon" (click)="reportActionTarget.set(null)">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--color-text-muted);margin:0">
+        {{ (ra.action === 'resolve' ? 'report.resolve_confirm' : 'report.dismiss_confirm') | translate }}
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="reportActionTarget.set(null)">{{ 'general.cancel' | translate }}</button>
+      <button class="btn" [class.btn-primary]="ra.action === 'resolve'" [class.btn-danger]="ra.action === 'dismiss'" (click)="confirmReportAction()">
+        {{ (ra.action === 'resolve' ? 'report.mark_resolved' : 'general.delete') | translate }}
       </button>
     </div>
   </div>

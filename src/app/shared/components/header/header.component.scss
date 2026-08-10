@@ -204,13 +204,23 @@
   animation: fadeIn 150ms ease;
   overflow: hidden;
 
-  @media (max-width: 480px) {
+  /* On phones the panel spans nearly the full width, pinned just under the header */
+  @media (max-width: 600px) {
     position: fixed;
-    top: calc(var(--header-height) + 8px);
+    top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + 8px);
     left: 8px;
-    right: 8px;
+    right: 8px !important;
     width: auto;
+    max-width: none;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(20,16,8,0.28);
+    animation: notifDrop 180ms ease;
   }
+}
+
+@keyframes notifDrop {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .notif-head {
@@ -358,6 +368,9 @@
   position: relative;
   cursor: pointer;
 
+  /* Desktop only — on phones the profile lives in the hamburger drawer */
+  @media (max-width: 768px) { display: none; }
+
   .user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
 
   .avatar-initial {
@@ -471,6 +484,57 @@
   right: 0;
   z-index: 99;
   box-shadow: var(--shadow-elevated);
+}
+
+/* ── Drawer user card (top of the mobile menu) ── */
+.mm-usercard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 14px 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  text-decoration: none;
+  background-color: var(--color-bg-elevated);
+  background-image: var(--paper-aged);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 8px rgba(70,50,20,0.12);
+
+  .mm-avatar-img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .mm-av { width: 46px; height: 46px; flex-shrink: 0; }
+  .mm-av-anon {
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--color-bg-card);
+    border: 1.5px dashed var(--color-border);
+    color: var(--color-text-dim);
+    font-size: 20px; font-weight: 700;
+  }
+
+  .mm-usertext { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .mm-username {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--color-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mm-usermail {
+    font-size: 12.5px;
+    color: var(--color-text-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .mm-chevron { color: var(--color-text-dim); flex-shrink: 0; }
+}
+
+/* "EXPLORE" style section label */
+.mm-section-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  color: var(--color-text-dim);
+  padding: 4px 1.5rem 6px;
 }
 
 .mobile-nav-link {

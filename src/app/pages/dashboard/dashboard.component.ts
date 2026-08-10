@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -48,9 +48,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
   watchReports() {
     this.reportsSub = this.fs.getReports$().subscribe(r => this.reports.set(r));
   }
-  async resolveReport(id: string) { try { await this.fs.resolveReport(id); } catch { this.toast.error(this.translate.instant('toast.error_generic')); } }
-  async dismissReport(id: string) { try { await this.fs.deleteReport(id); } catch { this.toast.error(this.translate.instant('toast.error_generic')); } }
   reportTime(r: Report) { return fmtDateWithTime(r.createdAt, this.translate.currentLang || 'sq'); }
+
+  /* Report actions — confirmed via modal */
+  reportActionTarget = signal<{ id: string; action: 'resolve' | 'dismiss' } | null>(null);
+  askResolveReport(id: string) { this.reportActionTarget.set({ id, action: 'resolve' }); }
+  askDismissReport(id: string) { this.reportActionTarget.set({ id, action: 'dismiss' }); }
+  async confirmReportAction() {
+    const t = this.reportActionTarget();
+    if (!t) return;
+    this.reportActionTarget.set(null);
+    try {
+      if (t.action === 'resolve') await this.fs.resolveReport(t.id);
+      else await this.fs.deleteReport(t.id);
+    } catch { this.toast.error(this.translate.instant('toast.error_generic')); }
+  }
 
   ngOnDestroy() { this.reportsSub?.unsubscribe(); }
 
@@ -78,6 +90,52 @@ export class DashboardComponent implements OnInit, OnDestroy {
   uploadingImages = signal(false);
 
   readonly categories: PostCategory[] = ['lajme', 'histori', 'njoftim', 'events', 'pajtimet', 'takimet', 'other'];
+
+  /* ════════ PAGINATION — 20 per page, per section ════════ */
+  readonly PAGE_SIZE = 20;
+  postsPage    = signal(1);
+  commentsPage = signal(1);
+  usersPage    = signal(1);
+  reportsPage  = signal(1);
+
+  private pageCount(len: number) { return Math.max(1, Math.ceil(len / this.PAGE_SIZE)); }
+  private page<T>(arr: T[], p: number): T[] {
+    const start = (p - 1) * this.PAGE_SIZE;
+    return arr.slice(start, start + this.PAGE_SIZE);
+  }
+
+  postsPageCount    = computed(() => this.pageCount(this.posts().length));
+  commentsPageCount = computed(() => this.pageCount(this.comments().length));
+  usersPageCount    = computed(() => this.pageCount(this.users().length));
+  reportsPageCount  = computed(() => this.pageCount(this.reports().length));
+
+  pagedPosts    = computed(() => this.page(this.posts(),    this.postsPage()));
+  pagedComments = computed(() => this.page(this.comments(), this.commentsPage()));
+  pagedUsers    = computed(() => this.page(this.users(),    this.usersPage()));
+  pagedReports  = computed(() => this.page(this.reports(),  this.reportsPage()));
+
+  /* Keep the current page valid when a list shrinks (e.g. after a delete) */
+  private readonly clampPages = [
+    effect(() => { const c = this.postsPageCount();    if (this.postsPage()    > c) this.postsPage.set(c);    }, { allowSignalWrites: true }),
+    effect(() => { const c = this.commentsPageCount(); if (this.commentsPage() > c) this.commentsPage.set(c); }, { allowSignalWrites: true }),
+    effect(() => { const c = this.usersPageCount();    if (this.usersPage()    > c) this.usersPage.set(c);    }, { allowSignalWrites: true }),
+    effect(() => { const c = this.reportsPageCount();  if (this.reportsPage()  > c) this.reportsPage.set(c);  }, { allowSignalWrites: true }),
+  ];
+
+  setPage(which: 'posts' | 'comments' | 'users' | 'reports', p: number) {
+    const map = {
+      posts:    { sig: this.postsPage,    max: this.postsPageCount()    },
+      comments: { sig: this.commentsPage, max: this.commentsPageCount() },
+      users:    { sig: this.usersPage,    max: this.usersPageCount()    },
+      reports:  { sig: this.reportsPage,  max: this.reportsPageCount()  },
+    }[which];
+    map.sig.set(Math.min(Math.max(1, p), map.max));
+    document.querySelector('.dashboard-page')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  trackByPostId(_i: number, p: Post) { return p.id; }
+  trackByCommentId(_i: number, c: Comment & { postId: string }) { return c.id; }
+  trackByReportId(_i: number, r: Report) { return r.id; }
 
   async ngOnInit() {
     // (admin-post brand migration now runs once from AuthService, not here)

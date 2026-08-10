@@ -11,7 +11,7 @@ import { PostCardComponent } from '../../shared/components/post-card/post-card.c
 import { ToastService } from '../../core/services/toast.service';
 import { Post, ReactionType } from '../../core/models';
 
-interface CategoryFilter { key: string; label: string; }
+interface CategoryFilter { key: string; label: string; icon?: string; }
 
 /** Feed pages 10 posts at a time via the "Load More" button */
 const PAGE_SIZE = 10;
@@ -42,17 +42,25 @@ export class FeedComponent implements OnInit, AfterViewInit {
   loadingMore    = signal(false);
   hasMore        = signal(false);
   loadError      = signal(false);
+
+  /* Mobile category picker (the floating wax-seal toggle) */
+  catPanelOpen   = signal(false);
+  toggleCatPanel() { this.catPanelOpen.update(v => !v); }
+  pickCategory(key: string) { this.catPanelOpen.set(false); this.filterBy(key); }
+  get activeCatLabel() {
+    return this.categories.find(c => c.key === this.activeCategory())?.label ?? 'feed.all';
+  }
   userFeedState  = signal(new Map<string, { reaction: ReactionType | null; bookmarked: boolean }>());
 
   readonly categories: CategoryFilter[] = [
-    { key: 'all',      label: 'feed.all' },
-    { key: 'lajme',    label: 'categories.lajme' },
-    { key: 'histori',  label: 'categories.histori' },
-    { key: 'njoftim',  label: 'categories.njoftim' },
-    { key: 'events',   label: 'categories.events' },
-    { key: 'pajtimet', label: 'categories.pajtimet' },
-    { key: 'takimet',  label: 'categories.takimet' },
-    { key: 'other',    label: 'categories.other' },
+    { key: 'all',      label: 'feed.all',            icon: '📖' },
+    { key: 'lajme',    label: 'categories.lajme',    icon: '📰' },
+    { key: 'histori',  label: 'categories.histori',  icon: '🏛️' },
+    { key: 'njoftim',  label: 'categories.njoftim',  icon: '📢' },
+    { key: 'events',   label: 'categories.events',   icon: '📅' },
+    { key: 'pajtimet', label: 'categories.pajtimet', icon: '🕊️' },
+    { key: 'takimet',  label: 'categories.takimet',  icon: '👥' },
+    { key: 'other',    label: 'categories.other',    icon: '🗃️' },
   ];
 
   trackById(_i: number, p: Post) { return p.id ?? _i; }
