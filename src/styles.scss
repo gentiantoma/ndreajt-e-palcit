@@ -86,6 +86,7 @@
   --font-display:       'Playfair Display', 'Georgia', 'Times New Roman', serif;
   --font-sans:          'Segoe UI', system-ui, -apple-system, sans-serif;
   --header-height:      56px;
+  --bottomnav-h:        62px;
   --transition-fast:    150ms ease;
   --transition-base:    250ms ease;
 }
@@ -696,6 +697,14 @@ select.form-control {
   padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   min-height: 100vh;
   overflow-x: clip;
+}
+
+/* On phones, keep scrolling pages clear of the fixed bottom navigation.
+   The map page opts out (it fills the viewport and lets the bar overlay it). */
+@media (max-width: 991.98px) {
+  .page-wrapper:not(:has(.map-page)) {
+    padding-bottom: calc(var(--bottomnav-h) + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* ─── GLOBAL REACTION PICKER ─── */

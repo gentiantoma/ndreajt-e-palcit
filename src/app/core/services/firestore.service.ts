@@ -6,7 +6,7 @@ import {
   DocumentData
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { Post, Comment, Reply, UserProfile, Favorite, ReactionType, Report, AppNotification } from '../models';
+import { Post, Comment, Reply, UserProfile, Favorite, ReactionType, Report, AppNotification, DiasporaMember, Place } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreService {
@@ -385,6 +385,44 @@ export class FirestoreService {
     } catch {
       return 0;
     }
+  }
+
+  /* ── diaspora map ── */
+
+  /** Live stream of every member pin on the village map. */
+  diasporaMembers$(): Observable<DiasporaMember[]> {
+    return collectionData(collection(this.db, 'diaspora'), { idField: 'uid' }) as Observable<DiasporaMember[]>;
+  }
+
+  /** My own pin, if I've placed one (used to prefill / show "you're on the map"). */
+  async getMyDiasporaPin(uid: string): Promise<DiasporaMember | null> {
+    const snap = await getDoc(doc(this.db, 'diaspora', uid));
+    return snap.exists() ? ({ uid: snap.id, ...snap.data() } as DiasporaMember) : null;
+  }
+
+  /** Place or move my pin. Keyed by uid so a person can only ever have one. */
+  async setMyDiasporaPin(uid: string, data: Omit<DiasporaMember, 'uid' | 'createdAt' | 'updatedAt'>): Promise<void> {
+    const ref = doc(this.db, 'diaspora', uid);
+    const exists = (await getDoc(ref)).exists();
+    // Include `uid` (the security rule checks it) and drop any undefined optional
+    // fields — Firestore rejects undefined values outright.
+    const payload: DocumentData = { uid };
+    for (const [k, v] of Object.entries(data)) {
+      if (v !== undefined) payload[k] = v;
+    }
+    payload['updatedAt'] = serverTimestamp();
+    if (!exists) payload['createdAt'] = serverTimestamp();
+    await setDoc(ref, payload, { merge: true });
+  }
+
+  /** Remove my pin from the map. */
+  async removeMyDiasporaPin(uid: string): Promise<void> {
+    await deleteDoc(doc(this.db, 'diaspora', uid));
+  }
+
+  /** Live stream of the fixed landmarks/POIs around Palç (imported from OSM). */
+  places$(): Observable<Place[]> {
+    return collectionData(collection(this.db, 'places'), { idField: 'id' }) as Observable<Place[]>;
   }
 
   /* ── admin: all comments ── */

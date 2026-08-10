@@ -100,6 +100,46 @@ export interface Favorite {
   createdAt?: Timestamp | Date | any;
 }
 
+/**
+ * A diaspora member's self-placed pin on the village map. Keyed by uid
+ * (one pin per person). Coordinates are captured at high zoom so they land
+ * on the person's actual home/city rather than a rough district centre.
+ */
+export interface DiasporaMember {
+  uid: string;
+  name: string;
+  username?: string;
+  photoURL?: string;
+  /** Where they are now — reverse-geocoded, e.g. "Milano, Itali" */
+  place?: string;
+  /** Short note shown in the pin popup, e.g. "Me mall nga Palçi 🇦🇱" */
+  message?: string;
+  lat: number;
+  lng: number;
+  createdAt?: Timestamp | Date | any;
+  updatedAt?: Timestamp | Date | any;
+}
+
+/**
+ * A fixed landmark/point-of-interest around Palç, imported from OpenStreetMap
+ * by scripts/import-places.mjs. Always shown on the map (separate from the
+ * self-placed diaspora pins). `emoji` and `color` are precomputed by the
+ * importer so the map can render without a category lookup.
+ */
+export interface Place {
+  id?: string;         // deterministic: osm_<type>_<id>
+  name: string;
+  category: string;    // e.g. 'ferry', 'lodging', 'peak', 'food'...
+  emoji: string;
+  color: string;       // hex, drives the map dot colour
+  rank?: number;       // importance (lower = more important); drives zoom reveal
+  lat: number;
+  lng: number;
+  osmId?: number;
+  osmType?: string;
+  source?: string;     // 'osm'
+}
+
 export interface Toast {
   id: string;
   type: 'success' | 'error' | 'warning' | 'info';

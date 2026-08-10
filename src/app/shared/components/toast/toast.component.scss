@@ -9,11 +9,15 @@
   max-width: 340px;
   width: calc(100vw - 2rem);
 
-  @media (max-width: 480px) {
-    bottom: 1rem;
-    right: 1rem;
-    left: 1rem;
+  /* On phones the bottom is crowded by the fixed nav + map controls, so toasts
+     drop down from just under the header instead. */
+  @media (max-width: 991.98px) {
+    top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + 10px);
+    bottom: auto;
+    left: 10px;
+    right: 10px;
     max-width: 100%;
+    align-items: center;
   }
 }
 
@@ -23,21 +27,29 @@
   gap: 10px;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid;
-  backdrop-filter: blur(8px);
+  /* Solid parchment card + dark text — readable over the map, header or feed */
+  background: #f7f1e1;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-text-muted);
+  color: var(--color-text);
   font-size: 14px;
   font-weight: 500;
-  box-shadow: 0 2px 0 rgba(0,0,0,0.12), 2px 4px 0 rgba(0,0,0,0.08), 4px 6px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 20px rgba(20,16,8,0.24);
 }
 
-.toast-success { background: rgba(82,183,136,0.15); border-color: rgba(82,183,136,0.3); color: #52b788; }
-.toast-error   { background: rgba(224,82,82,0.15);  border-color: rgba(224,82,82,0.3);  color: #e05252; }
-.toast-warning { background: rgba(255,183,77,0.15); border-color: rgba(255,183,77,0.3); color: #ffb74d; }
-.toast-info    { background: rgba(33,29,22,0.10); border-color: rgba(33,29,22,0.25); color: #211d16; }
+/* Only the accent stripe + icon carry the type colour */
+.toast-success { border-left-color: #3f9d5a; }
+.toast-error   { border-left-color: #c0392b; }
+.toast-warning { border-left-color: #d98a1f; }
+.toast-info    { border-left-color: #7a5c28; }
+.toast-success .toast-icon { color: #3f9d5a; }
+.toast-error   .toast-icon { color: #c0392b; }
+.toast-warning .toast-icon { color: #d98a1f; }
+.toast-info    .toast-icon { color: #7a5c28; }
 
 .toast-icon { font-weight: 700; font-size: 15px; flex-shrink: 0; }
-.toast-msg  { flex: 1; color: var(--color-text); font-size: 13px; }
+.toast-msg  { flex: 1; color: var(--color-text); font-size: 13.5px; }
 .toast-close {
-  background: transparent; border: none; color: var(--color-text-dim);
+  background: transparent; border: none; color: var(--color-text-muted);
   cursor: pointer; font-size: 13px; padding: 2px; flex-shrink: 0;
 }

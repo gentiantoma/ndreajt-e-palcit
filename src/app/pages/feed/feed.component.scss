@@ -562,7 +562,8 @@
 .cat-fab-wrap {
   position: fixed;
   right: 23px !important;
-  bottom: calc(25px + env(safe-area-inset-bottom, 0px)) !important;
+  /* Lifted clear of the fixed bottom navigation */
+  bottom: calc(var(--bottomnav-h) + 22px + env(safe-area-inset-bottom, 0px)) !important;
   z-index: 500;
   display: flex;
   flex-direction: column;

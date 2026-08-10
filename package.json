@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "import:places": "node scripts/import-places.mjs"
   },
   "private": true,
   "dependencies": {
@@ -24,6 +25,7 @@
     "@ngx-translate/http-loader": "^17.0.0",
     "bootstrap": "^5.3.8",
     "firebase": "^9.23.0",
+    "maplibre-gl": "^3.6.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.13.0"
@@ -33,6 +35,7 @@
     "@angular/cli": "^16.2.14",
     "@angular/compiler-cli": "^16.2.0",
     "@types/jasmine": "~4.3.0",
+    "firebase-admin": "^14.2.0",
     "jasmine-core": "~4.6.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

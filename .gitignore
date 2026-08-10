@@ -11,6 +11,10 @@
 npm-debug.log
 yarn-error.log
 
+# Firebase Admin service-account key (used by scripts/import-places.mjs) — never commit
+scripts/serviceAccountKey.json
+serviceAccountKey.json
+
 # IDEs and editors
 .idea/
 .project

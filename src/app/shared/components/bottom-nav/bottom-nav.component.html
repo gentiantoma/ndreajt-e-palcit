@@ -1,0 +1,35 @@
+<nav class="bn" role="navigation" [attr.aria-label]="'nav.explore' | translate">
+  <div class="bn-row">
+    <a *ngFor="let item of items(); trackBy: trackByIcon"
+       class="bn-item"
+       [routerLink]="item.route"
+       routerLinkActive="active"
+       #rla="routerLinkActive"
+       [routerLinkActiveOptions]="{ exact: item.exact }"
+       [attr.aria-current]="rla.isActive ? 'page' : null">
+
+      <span class="bn-icon-wrap">
+        <ng-container [ngSwitch]="item.icon">
+          <!-- Feed / mountain village -->
+          <svg *ngSwitchCase="'feed'" class="bn-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+            <path d="m3 20 6-11 4 7 3-5 5 9z"/><circle cx="17" cy="6" r="2"/>
+          </svg>
+          <!-- Map -->
+          <svg *ngSwitchCase="'map'" class="bn-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+            <path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>
+          </svg>
+          <!-- Weather -->
+          <svg *ngSwitchCase="'weather'" class="bn-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6 1.5A3.5 3.5 0 0 0 6.5 19z"/>
+          </svg>
+          <!-- Profile -->
+          <svg *ngSwitchCase="'profile'" class="bn-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </ng-container>
+      </span>
+
+      <span class="bn-label">{{ item.labelKey | translate }}</span>
+    </a>
+  </div>
+</nav>

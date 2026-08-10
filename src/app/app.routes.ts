@@ -12,6 +12,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/post-detail/post-detail.component').then(m => m.PostDetailComponent),
   },
   {
+    path: 'map',
+    loadComponent: () => import('./pages/map/map.component').then(m => m.MapComponent),
+  },
+  {
+    path: 'weather',
+    loadComponent: () => import('./pages/weather/weather.component').then(m => m.WeatherComponent),
+  },
+  {
     path: 'profile/:uid',
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard],

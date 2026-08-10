@@ -23,6 +23,18 @@
         </svg>
         {{ 'nav.feed' | translate }}
       </a>
+      <a routerLink="/map" routerLinkActive="active" class="nav-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+          <path d="m9 4-6 2v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/>
+        </svg>
+        {{ 'map.tab' | translate }}
+      </a>
+      <a routerLink="/weather" routerLinkActive="active" class="nav-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6 1.5A3.5 3.5 0 0 0 6.5 19z"/>
+        </svg>
+        {{ 'weather.tab' | translate }}
+      </a>
       <a *ngIf="auth.isLoggedIn()" routerLink="/favorites" routerLinkActive="active" class="nav-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
@@ -96,7 +108,7 @@
 
       <ng-container *ngIf="auth.authReady(); else authSkeletonTpl">
         <ng-container *ngIf="auth.isLoggedIn(); else loginBtn">
-          <div class="user-menu" (click)="toggleDrop()">
+          <div class="user-menu" (click)="$event.stopPropagation(); toggleDrop()">
             <!-- Admin: show uploaded brand photo, fallback to CSS avatar -->
             <ng-container *ngIf="auth.isAdmin()">
               <img *ngIf="auth.userProfile()?.photoURL && !adminAvatarError; else adminBrandAvatar"
@@ -207,6 +219,12 @@
 
     <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="mobile-nav-link" (click)="closeMenu()">
       <span class="mnav-icon">🏔️</span> {{ 'nav.feed' | translate }}
+    </a>
+    <a routerLink="/map" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+      <span class="mnav-icon">🗺️</span> {{ 'map.tab' | translate }}
+    </a>
+    <a routerLink="/weather" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
+      <span class="mnav-icon">🌤️</span> {{ 'weather.tab' | translate }}
     </a>
     <a *ngIf="auth.isLoggedIn()" routerLink="/favorites" routerLinkActive="active" class="mobile-nav-link" (click)="closeMenu()">
       <span class="mnav-icon">🗝️</span> {{ 'nav.favorites' | translate }}

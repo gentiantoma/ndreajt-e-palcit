@@ -1,0 +1,129 @@
+<div class="weather-page" [ngClass]="sky()">
+  <div class="wx-sky-fx" aria-hidden="true">
+    <span class="wx-orb"></span>
+    <span class="wx-cloud wx-cloud-1"></span>
+    <span class="wx-cloud wx-cloud-2"></span>
+    <span class="wx-cloud wx-cloud-3"></span>
+  </div>
+
+  <div class="weather-container">
+
+    <!-- Loading -->
+    <ng-container *ngIf="loading()">
+      <div class="wx-hero">
+        <div class="wx-sk-line shimmer" style="width:160px;height:22px;margin:0 auto"></div>
+        <div class="wx-sk-line shimmer" style="width:120px;height:80px;margin:18px auto"></div>
+        <div class="wx-sk-line shimmer" style="width:200px;height:20px;margin:0 auto"></div>
+      </div>
+    </ng-container>
+
+    <!-- Error -->
+    <div *ngIf="error() && !loading()" class="wx-error">
+      <div class="wx-error-icon">⛈️</div>
+      <p>{{ 'weather.error' | translate }}</p>
+      <button class="wx-retry-btn" (click)="load()">{{ 'general.retry' | translate }}</button>
+    </div>
+
+    <!-- Data -->
+    <ng-container *ngIf="data() as wx">
+      <ng-container *ngIf="!loading() && !error()">
+
+        <!-- Hero: location + big temp + condition + H/L -->
+        <section class="wx-hero">
+          <h1 class="wx-loc">{{ 'weather.location' | translate }}</h1>
+          <div class="wx-big-temp">{{ wx.now.temp }}<span class="wx-deg">°</span></div>
+          <div class="wx-cond">
+            <span class="wx-cond-emoji" aria-hidden="true">{{ desc(wx.now.code, wx.now.isDay).emoji }}</span>
+            {{ descText(wx.now.code, wx.now.isDay) }}
+          </div>
+          <div class="wx-hilo" *ngIf="wx.days.length">
+            <span>{{ 'weather.high_short' | translate }}: {{ wx.days[0].tMax }}°</span>
+            <span>{{ 'weather.low_short' | translate }}: {{ wx.days[0].tMin }}°</span>
+            <span class="wx-feels">· {{ 'weather.feels_like' | translate }} {{ wx.now.feelsLike }}°</span>
+          </div>
+        </section>
+
+        <!-- Hourly glass card -->
+        <section class="wx-glass" *ngIf="wx.hours.length">
+          <div class="wx-glass-head">
+            <span class="wx-glass-ico" aria-hidden="true">🕒</span>
+            {{ 'weather.hourly' | translate }}
+          </div>
+          <div class="wx-strip">
+            <div class="wx-hour" *ngFor="let h of wx.hours; let i = index; trackBy: trackByDate">
+              <span class="wx-hour-time">{{ i === 0 ? ('weather.now' | translate) : hourLabel(h.time) }}</span>
+              <span class="wx-hour-emoji" aria-hidden="true">{{ desc(h.code).emoji }}</span>
+              <span class="wx-hour-rain" [class.dry]="h.rainChance < 20">{{ h.rainChance }}%</span>
+              <span class="wx-hour-temp">{{ h.temp }}°</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7-day glass card -->
+        <section class="wx-glass" *ngIf="wx.days.length">
+          <div class="wx-glass-head">
+            <span class="wx-glass-ico" aria-hidden="true">📅</span>
+            {{ 'weather.forecast_7' | translate }}
+          </div>
+          <div class="wx-days">
+            <div class="wx-day" *ngFor="let d of wx.days; let i = index; trackBy: trackByDate">
+              <span class="wx-day-name">{{ dayName(d.date, i) }}</span>
+              <span class="wx-day-rain" [class.dry]="d.rainChance < 20">💧{{ d.rainChance }}%</span>
+              <span class="wx-day-emoji" aria-hidden="true">{{ desc(d.code).emoji }}</span>
+              <span class="wx-day-min">{{ d.tMin }}°</span>
+              <span class="wx-day-bar">
+                <span class="wx-day-bar-fill"
+                      [style.left.%]="barLeft(d, wx.days)"
+                      [style.right.%]="barRight(d, wx.days)"></span>
+              </span>
+              <span class="wx-day-max">{{ d.tMax }}°</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Metric tiles grid -->
+        <section class="wx-tiles">
+          <div class="wx-tile">
+            <span class="wx-tile-lbl">💧 {{ 'weather.humidity' | translate }}</span>
+            <span class="wx-tile-val">{{ wx.now.humidity }}%</span>
+          </div>
+          <div class="wx-tile">
+            <span class="wx-tile-lbl">🌬️ {{ 'weather.wind' | translate }}</span>
+            <span class="wx-tile-val">{{ wx.now.wind }} <small>km/h</small></span>
+            <span class="wx-tile-sub">{{ windCompass(wx.now.windDir) }}</span>
+          </div>
+          <div class="wx-tile">
+            <span class="wx-tile-lbl">🌧️ {{ 'weather.precip' | translate }}</span>
+            <span class="wx-tile-val">{{ wx.now.precipitation }} <small>mm</small></span>
+          </div>
+          <div class="wx-tile">
+            <span class="wx-tile-lbl">🌡️ {{ 'weather.feels_like' | translate }}</span>
+            <span class="wx-tile-val">{{ wx.now.feelsLike }}°</span>
+          </div>
+          <div class="wx-tile">
+            <span class="wx-tile-lbl">🌅 {{ 'weather.sunrise' | translate }}</span>
+            <span class="wx-tile-val">{{ timeOnly(wx.days[0].sunrise) }}</span>
+          </div>
+          <div class="wx-tile">
+            <span class="wx-tile-lbl">🌇 {{ 'weather.sunset' | translate }}</span>
+            <span class="wx-tile-val">{{ timeOnly(wx.days[0].sunset) }}</span>
+          </div>
+        </section>
+
+        <div class="wx-foot">
+          <span>{{ 'weather.updated' | translate }} {{ updatedLabel(wx.updatedAt) }}</span>
+          <button class="wx-foot-refresh" (click)="load()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+            </svg>
+            {{ 'weather.refresh' | translate }}
+          </button>
+        </div>
+        <p class="wx-source">{{ 'weather.source' | translate }}</p>
+
+      </ng-container>
+    </ng-container>
+
+  </div>
+</div>

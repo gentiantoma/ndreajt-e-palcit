@@ -240,7 +240,8 @@
   </div>
 
   <!-- ═══ MOBILE CATEGORY PICKER — floating wax-seal toggle + parchment scroll ═══ -->
-  <div class="cat-fab-wrap d-lg-none">
+  <!-- Temporarily hidden per request — flip *ngIf back to true (or remove it) to restore -->
+  <div class="cat-fab-wrap d-lg-none" *ngIf="false">
     <!-- One torn parchment sheet holding every category -->
     <div class="cat-panel" [class.open]="catPanelOpen()">
       <div class="cat-panel-title">{{ 'feed.categories' | translate }}</div>

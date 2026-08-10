@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, HostListener } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -106,6 +106,17 @@ export class HeaderComponent {
     if (profile === null) return true;   // profile still loading → keep skeleton
     return !!this.avatarPhotoUrl();      // profile loaded → show section only if has photo
   });
+
+  /**
+   * Close the notification dropdown and the user menu on any click outside them.
+   * The `.notif-menu` and `.user-menu` wrappers stop propagation on their own
+   * clicks, so this only fires for clicks elsewhere on the page.
+   */
+  @HostListener('document:click')
+  onDocumentClick() {
+    if (this.notifOpen()) this.notifOpen.set(false);
+    if (this.dropOpen())  this.dropOpen.set(false);
+  }
 
   toggleMenu()   { this.menuOpen.update(v => !v); this.notifOpen.set(false); }
   closeMenu()    { this.menuOpen.set(false); this.dropOpen.set(false); this.notifOpen.set(false); }
