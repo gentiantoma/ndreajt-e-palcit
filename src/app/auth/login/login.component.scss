@@ -1,5 +1,7 @@
 .login-page {
-  min-height: 100vh;
+  /* Fill exactly the visible area below the fixed header so the card centers.
+     The page-wrapper already offsets the header (and, on phones, the bottom nav). */
+  min-height: calc(100vh - var(--header-height) - env(safe-area-inset-top, 0px));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8,6 +10,15 @@
   background-image:
     radial-gradient(circle at 20% 80%, rgba(82,183,136,0.06) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(45,106,79,0.08) 0%, transparent 50%);
+}
+
+@media (max-width: 991.98px) {
+  .login-page {
+    min-height: calc(
+      100vh - var(--header-height) - var(--bottomnav-h)
+      - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
+  }
 }
 
 .login-card {

@@ -29,9 +29,10 @@
      * follows the user's preference again the moment it unmounts.
      */
     html:has(app-splash) { color-scheme: dark; }
-    /* Rubber-band scrolling past the splash would otherwise expose the white
-       canvas beneath it at the top and bottom edges. */
-    html, body { overscroll-behavior: none; }
+    /* Allow native pull-to-refresh in browsers. Only the splash locks overscroll
+       (so its intro can't be rubber-banded); the dark html background covers any
+       exposed edge. */
+    html:has(app-splash), body:has(app-splash) { overscroll-behavior: none; }
   </style>
   <meta name="theme-color" content="#241f15">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
