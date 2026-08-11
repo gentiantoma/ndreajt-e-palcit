@@ -263,13 +263,16 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       minzoom: this.POI_MIN_ZOOM,
       layout: {
         'icon-image': ['concat', 'poi-', ['get', 'category']],
-        'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.42, 13, 0.62, 17, 0.8],
+        // Grows as you approach: small and unobtrusive from afar, roughly twice
+        // the size once you're zoomed in over the location itself.
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 9, 0.6, 13, 1.1, 15, 1.6, 17, 2],
         'icon-allow-overlap': false,     // ← collision: pins never stack
         'icon-optional': false,
         'text-field': ['get', 'name'],
         'text-font': ['Noto Sans Regular'],
-        'text-size': 11,
-        'text-offset': [0, 1.1],
+        'text-size': ['interpolate', ['linear'], ['zoom'], 9, 10, 13, 12, 17, 15],
+        // In ems of text-size, so the label keeps clear of the growing icon
+        'text-offset': [0, 1.8],
         'text-anchor': 'top',
         'text-optional': true,           // drop the label before hiding the icon
         'text-allow-overlap': false,
@@ -298,21 +301,15 @@ export class MapComponent implements AfterViewInit, OnDestroy {
 
   private watchPlaces(): void {
     this.placesSub = this.fs.places$().subscribe(list => {
-      this.zone.runOutsideAngular(() => this.renderPoi(list));
+      this.zone.runOutsideAngular(() => { this.renderPoi(list).catch(() => {}); });
     });
   }
 
-  private renderPoi(list: Place[]): void {
+  private async renderPoi(list: Place[]): Promise<void> {
     if (!this.map.getSource('poi')) return;
-    // Ensure every category has its icon image before the layer references it.
-    for (const p of list) {
-      const id = `poi-${p.category}`;
-      if (this.map.hasImage(id)) continue;
-      try {
-        const data = this.makeIconImage(p.emoji || '📍', p.color || '#7a5c28');
-        if (data && !this.map.hasImage(id)) this.map.addImage(id, data, { pixelRatio: 2 });
-      } catch { /* ignore a single bad icon */ }
-    }
+    // Icons must exist before the layer references them.
+    await this.ensureIcons(list);
+    if (!this.map.getSource('poi')) return;   // page left while loading
     const features = list
       .filter(p => typeof p.lat === 'number' && typeof p.lng === 'number')
       .map(p => ({
@@ -323,25 +320,70 @@ export class MapComponent implements AfterViewInit, OnDestroy {
     (this.map.getSource('poi') as maplibregl.GeoJSONSource).setData({ type: 'FeatureCollection', features } as any);
   }
 
-  /** Draw a coloured circle + emoji to a canvas → ImageData for MapLibre. */
-  private makeIconImage(emoji: string, color: string): ImageData | null {
-    const size = 64;
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
-    ctx.font = `${Math.round(size * 0.46)}px "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(emoji, size / 2, size / 2 + 2);
-    return ctx.getImageData(0, 0, size, size);
+  /**
+   * White vector silhouettes drawn inside a 48×48 viewBox — NOT emoji.
+   * Emoji rendered to a canvas sit at different offsets on Android, iOS and
+   * desktop (each platform ships its own emoji font with its own metrics), which
+   * is why the icons drifted into the corner on phones. These paths are pure
+   * geometry, so every device draws them identically and perfectly centred.
+   */
+  private static readonly GLYPHS: Record<string, string> = {
+    ferry:      'M9 28h30l-5 9H14zM18 13h12v13H18zM23 7h2v6h-2z',
+    lodging:    'M9 19h5v9h25v10h-5v-5H14v5H9zM18 21h7v5h-7z',
+    worship:    'M21 8h6v10h10v6H27v16h-6V24H11v-6h10z',
+    historic:   'M10 10h28v5H10zM16 17h4v16h-4zM28 17h4v16h-4zM10 35h28v5H10z',
+    attraction: 'M24 8l5 11 12 1.5-9 8L34.5 41 24 34.5 13.5 41 16 28.5l-9-8L19 19z',
+    viewpoint:  'M24 14c-9 0-15 10-15 10s6 10 15 10 15-10 15-10-6-10-15-10zm0 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
+    food:       'M16 8v12h-2V8h-3v12a5 5 0 0 0 4 5v15h4V25a5 5 0 0 0 4-5V8h-3v12h-2V8zM32 8c-3 2-4 8-4 12s1 5 3 5v15h4V8z',
+    peak:       'M6 38 20 14l8 13 4-6 10 17z',
+    spring:     'M24 8s11 12 11 19a11 11 0 0 1-22 0c0-7 11-19 11-19z',
+    waterfall:  'M24 8s11 12 11 19a11 11 0 0 1-22 0c0-7 11-19 11-19z',
+    water:      'M24 8s11 12 11 19a11 11 0 0 1-22 0c0-7 11-19 11-19z',
+    cave:       'M8 40V26a16 16 0 0 1 32 0v14h-8V26a8 8 0 0 0-16 0v14z',
+    health:     'M20 8h8v12h12v8H28v12h-8V28H8v-8h12z',
+    school:     'M8 12h14a5 5 0 0 1 2 4v22a5 5 0 0 0-2-2H8zM40 12H26a5 5 0 0 0-2 4v22a5 5 0 0 1 2-2h14z',
+    fuel:       'M15 13h14a2 2 0 0 1 2 2v22H13V15a2 2 0 0 1 2-2zm3 4v6h8v-6zm16 5 3.5 3.5V33a3 3 0 0 1-6 0v-5h2v5a1 1 0 0 0 2 0v-6.2L34 24z',
+    shop:       'M16 16v-2a8 8 0 0 1 16 0v2h6v22H10V16zm4 0h8v-2a4 4 0 0 0-8 0z',
+    camp:       'M24 10 42 38H28l-4-8-4 8H6z',
+    leisure:    'M24 8l10 14h-6l8 12H26v6h-4v-6H12l8-12h-6z',
+    tower:      'M18 8h12v6l-2 4v20h-8V18l-2-4zM13 38h22v5H13z',
+    place:      'M24 9 41 24h-5v15h-8V29h-8v10h-8V24H8z',
+  };
+
+  private iconsLoaded = new Set<string>();
+
+  /** Build every category icon this dataset needs, once. */
+  private async ensureIcons(list: Place[]): Promise<void> {
+    const cats = new Map<string, string>();
+    for (const p of list) {
+      if (!cats.has(p.category)) cats.set(p.category, p.color || '#7a5c28');
+    }
+    await Promise.all([...cats].map(([cat, color]) => this.addCategoryIcon(cat, color)));
+  }
+
+  private addCategoryIcon(category: string, color: string): Promise<void> {
+    const id = `poi-${category}`;
+    if (this.iconsLoaded.has(id) || this.map.hasImage(id)) return Promise.resolve();
+    this.iconsLoaded.add(id);
+
+    const glyph = MapComponent.GLYPHS[category] ?? MapComponent.GLYPHS['place'];
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">` +
+      `<circle cx="24" cy="24" r="20" fill="${color}" stroke="#ffffff" stroke-width="3"/>` +
+      `<path fill="#ffffff" d="${glyph}" transform="translate(24 24) scale(0.62) translate(-24 -24)"/>` +
+      `</svg>`;
+
+    return new Promise<void>((resolve) => {
+      const img = new Image(48, 48);
+      img.onload = () => {
+        if (!this.map.hasImage(id)) {
+          try { this.map.addImage(id, img, { pixelRatio: 2 } as any); } catch { /* raced */ }
+        }
+        resolve();
+      };
+      img.onerror = () => { this.iconsLoaded.delete(id); resolve(); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
   }
 
   private openPoiPopup(p: { name: string; category: string; emoji: string; lat: number; lng: number }): void {

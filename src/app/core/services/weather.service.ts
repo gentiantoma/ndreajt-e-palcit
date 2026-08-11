@@ -2,8 +2,13 @@ import { Injectable } from '@angular/core';
 import { Observable, from, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
-/** Palç, Lekbibaj — Bashkia Tropojë, Qarku i Kukësit (Albanian Alps). */
-export const PALC_COORDS = { lat: 42.2707, lng: 19.9045 } as const;
+/**
+ * Palçi village centre — Lekbibaj, Bashkia Tropojë, Qarku i Kukësit.
+ * Taken from the OpenStreetMap village node, so our marker lands exactly on the
+ * "Palçi" label the basemap itself draws. (An earlier value, 42.2707/19.9045,
+ * was the neighbouring hamlet "Kapon (Palç)" ~1.4 km to the north-east.)
+ */
+export const PALC_COORDS = { lat: 42.2585186, lng: 19.898662 } as const;
 
 export interface WeatherNow {
   temp: number;
@@ -32,6 +37,7 @@ export interface WeatherHour {
   temp: number;
   code: number;
   rainChance: number;    // %
+  isDay: boolean;        // for the correct sun/moon icon
 }
 
 export interface WeatherBundle {
@@ -84,7 +90,7 @@ export class WeatherService {
       windDir: Math.round(c.wind_direction_10m ?? 0),
       precipitation: c.precipitation ?? 0,
       code: c.weather_code ?? 0,
-      isDay: (c.is_day ?? 1) === 1,
+      isDay: this.computeIsDay(c, raw.daily),
     };
 
     const d = raw.daily ?? {};
@@ -104,17 +110,46 @@ export class WeatherService {
     const times: string[] = h.time ?? [];
     const nowMs = Date.now();
     const startIdx = Math.max(0, times.findIndex(t => new Date(t).getTime() >= nowMs - 3600_000));
+    // Sunrise/sunset per calendar day, so each hour gets the right sun/moon icon
+    const sunByDate = new Map<string, { sr: number; ss: number }>();
+    for (const d0 of days) {
+      const sr = new Date(d0.sunrise).getTime();
+      const ss = new Date(d0.sunset).getTime();
+      if (!isNaN(sr) && !isNaN(ss)) sunByDate.set(d0.date, { sr, ss });
+    }
+
     const hours: WeatherHour[] = times.slice(startIdx, startIdx + 24).map((t: string, i: number) => {
       const idx = startIdx + i;
+      const ms  = new Date(t).getTime();
+      const sun = sunByDate.get(t.slice(0, 10));
       return {
         time: t,
         temp: Math.round(h.temperature_2m?.[idx] ?? 0),
         code: h.weather_code?.[idx] ?? 0,
         rainChance: Math.round(h.precipitation_probability?.[idx] ?? 0),
+        isDay: sun ? (ms >= sun.sr && ms < sun.ss) : true,
       };
     });
 
     return { now, days, hours, updatedAt: Date.now() };
+  }
+
+  /**
+   * Day/night, computed from the location's own sunrise/sunset vs its current
+   * time. All three come back as local-time strings with the SAME offset, so
+   * comparing them as timestamps is correct regardless of the viewer's timezone.
+   * Falls back to the API's `is_day` flag if the times are missing.
+   */
+  private computeIsDay(c: any, daily: any): boolean {
+    const srStr = daily?.sunrise?.[0];
+    const ssStr = daily?.sunset?.[0];
+    if (c?.time && srStr && ssStr) {
+      const t  = new Date(c.time).getTime();
+      const sr = new Date(srStr).getTime();
+      const ss = new Date(ssStr).getTime();
+      if (!isNaN(t) && !isNaN(sr) && !isNaN(ss)) return t >= sr && t < ss;
+    }
+    return (c?.is_day ?? 1) === 1;
   }
 
   /**
@@ -153,7 +188,18 @@ export class WeatherService {
       99: { emoji: '⛈️', key: 'thunderstorm_hail' },
     };
     const entry = map[code] ?? { emoji: '☁️', key: 'overcast' };
-    const emoji = !isDay && entry.nightEmoji ? entry.nightEmoji : entry.emoji;
+    let emoji = !isDay && entry.nightEmoji ? entry.nightEmoji : entry.emoji;
+
+    // Safety net: at night nothing may show a sun. Any remaining sun-bearing
+    // icon falls back to its moon/neutral-cloud twin, so e.g. a rainy night
+    // stays rainy — just without the sun. (Emoji has no "moon behind cloud",
+    // so cloudy nights use the plain cloud over the dark sky background.)
+    if (!isDay) {
+      const nightSwap: Record<string, string> = {
+        '☀️': '🌙', '🌤️': '🌙', '⛅': '☁️', '🌥️': '☁️', '🌦️': '🌧️',
+      };
+      emoji = nightSwap[emoji] ?? emoji;
+    }
     return { emoji, key: `weather.code.${entry.key}` };
   }
 }

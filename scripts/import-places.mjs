@@ -38,7 +38,8 @@ import { getFirestore } from 'firebase-admin/firestore';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ── Config ──────────────────────────────────────────────────────────
-const PALC = { lat: 42.2707, lng: 19.9045 };          // Palç, Bashkia Tropojë
+// Palçi village centre (OSM village node), Lekbibaj — Bashkia Tropojë
+const PALC = { lat: 42.2585186, lng: 19.898662 };
 const RADIUS_KM = Number(process.env.RADIUS_KM || 12);
 const COLLECTION = process.env.COLLECTION || 'places';
 // Keep only the most important landmarks so the map stays clean (env override).

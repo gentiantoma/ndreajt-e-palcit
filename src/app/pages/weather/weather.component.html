@@ -8,13 +8,33 @@
 
   <div class="weather-container">
 
-    <!-- Loading -->
+    <!-- Loading skeleton — mirrors the real layout (hero + hourly + 7-day + tiles) -->
     <ng-container *ngIf="loading()">
-      <div class="wx-hero">
-        <div class="wx-sk-line shimmer" style="width:160px;height:22px;margin:0 auto"></div>
-        <div class="wx-sk-line shimmer" style="width:120px;height:80px;margin:18px auto"></div>
-        <div class="wx-sk-line shimmer" style="width:200px;height:20px;margin:0 auto"></div>
-      </div>
+      <section class="wx-hero">
+        <div class="shimmer" style="width:150px;height:22px;margin:0 auto 20px;border-radius:8px"></div>
+        <div class="shimmer" style="width:130px;height:78px;margin:0 auto;border-radius:16px"></div>
+        <div class="shimmer" style="width:190px;height:20px;margin:16px auto 8px;border-radius:8px"></div>
+        <div class="shimmer" style="width:150px;height:15px;margin:0 auto;border-radius:8px"></div>
+      </section>
+
+      <section class="wx-glass">
+        <div class="shimmer" style="width:90px;height:12px;margin-bottom:14px;border-radius:6px"></div>
+        <div class="wx-strip">
+          <div class="shimmer" *ngFor="let s of [1,2,3,4,5,6]"
+               style="flex:0 0 auto;width:52px;height:80px;border-radius:12px"></div>
+        </div>
+      </section>
+
+      <section class="wx-glass">
+        <div class="shimmer" style="width:120px;height:12px;margin-bottom:14px;border-radius:6px"></div>
+        <div class="shimmer" *ngFor="let s of [1,2,3,4,5]"
+             style="height:22px;margin:11px 0;border-radius:8px"></div>
+      </section>
+
+      <section class="wx-tiles">
+        <div class="shimmer" *ngFor="let s of [1,2,3,4]"
+             style="min-height:74px;border-radius:16px"></div>
+      </section>
     </ng-container>
 
     <!-- Error -->
@@ -52,7 +72,7 @@
           <div class="wx-strip">
             <div class="wx-hour" *ngFor="let h of wx.hours; let i = index; trackBy: trackByDate">
               <span class="wx-hour-time">{{ i === 0 ? ('weather.now' | translate) : hourLabel(h.time) }}</span>
-              <span class="wx-hour-emoji" aria-hidden="true">{{ desc(h.code).emoji }}</span>
+              <span class="wx-hour-emoji" aria-hidden="true">{{ desc(h.code, h.isDay).emoji }}</span>
               <span class="wx-hour-rain" [class.dry]="h.rainChance < 20">{{ h.rainChance }}%</span>
               <span class="wx-hour-temp">{{ h.temp }}°</span>
             </div>

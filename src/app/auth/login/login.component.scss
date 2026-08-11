@@ -18,6 +18,13 @@
       100vh - var(--header-height) - var(--bottomnav-h)
       - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
     );
+    /* dvh tracks the *visible* viewport on mobile Safari/Chrome, where 100vh
+       also counts the space behind the browser toolbar — that extra height is
+       what pushed the card down under the bottom nav. */
+    min-height: calc(
+      100dvh - var(--header-height) - var(--bottomnav-h)
+      - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
   }
 }
 

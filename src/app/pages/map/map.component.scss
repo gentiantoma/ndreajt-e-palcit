@@ -4,6 +4,9 @@
   position: relative;
   width: 100%;
   height: calc(100vh - var(--header-height) - env(safe-area-inset-top, 0px));
+  /* dvh follows the visible viewport on mobile (100vh includes the space behind
+     the browser toolbar, which would push the map under the bottom nav). */
+  height: calc(100dvh - var(--header-height) - env(safe-area-inset-top, 0px));
   overflow: hidden;
   background: #e8e3d6;
 }
