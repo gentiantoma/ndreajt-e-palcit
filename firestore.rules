@@ -1,0 +1,117 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email in ['gentiantoma403@gmail.com', 'palciinfo@gmail.com'];
+    }
+
+    function callerProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function callerActive() {
+      return isSignedIn() && !(callerProfile().suspended == true);
+    }
+
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    /* ── users ── */
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow update: if isAdmin()
+        || (isSignedIn() && request.auth.uid == uid
+            && unchanged('role') && unchanged('suspended') && unchanged('suspendedAt'))
+        || (callerActive()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'reactionCount']));
+      allow delete: if isAdmin();
+    }
+
+    /* ── posts ── */
+    match /posts/{postId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (callerActive()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'commentCount', 'reactionCounts']));
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if callerActive() && request.resource.data.authorId == request.auth.uid;
+        allow update: if isSignedIn() && request.auth.uid == resource.data.authorId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['textSq', 'editedAt']);
+        allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.authorId);
+
+        match /replies/{replyId} {
+          allow read: if true;
+          allow create: if callerActive() && request.resource.data.authorId == request.auth.uid;
+          allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.authorId);
+        }
+      }
+    }
+
+    /* ── likes (docId = `${postId}_${userId}`) ── */
+    match /likes/{likeId} {
+      allow read: if true;
+      allow create: if callerActive()
+        && request.resource.data.userId == request.auth.uid
+        && likeId == request.resource.data.postId + '_' + request.resource.data.userId;
+      allow update: if callerActive() && request.auth.uid == resource.data.userId;
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    /* ── favorites (docId = `${userId}_${postId}`) ── */
+    match /favorites/{favId} {
+      allow read: if isSignedIn() && request.auth.uid == resource.data.userId;
+      allow create: if callerActive()
+        && request.resource.data.userId == request.auth.uid
+        && favId == request.resource.data.userId + '_' + request.resource.data.postId;
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.userId;
+    }
+
+    /* ── reports ── */
+    match /reports/{reportId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if callerActive() && request.resource.data.reporterId == request.auth.uid;
+    }
+
+    /* ── notifications ── */
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && request.auth.uid == resource.data.recipientId;
+      allow create: if isSignedIn()
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.recipientId != request.auth.uid;
+      allow update: if isSignedIn() && request.auth.uid == resource.data.recipientId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isSignedIn() && request.auth.uid == resource.data.recipientId;
+    }
+
+    /* ── diaspora pins (docId = uid) ── */
+    match /diaspora/{uid} {
+      allow read: if true;
+      allow create, update: if callerActive() && request.auth.uid == uid && request.resource.data.uid == uid;
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.uid == uid);
+    }
+
+    /* ── places (imported offline via firebase-admin, read-only for clients) ── */
+    match /places/{placeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /* ── contact form (open to anonymous visitors; only admins read the inbox) ── */
+    match /contacts/{contactId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

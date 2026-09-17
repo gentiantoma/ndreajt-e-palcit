@@ -1,0 +1,51 @@
+<div class="contact-page">
+  <div class="container contact-container">
+
+    <div class="page-header">
+      <h1 class="page-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-accent)">
+          <path d="M4 4h16v16H4z" opacity="0"/>
+          <path d="M3 7l9 6 9-6"/>
+          <rect x="3" y="5" width="18" height="14" rx="2"/>
+        </svg>
+        {{ 'contact.title' | translate }}
+      </h1>
+      <p class="page-sub">{{ 'contact.subtitle' | translate }}</p>
+    </div>
+
+    <div class="card contact-card">
+      <ng-container *ngIf="!sent(); else sentTpl">
+        <div class="form-group">
+          <label>{{ 'contact.name' | translate }}</label>
+          <input class="form-control" type="text" [value]="name()" (input)="name.set($any($event.target).value)" maxlength="60">
+        </div>
+
+        <div class="form-group">
+          <label>{{ 'contact.email' | translate }}</label>
+          <input class="form-control" type="email" [value]="email()" (input)="email.set($any($event.target).value)"
+            maxlength="120" [disabled]="auth.isLoggedIn()">
+        </div>
+
+        <div class="form-group">
+          <label>{{ 'contact.message' | translate }}</label>
+          <textarea class="form-control" rows="5" maxlength="1000"
+            [value]="message()" (input)="message.set($any($event.target).value)"
+            [placeholder]="'contact.message_placeholder' | translate"></textarea>
+        </div>
+
+        <button class="btn btn-primary" (click)="submit()" [disabled]="sending()">
+          <span *ngIf="sending()" class="spinner"></span>
+          {{ 'contact.send' | translate }}
+        </button>
+      </ng-container>
+
+      <ng-template #sentTpl>
+        <div class="contact-sent">
+          <div class="contact-sent-icon">✉️</div>
+          <p>{{ 'contact.sent' | translate }}</p>
+        </div>
+      </ng-template>
+    </div>
+
+  </div>
+</div>

@@ -8,12 +8,12 @@ const { getFirestore, collection, addDoc, getDocs, query, where, Timestamp }
   = require('../node_modules/firebase/firestore/dist/index.cjs.js');
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyDp0-VW4jYgtM-6GWMigW7kmFgW6PslXlk',
-  authDomain: 'bookingsystem-1f9e1.firebaseapp.com',
-  projectId: 'bookingsystem-1f9e1',
-  storageBucket: 'bookingsystem-1f9e1.firebasestorage.app',
-  messagingSenderId: '626285198203',
-  appId: '1:626285198203:web:82ea23034c72d3d5535bde',
+  apiKey: 'AIzaSyA2Fm-imZZ21cR6M_vrbDb5KeCa5mozBcE',
+  authDomain: 'palci-2fe2c.firebaseapp.com',
+  projectId: 'palci-2fe2c',
+  storageBucket: 'palci-2fe2c.firebasestorage.app',
+  messagingSenderId: '655107800666',
+  appId: '1:655107800666:web:624790d6187b5b54c92263',
 };
 
 const now = Date.now();

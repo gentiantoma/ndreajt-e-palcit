@@ -31,7 +31,7 @@ export class AppComponent implements OnInit {
     const saved = localStorage.getItem('lang') || 'sq';
     this.translate.use(saved);
     this.auth.init();
-    setTimeout(() => this.showSplash.set(false), 3150);
+    setTimeout(() => this.showSplash.set(false), 1320);
 
     // Pre-build the map off-screen once the app is idle, so tapping "Map"
     // reparents an already-rendered canvas instead of cold-starting MapLibre.

@@ -6,7 +6,19 @@
     "login": "Sign In",
     "logout": "Sign Out",
     "dashboard": "Dashboard",
-    "explore": "Explore"
+    "explore": "Explore",
+    "contact": "Contact"
+  },
+  "contact": {
+    "title": "Contact us",
+    "subtitle": "Have a question, suggestion, or something to tell us? Write to us.",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "message_placeholder": "Write your message...",
+    "send": "Send message",
+    "sent": "Thank you! Your message was sent successfully.",
+    "form_invalid": "Please fill in all fields correctly."
   },
   "feed": {
     "title": "Ndreajt e Palçit",

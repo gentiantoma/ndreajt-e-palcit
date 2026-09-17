@@ -26,7 +26,7 @@
    * element's own shadow) and it fades with the same splashOut animation, so
    * there is no second element and no duplicated timing to drift.
    */
-  box-shadow: 0 0 0 200px #0a0705;
+  box-shadow: 0 0 0 100px #0a0705;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,7 +37,11 @@
   background-color: #0a0705;
   background-image:
     radial-gradient(ellipse 70% 60% at 50% 42%, #241d12 0%, #150f09 55%, #0a0705 100%);
-  animation: splashOut 620ms ease 2500ms forwards;
+  animation: splashOut 300ms ease-out 1000ms forwards;
+  /* Promote to its own compositor layer up front so the fade-out never has to
+     wait on a layout/paint pass competing with the app booting underneath —
+     that contention is what made the fade read as slow-motion/janky. */
+  will-change: opacity;
 }
 
 /* Paper grain + warm top light */
@@ -87,7 +91,7 @@
   position: relative;
   text-align: center;
   padding: 1.5rem;
-  animation: contentIn 700ms ease both;
+  animation: contentIn 320ms ease both;
 }
 
 @keyframes contentIn {
@@ -106,12 +110,12 @@
   .ring, .peak {
     stroke-dasharray: var(--len, 400);
     stroke-dashoffset: var(--len, 400);
-    animation: draw 1200ms ease forwards;
+    animation: draw 550ms ease forwards;
   }
-  .ring       { --len: 340; animation-delay: 250ms; }
-  .peak-back  { --len: 150; animation-delay: 780ms; }
-  .peak-front { --len: 175; animation-delay: 950ms; }
-  .snow       { --len: 60;  animation-delay: 1250ms; opacity: 0; animation: draw 700ms ease 1250ms forwards, snowFill 400ms ease 1500ms forwards; }
+  .ring       { --len: 340; animation-delay: 80ms; }
+  .peak-back  { --len: 150; animation-delay: 320ms; }
+  .peak-front { --len: 175; animation-delay: 420ms; }
+  .snow       { --len: 60;  animation-delay: 560ms; opacity: 0; animation: draw 260ms ease 560ms forwards, snowFill 200ms ease 680ms forwards; }
 }
 
 @keyframes draw     { to { stroke-dashoffset: 0; } }
@@ -133,8 +137,8 @@
   color: transparent;
   opacity: 0;
   animation:
-    titleRise 800ms ease 1100ms both,
-    shimmer 1400ms ease 1300ms both;
+    titleRise 340ms ease 300ms both,
+    shimmer 550ms ease 380ms both;
 }
 
 @keyframes titleRise {
@@ -153,7 +157,7 @@
   width: 0;
   margin: 10px auto;
   background: linear-gradient(to right, transparent, #c9a55c, transparent);
-  animation: ruleGrow 700ms ease 1250ms forwards;
+  animation: ruleGrow 300ms ease 380ms forwards;
 
   .diamond {
     position: absolute;
@@ -163,7 +167,7 @@
     color: #c9a55c;
     font-size: 8px;
     opacity: 0;
-    animation: fadeIn 500ms ease 1700ms forwards;
+    animation: fadeIn 220ms ease 560ms forwards;
   }
 }
 .rule-top    { margin-bottom: 4px; }
@@ -181,7 +185,7 @@
   color: #b9a06e;
   margin: 6px 0 0;
   opacity: 0;
-  animation: fadeUp 700ms ease 1650ms both;
+  animation: fadeUp 300ms ease 540ms both;
 }
 
 @keyframes fadeUp {
@@ -228,5 +232,5 @@
   .rule { width: min(320px, 78vw); animation: none; }
   .rule .diamond, .tagline, .quill { opacity: 1; animation: none; }
   .embers { display: none; }
-  .splash { animation: splashOut 500ms ease 1600ms forwards; }
+  .splash { animation: splashOut 250ms ease-out 500ms forwards; }
 }

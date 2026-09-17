@@ -6,7 +6,19 @@
     "login": "Hyr",
     "logout": "Dil",
     "dashboard": "Paneli",
-    "explore": "Eksploro"
+    "explore": "Eksploro",
+    "contact": "Kontakt"
+  },
+  "contact": {
+    "title": "Na kontaktoni",
+    "subtitle": "Keni një pyetje, sugjerim apo diçka për të na treguar? Na shkruani.",
+    "name": "Emri",
+    "email": "Email",
+    "message": "Mesazhi",
+    "message_placeholder": "Shkruani mesazhin tuaj...",
+    "send": "Dërgo mesazhin",
+    "sent": "Faleminderit! Mesazhi juaj u dërgua me sukses.",
+    "form_invalid": "Ju lutem plotësoni saktë të gjitha fushat."
   },
   "feed": {
     "title": "Ndreajt e Palçit",

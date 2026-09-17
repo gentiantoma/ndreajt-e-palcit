@@ -9,7 +9,7 @@ import { UserProfile } from '../models';
 import { FirestoreService } from './firestore.service';
 import { ToastService } from './toast.service';
 
-export const ADMIN_EMAILS = ['gentiantoma403@gmail.com'];
+export const ADMIN_EMAILS = ['gentiantoma403@gmail.com', 'palciinfo@gmail.com'];
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

@@ -13,6 +13,7 @@ import { LazyImgDirective } from '../../shared/directives/lazy-img.directive';
 import { Post, Comment, Reply, ReactionType, REACTIONS } from '../../core/models';
 import { ReactionPickerService } from '../../core/services/reaction-picker.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { EmailService } from '../../core/services/email.service';
 import { RateLimitService } from '../../core/services/rate-limit.service';
 import { Report, ReportReason, ReportTargetType } from '../../core/models';
 
@@ -41,6 +42,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private translate  = inject(TranslateService);
   private pickerSvc  = inject(ReactionPickerService);
   private notifSvc   = inject(NotificationService);
+  private emailSvc   = inject(EmailService);
   private router     = inject(Router);
   private rateLimit  = inject(RateLimitService);
 
@@ -258,7 +260,10 @@ export class PostDetailComponent implements OnInit, OnDestroy {
       });
       this.commentText.set('');
       const p = this.post();
-      if (p) this.notifSvc.notifyComment(p, user.uid, this.actorName, this.actorPhoto, text);
+      if (p) {
+        this.notifSvc.notifyComment(p, user.uid, this.actorName, this.actorPhoto, text);
+        this.emailSvc.notifyNewComment(p, this.actorName, text, 'comment');
+      }
     } catch { this.toast.error(this.translate.instant('toast.error_generic')); }
     finally { this.submitting.set(false); }
   }
@@ -331,7 +336,10 @@ export class PostDetailComponent implements OnInit, OnDestroy {
       s.replyText = '';
       s.showReplyInput = false;
       const p = this.post();
-      if (p) this.notifSvc.notifyReply(p, comment, user.uid, this.actorName, this.actorPhoto, text);
+      if (p) {
+        this.notifSvc.notifyReply(p, comment, user.uid, this.actorName, this.actorPhoto, text);
+        this.emailSvc.notifyNewComment(p, this.actorName, text, 'reply');
+      }
     } catch {
       this.toast.error(this.translate.instant('toast.error_generic'));
     } finally {
